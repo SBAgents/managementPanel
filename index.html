@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход | Панель управления</title>
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #042F28 0%, #0A5C4A 100%);
+            --accent: #D0E41E;
+            --text: white;
+            --card-bg: rgba(255, 255, 255, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { 
+            background: var(--primary-bg); 
+            color: var(--text); 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px; 
+        }
+        .login-box { 
+            background: var(--card-bg); 
+            border-radius: 15px; 
+            padding: 40px; 
+            width: 100%; 
+            max-width: 400px; 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            backdrop-filter: blur(10px); 
+            text-align: center; 
+        }
+        .logo { font-size: 28px; font-weight: bold; color: var(--accent); margin-bottom: 10px; }
+        .input-group { margin: 20px 0; text-align: left; }
+        label { display: block; margin-bottom: 8px; color: var(--accent); font-weight: bold; }
+        input { 
+            width: 100%; 
+            padding: 12px 15px; 
+            background: rgba(255, 255, 255, 0.9); 
+            border: 2px solid #34495e; 
+            border-radius: 8px; 
+            color: #2c3e50; 
+            font-size: 16px; 
+        }
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            background: var(--accent); 
+            color: #2c3e50; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            margin-top: 10px; 
+        }
+        button:hover { background: #b8cc1a; }
+        .error { 
+            background: rgba(231, 76, 60, 0.15); 
+            border: 1px solid #e74c3c; 
+            border-radius: 8px; 
+            padding: 12px; 
+            margin: 15px 0; 
+            color: #e74c3c; 
+            display: none; 
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (max-width: 480px) { .login-box { padding: 30px 20px; } }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <div class="logo">🔐 Панель управления</div>
+        <p>Платёжная система</p>
+        
+        <div class="error" id="errorMsg"></div>
+        
+        <div class="input-group">
+            <label>Логин</label>
+            <input type="text" id="username" placeholder="superadmin" autocomplete="username">
+        </div>
+        
+        <div class="input-group">
+            <label>Пароль</label>
+            <input type="password" id="password" placeholder="admin123" autocomplete="current-password">
+        </div>
+        
+        <button onclick="login()" id="loginBtn">Войти</button>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxDaBdYMx44M2W3FsJp5tOECFTRD6rWrhPAC96MuUexROt5Qjgj4U0er4So6Ehsh8xQ5g/exec'; 
+        
+        async function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const btn = document.getElementById('loginBtn');
+            const error = document.getElementById('errorMsg');
+            
+            if (!username || !password) {
+                showError('Заполните все поля');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader"></div> Вход...';
+            error.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+                const result = await response.json();
+                
+                if (result.success && result.token) {
+                    // Сохраняем токен и данные пользователя
+                    localStorage.setItem('admin_token', result.token);
+                    localStorage.setItem('admin_user', JSON.stringify(result.user));
+                    localStorage.setItem('admin_permissions', JSON.stringify(result.permissions));
+                    
+                    // Переходим на панель управления
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showError(result.error || 'Ошибка входа');
+                    btn.disabled = false;
+                    btn.textContent = 'Войти';
+                }
+            } catch (err) {
+                showError('Ошибка сети. Проверьте API URL');
+                console.error('Login error:', err);
+                btn.disabled = false;
+                btn.textContent = 'Войти';
+            }
+        }
+        
+        function showError(message) {
+            const error = document.getElementById('errorMsg');
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+        
+        // Автозаполнение для теста (удалите в продакшене)
+        document.getElementById('username').value = 'superadmin';
+        document.getElementById('password').value = 'admin123';
+        
+        // Вход по Enter
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') login();
+        });
+    </script>
+</body>
+</html>
