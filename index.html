@@ -194,130 +194,123 @@
             });
         });
         
-        async function login() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const rememberMe = document.getElementById('rememberMe').checked;
-            const btn = document.getElementById('loginBtn');
-            const error = document.getElementById('errorMsg');
-            
-            // Валидация
-            if (!username || !password) {
-                showError('Заполните все поля');
-                return;
-            }
-            
-            // Блокируем кнопку и показываем загрузку
-            btn.disabled = true;
-            btn.innerHTML = '<div class="loader"></div> Вход...';
-            error.classList.remove('show');
-            
-            try {
-                // Формируем URL для Google Apps Script
-                // Важно: используем /public?action=login (не ?action=login напрямую)
-                const url = `${API_URL}/public?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-                
-                console.log('Отправка запроса на:', url);
-                
-                const response = await fetch(url, {
-                    method: 'GET',
-                    mode: 'no-cors' // Важно для Google Apps Script!
-                }).catch(err => {
-                    // Если CORS всё ещё блокирует, используем альтернативный метод
-                    console.log('Пробуем альтернативный метод...');
-                    return fetchViaProxy(url);
-                });
-                
-                // Если используем no-cors, response будет opaque
-                // В этом случае мы не можем прочитать ответ, нужно иное решение
-                
-                // Альтернатива: используем JSONP или прокси
-                const result = await tryAlternativeLogin(username, password);
-                
-                if (result.success && result.token) {
-                    // Сохраняем данные если нужно
-                    if (rememberMe) {
-                        localStorage.setItem('saved_login', JSON.stringify({ username, password }));
-                    } else {
-                        localStorage.removeItem('saved_login');
-                    }
-                    
-                    // Сохраняем токен и переходим
-                    localStorage.setItem('admin_token', result.token);
-                    localStorage.setItem('admin_user', JSON.stringify(result.user));
-                    localStorage.setItem('admin_permissions', JSON.stringify(result.permissions));
-                    
-                    window.location.href = 'dashboard.html';
-                } else {
-                    showError(result.error || 'Ошибка входа. Проверьте логин и пароль.');
-                    btn.disabled = false;
-                    btn.textContent = 'Войти';
-                }
-                
-            } catch (err) {
-                console.error('Login error:', err);
-                showError('Ошибка подключения к серверу. Проверьте настройки CORS в Google Apps Script.');
-                btn.disabled = false;
-                btn.textContent = 'Войти';
-            }
-        }
-        
         // Альтернативный метод входа через прокси-подход
-        async function tryAlternativeLogin(username, password) {
-            try {
-                // Метод 1: Пробуем стандартный fetch с credentials
-                const url = `${API_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-                
-                // Если CORS настроен в бэкенде, это сработает
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    return await response.json();
-                }
-                
-                // Метод 2: Используем Google Apps Script как прокси
-                const proxyUrl = `https://script.google.com/macros/s/AKfycbxDaBdYMx44M2W3FsJp5tOECFTRD6rWrhPAC96MuUexROt5Qjgj4U0er4So6Ehsh8xQ5g/exec?action=login&username=${username}&password=${password}`;
-                
-                const proxyResponse = await fetch(proxyUrl);
-                if (proxyResponse.ok) {
-                    const text = await proxyResponse.text();
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        return { success: false, error: 'Ошибка парсинга ответа' };
-                    }
-                }
-                
-                return { success: false, error: 'Сервер не отвечает' };
-                
-            } catch (error) {
-                return { success: false, error: error.toString() };
-            }
-        }
+        // ⚠️ ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ URL
+const API_URL = 'https://script.google.com/macros/s/AKfycbxDaBdYMx44M2W3FsJp5tOECFTRD6rWrhPAC96MuUexROt5Qjgj4U0er4So6Ehsh8xQ5g/exec';
+
+// Альтернативный метод входа через прокси-подход
+async function tryAlternativeLogin(username, password) {
+  try {
+    // Правильный URL без /public
+    const url = `${API_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+    
+    console.log('Пробуем URL:', url);
+    
+    // Используем простой fetch без mode: 'no-cors'
+    const response = await fetch(url);
+    
+    if (response.ok) {
+      const text = await response.text();
+      console.log('Ответ сервера:', text);
+      
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.error('Ошибка парсинга JSON:', e);
+        return { success: false, error: 'Ошибка формата ответа' };
+      }
+    } else {
+      console.error('Ошибка HTTP:', response.status);
+      return { success: false, error: `Ошибка сервера: ${response.status}` };
+    }
+    
+  } catch (error) {
+    console.error('Ошибка сети:', error);
+    return { success: false, error: 'Ошибка подключения к серверу' };
+  }
+}
+
+// Обновите основную функцию login:
+async function login() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const rememberMe = document.getElementById('rememberMe').checked;
+  const btn = document.getElementById('loginBtn');
+  const error = document.getElementById('errorMsg');
+  
+  // Валидация
+  if (!username || !password) {
+    showError('Заполните все поля');
+    return;
+  }
+  
+  // Блокируем кнопку и показываем загрузку
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loader"></div> Вход...';
+  error.classList.remove('show');
+  
+  try {
+    // Используем альтернативный метод
+    const result = await tryAlternativeLogin(username, password);
+    
+    console.log('Результат входа:', result);
+    
+    if (result.success && result.token) {
+      // Сохраняем данные если нужно
+      if (rememberMe) {
+        localStorage.setItem('saved_login', JSON.stringify({ username, password }));
+      } else {
+        localStorage.removeItem('saved_login');
+      }
+      
+      // Сохраняем токен и переходим
+      localStorage.setItem('admin_token', result.token);
+      localStorage.setItem('admin_user', JSON.stringify(result.user));
+      localStorage.setItem('admin_permissions', JSON.stringify(result.permissions));
+      
+      window.location.href = 'dashboard.html';
+    } else {
+      showError(result.error || 'Ошибка входа. Проверьте логин и пароль.');
+      btn.disabled = false;
+      btn.textContent = 'Войти';
+    }
+    
+  } catch (err) {
+    console.error('Login error:', err);
+    showError('Ошибка подключения к серверу');
+    btn.disabled = false;
+    btn.textContent = 'Войти';
+  }
+}
+
+// Обновите функцию testApiConnection:
+async function testApiConnection() {
+  try {
+    const testUrl = `${API_URL}?action=test`;
+    console.log('Тестируем подключение к:', testUrl);
+    
+    const response = await fetch(testUrl);
+    const text = await response.text();
+    console.log('API тест ответ:', text);
+    
+    try {
+      const result = JSON.parse(text);
+      console.log('API работает:', result.message);
+      return true;
+    } catch (e) {
+      console.error('Неверный JSON:', text);
+      return false;
+    }
+  } catch (error) {
+    console.error('API недоступен:', error);
+    return false;
+  }
+}
         
         function showError(message) {
             const error = document.getElementById('errorMsg');
             error.textContent = message;
             error.classList.add('show');
-        }
-        
-        // Функция для тестирования API (удалите в продакшене)
-        async function testApiConnection() {
-            try {
-                const testUrl = `${API_URL}?action=test`;
-                const response = await fetch(testUrl);
-                const result = await response.text();
-                console.log('API тест:', result);
-                return true;
-            } catch (error) {
-                console.error('API недоступен:', error);
-                return false;
-            }
         }
         
         // Запускаем тест при загрузке
