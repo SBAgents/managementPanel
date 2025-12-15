@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход | Панель управления</title>
     <style>
-        /* Стили остаются без изменений */
         :root {
             --primary-bg: linear-gradient(135deg, #042F28 0%, #0A5C4A 100%);
             --accent: #D0E41E;
@@ -144,7 +143,7 @@
     </div>
 
     <script>
-        // ⚠️ ВАШ URL (используйте ваш URL из развертывания)
+        // ПРОКСИ ДЛЯ ОБХОДА CORS (простой метод)
         const API_URL = 'https://script.google.com/macros/s/AKfycbxDaBdYMx44M2W3FsJp5tOECFTRD6rWrhPAC96MuUexROt5Qjgj4U0er4So6Ehsh8xQ5g/exec';
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -174,7 +173,8 @@
             });
         });
         
-        async function login() {
+        // НОВЫЙ МЕТОД: Используем JSONP для обхода CORS
+        function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
             const rememberMe = document.getElementById('rememberMe').checked;
@@ -190,41 +190,166 @@
             btn.innerHTML = '<div class="loader"></div> Вход...';
             error.classList.remove('show');
             
-            try {
-                const url = `${API_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+            // Метод 1: Пробуем через XMLHttpRequest с режимом no-cors
+            loginWithXMLHttpRequest(username, password, rememberMe, btn, error);
+        }
+        
+        function loginWithXMLHttpRequest(username, password, rememberMe, btn, error) {
+            const url = `${API_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+            
+            console.log('Пробуем XMLHttpRequest к:', url);
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            
+            // Важно: не устанавливаем заголовки
+            xhr.timeout = 10000; // 10 секунд таймаут
+            
+            xhr.onload = function() {
+                console.log('Статус ответа:', xhr.status);
                 
-                console.log('Отправка запроса на:', url);
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                console.log('Ответ сервера:', result);
-                
-                if (result.success && result.token) {
-                    if (rememberMe) {
-                        localStorage.setItem('saved_login', JSON.stringify({ username, password }));
-                    } else {
-                        localStorage.removeItem('saved_login');
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const responseText = xhr.responseText;
+                        console.log('Текст ответа:', responseText);
+                        
+                        // Пробуем разные методы парсинга
+                        let result;
+                        try {
+                            result = JSON.parse(responseText);
+                        } catch (e) {
+                            // Если это не JSON, может быть HTML или текст
+                            if (responseText.includes('token') || responseText.includes('success')) {
+                                // Пробуем извлечь JSON из текста
+                                const jsonMatch = responseText.match(/\{.*\}/);
+                                if (jsonMatch) {
+                                    result = JSON.parse(jsonMatch[0]);
+                                } else {
+                                    result = { success: false, error: 'Неверный формат ответа' };
+                                }
+                            } else {
+                                result = { success: false, error: 'Сервер вернул не JSON' };
+                            }
+                        }
+                        
+                        handleLoginResult(result, username, password, rememberMe, btn, error);
+                        
+                    } catch (parseError) {
+                        console.error('Ошибка парсинга:', parseError);
+                        showError('Ошибка обработки ответа сервера');
+                        btn.disabled = false;
+                        btn.textContent = 'Войти';
                     }
-                    
-                    localStorage.setItem('admin_token', result.token);
-                    localStorage.setItem('admin_user', JSON.stringify(result.user));
-                    localStorage.setItem('admin_permissions', JSON.stringify(result.permissions));
-                    
-                    window.location.href = 'dashboard.html';
                 } else {
-                    showError(result.error || 'Ошибка входа. Проверьте логин и пароль.');
+                    console.error('HTTP ошибка:', xhr.status);
+                    
+                    // Метод 2: Пробуем через iframe (JSONP-подход)
+                    loginWithIframe(username, password, rememberMe, btn, error);
+                }
+            };
+            
+            xhr.onerror = function() {
+                console.error('Ошибка сети XMLHttpRequest');
+                // Метод 2: Пробуем через iframe (JSONP-подход)
+                loginWithIframe(username, password, rememberMe, btn, error);
+            };
+            
+            xhr.ontimeout = function() {
+                console.error('Таймаут XMLHttpRequest');
+                loginWithIframe(username, password, rememberMe, btn, error);
+            };
+            
+            xhr.send();
+        }
+        
+        function loginWithIframe(username, password, rememberMe, btn, error) {
+            console.log('Пробуем метод iframe...');
+            
+            // Создаем временный iframe для отправки запроса
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.name = 'loginFrame';
+            
+            // Создаем форму для отправки данных
+            const form = document.createElement('form');
+            form.target = 'loginFrame';
+            form.method = 'GET';
+            form.action = API_URL;
+            
+            // Добавляем поля
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'login';
+            form.appendChild(actionInput);
+            
+            const userInput = document.createElement('input');
+            userInput.type = 'hidden';
+            userInput.name = 'username';
+            userInput.value = username;
+            form.appendChild(userInput);
+            
+            const passInput = document.createElement('input');
+            passInput.type = 'hidden';
+            passInput.name = 'password';
+            passInput.value = password;
+            form.appendChild(passInput);
+            
+            // Добавляем callback для получения результата
+            window.handleLoginCallback = function(result) {
+                console.log('Callback результат:', result);
+                handleLoginResult(result, username, password, rememberMe, btn, error);
+                
+                // Очистка
+                document.body.removeChild(iframe);
+                document.body.removeChild(form);
+                delete window.handleLoginCallback;
+            };
+            
+            // Добавляем callback параметр
+            const callbackInput = document.createElement('input');
+            callbackInput.type = 'hidden';
+            callbackInput.name = 'callback';
+            callbackInput.value = 'handleLoginCallback';
+            form.appendChild(callbackInput);
+            
+            document.body.appendChild(iframe);
+            document.body.appendChild(form);
+            form.submit();
+            
+            // Таймаут на случай если callback не сработает
+            setTimeout(function() {
+                if (btn.disabled) {
+                    showError('Таймаут соединения');
                     btn.disabled = false;
                     btn.textContent = 'Войти';
+                    
+                    // Метод 3: Прямой переход (последняя попытка)
+                    setTimeout(function() {
+                        window.location.href = `${API_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+                    }, 1000);
+                }
+            }, 5000);
+        }
+        
+        function handleLoginResult(result, username, password, rememberMe, btn, error) {
+            console.log('Результат входа:', result);
+            
+            if (result && result.success && result.token) {
+                if (rememberMe) {
+                    localStorage.setItem('saved_login', JSON.stringify({ username, password }));
+                } else {
+                    localStorage.removeItem('saved_login');
                 }
                 
-            } catch (err) {
-                console.error('Login error:', err);
-                showError('Ошибка подключения к серверу. Проверьте URL API.');
+                localStorage.setItem('admin_token', result.token);
+                localStorage.setItem('admin_user', JSON.stringify(result.user || {}));
+                localStorage.setItem('admin_permissions', JSON.stringify(result.permissions || {}));
+                
+                // Перенаправляем на dashboard
+                window.location.href = 'dashboard.html';
+            } else {
+                showError(result?.error || 'Неверный логин или пароль');
                 btn.disabled = false;
                 btn.textContent = 'Войти';
             }
@@ -235,6 +360,28 @@
             error.textContent = message;
             error.classList.add('show');
         }
+        
+        // Альтернативный метод для тестирования
+        function testConnection() {
+            const testUrl = `${API_URL}?action=test&callback=testCallback`;
+            
+            window.testCallback = function(result) {
+                console.log('Тест соединения:', result);
+                delete window.testCallback;
+            };
+            
+            const script = document.createElement('script');
+            script.src = testUrl;
+            document.head.appendChild(script);
+            setTimeout(() => {
+                if (script.parentNode) {
+                    document.head.removeChild(script);
+                }
+            }, 5000);
+        }
+        
+        // Запускаем тест при загрузке
+        window.addEventListener('load', testConnection);
     </script>
 </body>
 </html>
