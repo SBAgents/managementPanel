@@ -612,97 +612,82 @@ function getOnlineAgentsCount(total) {
 }
         
                 // ========== КОШЕЛЬКИ (обновленная версия) ==========
-        async function loadWallets() {
-            try {
+          async function loadWallets() {
+    try {
+        console.log('=== Загрузка кошельков ==='); // Отладка
+        
         const token = localStorage.getItem('admin_token');
         const container = document.getElementById('walletsList');
         container.innerHTML = '<p>Загрузка...</p><div class="loader"></div>';
         
-        // Загружаем кошельки И формы
-        const [walletsResponse, formsResponse] = await Promise.all([
-            fetch(`${API_URL}?action=get_all_wallets&token=${token}`),
-            fetch(`${API_URL}?action=get_all_forms&token=${token}`)
-        ]);
-        
+        // Загружаем только кошельки для начала
+        const walletsResponse = await fetch(`${API_URL}?action=get_all_wallets&token=${token}`);
         const walletsResult = await walletsResponse.json();
-        const formsResult = await formsResponse.json();
+        
+        console.log('Кошельки результат:', walletsResult); // Отладка
         
         if (walletsResult.success) {
-            // Фильтруем только активные кошельки
-            const activeWallets = walletsResult.wallets.filter(w => w.enabled);
+            // Показываем ВСЕ кошельки (для отладки)
+            console.log('Все кошельки:', walletsResult.wallets);
+            
+            // Фильтруем активные кошельки
+            const activeWallets = walletsResult.wallets.filter(w => w.enabled === true);
+            console.log('Активные кошельки:', activeWallets);
             
             if (activeWallets.length === 0) {
                 container.innerHTML = '<p>Нет активных кошельков</p>';
                 return;
             }
             
+            // Простая таблица только с кошельками (без форм пока)
             let html = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3>Активные кошельки: ${activeWallets.length}</h3>
-                    <div>
-                        <button class="btn" onclick="showAllWallets()">👁️ Показать все</button>
-                        <button class="btn btn-success" onclick="showAddWalletForm()">➕ Добавить</button>
-                    </div>
-                </div>
+                <h3>Активные кошельки: ${activeWallets.length}</h3>
                 <table class="wallet-table">
                     <thead>
                         <tr>
                             <th>Тип</th>
                             <th>Название</th>
                             <th>Номер</th>
-                            <th>Используется в формах</th>
+                            <th>Статус</th>
                             <th>Действия</th>
                         </tr>
                     </thead>
                     <tbody>
-                `;
+            `;
             
             activeWallets.forEach(wallet => {
-                // Находим формы, которые используют этот кошелёк
-                const usedInForms = formsResult.success ? 
-                    formsResult.forms.filter(f => 
-                        f.formAPI && f.formAPI.includes(wallet.number)
-                    ).map(f => f.formName) : [];
-                
                 html += `
                     <tr>
+                        <td>${wallet.type || '-'}</td>
+                        <td>${wallet.name || '-'}</td>
                         <td>
-                            <span style="background: ${getWalletTypeColor(wallet.type)}; padding: 5px 10px; border-radius: 15px; color: white; font-size: 12px;">
-                                ${wallet.type || 'Не указан'}
-                            </span>
-                        </td>
-                        <td>${wallet.name || 'Без названия'}</td>
-                        <td>
-                            <code style="background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 5px; cursor: pointer;" 
-                                  onclick="copyToClipboard('${wallet.number}')">
+                            <code onclick="copyToClipboard('${wallet.number}')" style="cursor:pointer">
                                 ${wallet.number}
                             </code>
                         </td>
-                        <td>
-                            ${usedInForms.length > 0 ? 
-                                usedInForms.map(name => `<span style="background: #3498db; color: white; padding: 3px 8px; border-radius: 10px; margin: 2px; display: inline-block; font-size: 12px;">${name}</span>`).join('') :
-                                '<span style="color: #95a5a6;">Не используется</span>'
-                            }
+                        <td style="color: ${wallet.enabled ? '#2ecc71' : '#e74c3c'}">
+                            ${wallet.enabled ? '✅ Активен' : '❌ Отключен'}
                         </td>
                         <td>
-                            <button class="btn" style="padding: 5px 10px; font-size: 12px;" 
-                                    onclick="editWallet(${wallet.row})">✏️</button>
-                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" 
-                                    onclick="toggleWallet(${wallet.row}, false)">❌ Отключить</button>
-                            </td>
-                        </tr>
-                    `;
-                });
+                            <button class="btn" onclick="toggleWallet(${wallet.row}, false)">
+                                Отключить
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
             
-                html += `</tbody></table>`;
-                container.innerHTML = html;
-                } else {
-                container.innerHTML = `<p style="color: #e74c3c">Ошибка: ${walletsResult.error}</p>`;
-                }
-                } catch (error) {
-                container.innerHTML = `<p style="color: #e74c3c">Ошибка сети: ${error.message}</p>`;
-                }
-            }
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            
+        } else {
+            container.innerHTML = `<p style="color: #e74c3c">Ошибка: ${walletsResult.error}</p>`;
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки кошельков:', error);
+        container.innerHTML = `<p style="color: #e74c3c">Ошибка: ${error.message}</p>`;
+    }
+}
 
 // Вспомогательная функция для цвета типа кошелька
 function getWalletTypeColor(type) {
