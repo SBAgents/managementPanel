@@ -581,7 +581,6 @@ async function refreshWalletsCache() {
 }
 
         // ========== ФОРМЫ ==========
-        // ========== ФОРМЫ (расширенная версия) ==========
 async function loadForms() {
     try {
         const token = localStorage.getItem('admin_token');
@@ -1067,6 +1066,167 @@ function getAgentsForForm(formName) {
     }
 }
 
+        // Функция для обновления статуса кошелька в форме
+async function updateWalletInForm(formAPI, walletType, walletNumber, newStatus, walletName = null) {
+    try {
+        console.log('Обновление кошелька в форме:', { formAPI, walletType, walletNumber, newStatus });
+        
+        // Показываем индикатор загрузки
+        const button = event?.target;
+        const originalText = button?.innerHTML;
+        if (button) {
+            button.innerHTML = '<div class="loader" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px;"></div>Обновление...';
+            button.disabled = true;
+        }
+        
+        // Формируем параметры запроса
+        const params = new URLSearchParams({
+            action: 'update_wallet_status',
+            wallet_type: walletType,
+            wallet_number: walletNumber,
+            enabled: newStatus ? 'true' : 'false'
+        });
+        
+        if (walletName) {
+            params.append('wallet_name', walletName);
+        }
+        
+        // Отправляем запрос к API формы
+        const response = await fetch(`${formAPI}?${params.toString()}`);
+        const result = await response.json();
+        
+        console.log('Результат обновления:', result);
+        
+        // Восстанавливаем кнопку
+        if (button) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+        
+        if (result.status === 'success') {
+            return { success: true, message: 'Статус кошелька обновлён' };
+        } else {
+            return { success: false, error: result.message || 'Ошибка обновления' };
+        }
+        
+    } catch (error) {
+        console.error('Ошибка обновления кошелька:', error);
+        
+        if (button) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+        
+        return { success: false, error: error.message };
+    }
+}
+
+// Функция для добавления нового кошелька в форму
+async function addNewWalletToForm(formAPI, walletData) {
+    try {
+        console.log('Добавление нового кошелька:', { formAPI, walletData });
+        
+        // Показываем индикатор загрузки
+        const button = event?.target;
+        const originalText = button?.innerHTML;
+        if (button) {
+            button.innerHTML = '<div class="loader" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px;"></div>Добавление...';
+            button.disabled = true;
+        }
+        
+        // Формируем параметры запроса
+        const params = new URLSearchParams({
+            action: 'add_wallet',
+            type: walletData.type,
+            name: walletData.name || walletData.type,
+            number: walletData.number,
+            enabled: walletData.enabled ? 'true' : 'false'
+        });
+        
+        // Отправляем запрос к API формы
+        const response = await fetch(`${formAPI}?${params.toString()}`);
+        const result = await response.json();
+        
+        console.log('Результат добавления:', result);
+        
+        // Восстанавливаем кнопку
+        if (button) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+        
+        if (result.status === 'success') {
+            return { success: true, message: 'Кошелёк добавлен' };
+        } else {
+            return { success: false, error: result.message || 'Ошибка добавления' };
+        }
+        
+    } catch (error) {
+        console.error('Ошибка добавления кошелька:', error);
+        
+        if (button) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+        
+        return { success: false, error: error.message };
+    }
+}
+
+// Функция для удаления кошелька из формы
+async function deleteWalletFromForm(formAPI, walletType, walletNumber) {
+    try {
+        if (!confirm(`Удалить кошелёк ${walletNumber} (${walletType})?`)) {
+            return { success: false, error: 'Отменено пользователем' };
+        }
+        
+        console.log('Удаление кошелька:', { formAPI, walletType, walletNumber });
+        
+        // Показываем индикатор загрузки
+        const button = event?.target;
+        const originalText = button?.innerHTML;
+        if (button) {
+            button.innerHTML = '<div class="loader" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px;"></div>Удаление...';
+            button.disabled = true;
+        }
+        
+        // Формируем параметры запроса
+        const params = new URLSearchParams({
+            action: 'delete_wallet',
+            wallet_type: walletType,
+            wallet_number: walletNumber
+        });
+        
+        // Отправляем запрос к API формы
+        const response = await fetch(`${formAPI}?${params.toString()}`);
+        const result = await response.json();
+        
+        console.log('Результат удаления:', result);
+        
+        // Восстанавливаем кнопку
+        if (button) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+        
+        if (result.status === 'success') {
+            return { success: true, message: 'Кошелёк удалён' };
+        } else {
+            return { success: false, error: result.message || 'Ошибка удаления' };
+        }
+        
+    } catch (error) {
+        console.error('Ошибка удаления кошелька:', error);
+        
+        if (button) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+        
+        return { success: false, error: error.message };
+    }
+}
+
         // Показать индикатор загрузки на кнопке
 function showButtonLoader(buttonId, text = 'Загрузка...') {
     const button = typeof buttonId === 'string' ? document.getElementById(buttonId) : buttonId;
@@ -1090,35 +1250,196 @@ function hideButtonLoader(buttonId, originalText = null) {
 }
 
 // Обновим функции действий с индикаторами загрузки
+        // Функция для кнопки "Добавить кошелёк" в модальном окне
 async function addWalletToForm(formName) {
-    const button = event?.target || document.querySelector('button[onclick*="addWalletToForm"]');
-    showButtonLoader(button, 'Добавление...');
-    
     try {
-        // Имитация загрузки
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Получаем данные формы
+        const token = localStorage.getItem('admin_token');
+        const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+        const formsResult = await formsResponse.json();
         
-        // Ваш код добавления кошелька
-        alert('Кошелёк добавлен!');
+        const form = formsResult.forms?.find(f => f.formName === formName);
+        if (!form) {
+            alert('Форма не найдена');
+            return;
+        }
         
-    } finally {
-        hideButtonLoader(button);
+        // Получаем значения из полей ввода
+        const type = document.getElementById('new_wallet_type').value;
+        const name = document.getElementById('new_wallet_name').value || type;
+        const number = document.getElementById('new_wallet_number').value.trim();
+        const enabled = document.getElementById('new_wallet_enabled').value === 'true';
+        
+        // Валидация
+        if (!type || !number) {
+            alert('Заполните тип и номер кошелька');
+            return;
+        }
+        
+        // Проверка формата номера (простая проверка)
+        if (!/^[0-9]+$/.test(number)) {
+            alert('Номер кошелька должен содержать только цифры');
+            return;
+        }
+        
+        // Добавляем кошелёк
+        const result = await addNewWalletToForm(form.formAPI, {
+            type: type,
+            name: name,
+            number: number,
+            enabled: enabled
+        });
+        
+        if (result.success) {
+            alert('✅ Кошелёк успешно добавлен!');
+            
+            // Очищаем поля
+            document.getElementById('new_wallet_name').value = '';
+            document.getElementById('new_wallet_number').value = '';
+            
+            // Обновляем содержимое модального окна
+            showEditWalletsModal(formName);
+            
+            // Обновляем кэш
+            loadAllWalletsFromForms(true);
+        } else {
+            alert('❌ Ошибка добавления кошелька: ' + result.error);
+        }
+        
+    } catch (error) {
+        console.error('Ошибка добавления кошелька:', error);
+        alert('Ошибка: ' + error.message);
     }
 }
 
+// Функция для удаления кошелька
+        async function deleteWalletFromForm(formName, walletType, walletNumber) {
+            try {
+                // Получаем данные формы
+                const token = localStorage.getItem('admin_token');
+                const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+                const formsResult = await formsResponse.json();
+                
+                const form = formsResult.forms?.find(f => f.formName === formName);
+                if (!form) {
+                    alert('Форма не найдена');
+                    return;
+                }
+                
+                // Удаляем кошелёк
+                const result = await deleteWalletFromFormAPI(form.formAPI, walletType, walletNumber);
+                
+                if (result.success) {
+                    alert('✅ Кошелёк успешно удалён!');
+                    
+                    // Обновляем содержимое модального окна
+                    showEditWalletsModal(formName);
+                    
+                    // Обновляем кэш
+                    loadAllWalletsFromForms(true);
+                } else {
+                    alert('❌ Ошибка удаления кошелька: ' + result.error);
+                }
+                
+            } catch (error) {
+                console.error('Ошибка удаления кошелька:', error);
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        // Обновленная функция для применения изменений
 async function applyWalletChanges(formName) {
-    const button = document.getElementById('applyChangesBtn');
-    showButtonLoader(button, 'Сохранение...');
-    
     try {
-        // Имитация сохранения
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Получаем данные формы
+        const token = localStorage.getItem('admin_token');
+        const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+        const formsResult = await formsResponse.json();
         
-        // Ваш код сохранения изменений
-        alert('Изменения сохранены!');
+        const form = formsResult.forms?.find(f => f.formName === formName);
+        if (!form) {
+            alert('Форма не найдена');
+            return;
+        }
         
-    } finally {
-        hideButtonLoader(button, '✅ Применить изменения');
+        // Показываем индикатор загрузки
+        const button = document.getElementById('applyChangesBtn');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<div class="loader" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px;"></div>Сохранение изменений...';
+        button.disabled = true;
+        
+        // Собираем все изменения
+        const changes = [];
+        
+        // Проходим по всем строкам таблицы и собираем изменения статусов
+        const tableRows = document.querySelectorAll('#modalFormContent table tbody tr');
+        tableRows.forEach(row => {
+            const typeElement = row.querySelector('td:nth-child(1) span');
+            const numberElement = row.querySelector('td:nth-child(3) code');
+            const statusSelect = row.querySelector('td:nth-child(4) select');
+            
+            if (typeElement && numberElement && statusSelect) {
+                const walletType = typeElement.textContent.trim();
+                const walletNumber = numberElement.textContent.trim();
+                const newStatus = statusSelect.value === 'enabled';
+                
+                changes.push({
+                    type: walletType,
+                    number: walletNumber,
+                    enabled: newStatus
+                });
+            }
+        });
+        
+        console.log('Изменения для сохранения:', changes);
+        
+        // Отправляем изменения по одному
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const change of changes) {
+            try {
+                const result = await updateWalletInForm(form.formAPI, change.type, change.number, change.enabled);
+                if (result.success) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                    console.error('Ошибка обновления кошелька:', change, result.error);
+                }
+            } catch (error) {
+                errorCount++;
+                console.error('Ошибка обновления кошелька:', change, error);
+            }
+            
+            // Небольшая задержка между запросами
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        // Восстанавливаем кнопку
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        // Показываем результат
+        if (errorCount === 0) {
+            alert(`✅ Все изменения сохранены!\n\nУспешно обновлено: ${successCount} кошельков`);
+            
+            // Обновляем кэш и закрываем модальное окно
+            loadAllWalletsFromForms(true); // Принудительно обновляем кэш
+            setTimeout(() => closeEditWalletsModal(), 1000);
+        } else {
+            alert(`⚠️ Часть изменений сохранена\n\nУспешно: ${successCount}\nОшибок: ${errorCount}\n\nПроверьте консоль для деталей`);
+        }
+        
+    } catch (error) {
+        console.error('Ошибка применения изменений:', error);
+        
+        // Восстанавливаем кнопку
+        const button = document.getElementById('applyChangesBtn');
+        if (button) {
+            button.innerHTML = '✅ Применить изменения';
+            button.disabled = false;
+        }
+        
+        alert('❌ Ошибка сохранения изменений: ' + error.message);
     }
 }
 
