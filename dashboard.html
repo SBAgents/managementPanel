@@ -117,6 +117,25 @@
 .wallet-table tr:hover {
     background: rgba(255,255,255,0.05);
 }
+
+.modal-fade-in {
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.loading-pulse {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
     </style>
 </head>
 <body>
@@ -740,169 +759,366 @@ function getAgentsForForm(formName) {
         // ========== МОДАЛЬНОЕ ОКНО ДЛЯ РЕДАКТИРОВАНИЯ КОШЕЛЬКОВ ==========
 
 // Показать модальное окно редактирования кошельков
-async function showEditWalletsModal(formName) {
+         async function showEditWalletsModal(formName) {
     try {
         console.log('Открытие модального окна для формы:', formName);
         
-        // Получаем данные формы
-        const token = localStorage.getItem('admin_token');
-        const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
-        const formsResult = await formsResponse.json();
-        
-        const form = formsResult.forms?.find(f => f.formName === formName);
-        if (!form) {
-            alert('Форма не найдена');
-            return;
-        }
-        
-        // Получаем кошельки из формы
-        const walletsResponse = await fetch(`${form.formAPI}?action=get_wallets`);
-        const walletsResult = await walletsResponse.json();
-        
-        if (walletsResult.status !== 'success') {
-            alert('Не удалось загрузить кошельки из формы');
-            return;
-        }
-        
-        // Заполняем модальное окно
+        // Показываем модальное окно сразу с индикатором загрузки
         document.getElementById('modalFormTitle').textContent = `Кошельки формы: ${formName}`;
-        
-        let modalContent = `
-            <div style="margin-bottom: 20px;">
-                <p><strong>API формы:</strong> ${form.formAPI}</p>
-                <p><strong>Статус:</strong> ${form.enabled ? '✅ Активна' : '❌ Отключена'}</p>
-            </div>
-            
-            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                <h4>📋 Текущие кошельки</h4>
-        `;
-        
-        // Отображаем текущие кошельки
-        if (walletsResult.wallets && Object.keys(walletsResult.wallets).length > 0) {
-            modalContent += `
-                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                    <thead>
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                            <th style="padding: 10px; text-align: left;">Тип</th>
-                            <th style="padding: 10px; text-align: left;">Название</th>
-                            <th style="padding: 10px; text-align: left;">Номер</th>
-                            <th style="padding: 10px; text-align: left;">Статус</th>
-                            <th style="padding: 10px; text-align: left;">Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            Object.entries(walletsResult.wallets).forEach(([walletType, walletData]) => {
-                if (walletData.availableNumbers && walletData.availableNumbers.length > 0) {
-                    walletData.availableNumbers.forEach((walletNumber, index) => {
-                        modalContent += `
-                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                <td style="padding: 10px;">
-                                    <span style="background: ${getWalletTypeColor(walletType)}; padding: 3px 8px; border-radius: 10px; color: white; font-size: 12px;">
-                                        ${walletType}
-                                    </span>
-                                </td>
-                                <td style="padding: 10px;">${walletData.name || walletType}</td>
-                                <td style="padding: 10px;">
-                                    <code style="background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 5px;">
-                                        ${walletNumber}
-                                    </code>
-                                </td>
-                                <td style="padding: 10px;">
-                                    <select id="wallet_status_${walletType}_${index}" style="padding: 5px 10px; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px;">
-                                        <option value="enabled" ${walletData.enabled ? 'selected' : ''}>✅ Включён</option>
-                                        <option value="disabled" ${!walletData.enabled ? 'selected' : ''}>❌ Отключён</option>
-                                    </select>
-                                </td>
-                                <td style="padding: 10px;">
-                                    <button class="btn" style="padding: 5px 10px; font-size: 12px;" 
-                                            onclick="editSingleWallet('${formName}', '${walletType}', '${walletNumber}', ${index})">
-                                        ✏️
-                                    </button>
-                                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px; margin-left: 5px;" 
-                                            onclick="deleteWalletFromForm('${formName}', '${walletType}', '${walletNumber}')">
-                                        🗑️
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-            });
-            
-            modalContent += `</tbody></table>`;
-        } else {
-            modalContent += '<p style="color: #95a5a6;">Нет кошельков в форме</p>';
-        }
-        
-        modalContent += `</div>`;
-        
-        // Форма для добавления нового кошелька
-        modalContent += `
-            <div style="background: rgba(46, 204, 113, 0.1); padding: 15px; border-radius: 10px; border: 1px solid rgba(46, 204, 113, 0.3);">
-                <h4>➕ Добавить новый кошелёк</h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-size: 14px;">Тип кошелька</label>
-                        <select id="new_wallet_type" style="width: 100%; padding: 10px; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px;">
-                            <option value="vodafone">Vodafone Cash</option>
-                            <option value="instapay">InstaPay QR</option>
-                            <option value="orange">Orange Money</option>
-                            <option value="etisalat">Etisalat Cash</option>
-                            <option value="we">We Pay</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-size: 14px;">Название</label>
-                        <input type="text" id="new_wallet_name" placeholder="Например: Основной кошелёк" style="width: 100%; padding: 10px; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px;">
-                    </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-size: 14px;">Номер телефона</label>
-                        <input type="text" id="new_wallet_number" placeholder="01012345678" style="width: 100%; padding: 10px; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px;">
-                    </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-size: 14px;">Статус</label>
-                        <select id="new_wallet_enabled" style="width: 100%; padding: 10px; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px;">
-                            <option value="true">✅ Включён</option>
-                            <option value="false">❌ Отключён</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button class="btn btn-success" onclick="addWalletToForm('${formName}')" style="flex: 1;">
-                        💾 Добавить кошелёк
-                    </button>
-                    <button class="btn" onclick="saveAllWalletChanges('${formName}')" style="flex: 1;">
-                        📤 Сохранить все изменения
-                    </button>
-                </div>
+        document.getElementById('modalFormContent').innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <div class="loader" style="width: 40px; height: 40px; margin: 0 auto 20px;"></div>
+                <p>Загрузка конфигурации формы...</p>
+                <p style="color: #95a5a6; font-size: 14px; margin-top: 10px;">
+                    ${formName}
+                </p>
             </div>
         `;
         
-        // Кнопки управления
-        modalContent += `
-            <div style="display: flex; justify-content: space-between; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
-                <button class="btn" onclick="testFormWallets('${formName}')">
-                    🧪 Тестировать кошельки
-                </button>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn" onclick="closeEditWalletsModal()">
-                        ❌ Отмена
-                    </button>
-                    <button class="btn btn-success" onclick="applyWalletChanges('${formName}')">
-                        ✅ Применить изменения
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        document.getElementById('modalFormContent').innerHTML = modalContent;
+        // Показываем модальное окно
         document.getElementById('editWalletsModal').style.display = 'flex';
+        
+        // Получаем данные формы с задержкой для видимости загрузки
+        setTimeout(async () => {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+                const formsResult = await formsResponse.json();
+                
+                const form = formsResult.forms?.find(f => f.formName === formName);
+                if (!form) {
+                    document.getElementById('modalFormContent').innerHTML = `
+                        <div style="text-align: center; padding: 30px; color: #e74c3c;">
+                            <p style="font-size: 24px;">❌</p>
+                            <p><strong>Форма не найдена</strong></p>
+                            <p style="color: #95a5a6;">${formName}</p>
+                            <button class="btn" onclick="closeEditWalletsModal()" style="margin-top: 20px;">
+                                Закрыть
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Получаем кошельки из формы
+                const walletsResponse = await fetch(`${form.formAPI}?action=get_wallets`);
+                const walletsResult = await walletsResponse.json();
+                
+                if (walletsResult.status !== 'success') {
+                    document.getElementById('modalFormContent').innerHTML = `
+                        <div style="text-align: center; padding: 30px; color: #e74c3c;">
+                            <p style="font-size: 24px;">⚠️</p>
+                            <p><strong>Не удалось загрузить кошельки</strong></p>
+                            <p style="color: #95a5a6; font-size: 14px; margin-top: 10px;">
+                                API форма не ответила или вернула ошибку
+                            </p>
+                            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                                <button class="btn" onclick="closeEditWalletsModal()">
+                                    Отмена
+                                </button>
+                                <button class="btn" onclick="showEditWalletsModal('${formName}')">
+                                    🔄 Повторить
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Заполняем модальное окно данными
+                let modalContent = `
+                    <div style="margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <div style="background: #3498db; color: white; padding: 5px 10px; border-radius: 5px; margin-right: 10px;">
+                                📋
+                            </div>
+                            <div>
+                                <strong>${formName}</strong>
+                                <div style="font-size: 12px; color: #95a5a6;">
+                                    ${form.formAPI}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; font-size: 14px;">
+                            <span style="color: ${form.enabled ? '#2ecc71' : '#e74c3c'}">
+                                ${form.enabled ? '✅ Активна' : '❌ Отключена'}
+                            </span>
+                            <span style="color: ${form.serviceMode ? '#e67e22' : '#2ecc71'}">
+                                ${form.serviceMode ? '🔧 Тех. работы' : '✅ Работает'}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <div style="background: #2ecc71; color: white; padding: 5px 10px; border-radius: 5px; margin-right: 10px;">
+                                🏦
+                            </div>
+                            <h4 style="margin: 0;">Текущие кошельки</h4>
+                            <span style="margin-left: auto; background: rgba(255,255,255,0.1); padding: 3px 10px; border-radius: 12px; font-size: 12px;">
+                                ${walletsResult.wallets ? Object.keys(walletsResult.wallets).length : 0} типов
+                            </span>
+                        </div>
+                `;
+                
+                // Отображаем текущие кошельки
+                if (walletsResult.wallets && Object.keys(walletsResult.wallets).length > 0) {
+                    modalContent += `
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 700px;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                        <th style="padding: 12px; text-align: left; font-weight: bold; background: rgba(0,0,0,0.3);">Тип</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: bold; background: rgba(0,0,0,0.3);">Название</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: bold; background: rgba(0,0,0,0.3);">Номер</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: bold; background: rgba(0,0,0,0.3);">Статус</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: bold; background: rgba(0,0,0,0.3);">Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    Object.entries(walletsResult.wallets).forEach(([walletType, walletData]) => {
+                        if (walletData.availableNumbers && walletData.availableNumbers.length > 0) {
+                            walletData.availableNumbers.forEach((walletNumber, index) => {
+                                const isEnabled = walletData.enabled !== false;
+                                modalContent += `
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" 
+                                        onmouseover="this.style.background='rgba(255,255,255,0.03)'" 
+                                        onmouseout="this.style.background='transparent'">
+                                        <td style="padding: 12px; vertical-align: middle;">
+                                            <span style="background: ${getWalletTypeColor(walletType)}; padding: 5px 10px; border-radius: 10px; color: white; font-size: 12px; display: inline-block; min-width: 80px; text-align: center;">
+                                                ${walletType}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 12px; vertical-align: middle;">${walletData.name || walletType}</td>
+                                        <td style="padding: 12px; vertical-align: middle;">
+                                            <code style="background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 5px; font-family: monospace; font-size: 13px; display: inline-block; cursor: pointer;" 
+                                                  onclick="copyToClipboard('${walletNumber}')"
+                                                  title="Кликните для копирования">
+                                                ${walletNumber}
+                                            </code>
+                                        </td>
+                                        <td style="padding: 12px; vertical-align: middle;">
+                                            <div style="position: relative;">
+                                                <select id="wallet_status_${walletType}_${index}" 
+                                                        style="padding: 8px 15px; background: ${isEnabled ? 'rgba(46, 204, 113, 0.1)' : 'rgba(231, 76, 60, 0.1)'}; 
+                                                               color: var(--text); border: 1px solid ${isEnabled ? '#2ecc71' : '#e74c3c'}; 
+                                                               border-radius: 5px; width: 100%; cursor: pointer;"
+                                                        onchange="this.style.background = this.value === 'enabled' ? 'rgba(46, 204, 113, 0.1)' : 'rgba(231, 76, 60, 0.1)';
+                                                                 this.style.borderColor = this.value === 'enabled' ? '#2ecc71' : '#e74c3c'">
+                                                    <option value="enabled" ${isEnabled ? 'selected' : ''}>✅ Включён</option>
+                                                    <option value="disabled" ${!isEnabled ? 'selected' : ''}>❌ Отключён</option>
+                                                </select>
+                                            </div>
+                                        </td>
+                                        <td style="padding: 12px; vertical-align: middle;">
+                                            <div style="display: flex; gap: 5px;">
+                                                <button class="btn" style="padding: 6px 12px; font-size: 12px; background: #3498db;" 
+                                                        onclick="editSingleWallet('${formName}', '${walletType}', '${walletNumber}', ${index})"
+                                                        title="Редактировать">
+                                                    ✏️
+                                                </button>
+                                                <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" 
+                                                        onclick="deleteWalletFromForm('${formName}', '${walletType}', '${walletNumber}')"
+                                                        title="Удалить">
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            });
+                        }
+                    });
+                    
+                    modalContent += `</tbody></table></div>`;
+                } else {
+                    modalContent += `
+                        <div style="text-align: center; padding: 30px; color: #95a5a6;">
+                            <p style="font-size: 48px; margin-bottom: 10px;">🏦</p>
+                            <p><strong>Нет кошельков в форме</strong></p>
+                            <p>Добавьте первый кошелёк ниже</p>
+                        </div>
+                    `;
+                }
+                
+                modalContent += `</div>`;
+                
+                // Форма для добавления нового кошелька
+                modalContent += `
+                    <div style="background: rgba(52, 152, 219, 0.1); padding: 20px; border-radius: 10px; border: 1px solid rgba(52, 152, 219, 0.3); margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <div style="background: #3498db; color: white; padding: 5px 10px; border-radius: 5px; margin-right: 10px;">
+                                ➕
+                            </div>
+                            <h4 style="margin: 0;">Добавить новый кошелёк</h4>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--accent); font-weight: bold;">Тип кошелька</label>
+                                <select id="new_wallet_type" 
+                                        style="width: 100%; padding: 12px; background: var(--card-bg); color: var(--text); border: 2px solid var(--border); border-radius: 8px; transition: border 0.3s;"
+                                        onfocus="this.style.borderColor='var(--accent)'; this.style.background='rgba(255,255,255,0.95)'"
+                                        onblur="this.style.borderColor='var(--border)'; this.style.background='var(--card-bg)'">
+                                    <option value="vodafone">Vodafone Cash</option>
+                                    <option value="instapay">InstaPay QR</option>
+                                    <option value="orange">Orange Money</option>
+                                    <option value="etisalat">Etisalat Cash</option>
+                                    <option value="we">We Pay</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--accent); font-weight: bold;">Название</label>
+                                <input type="text" id="new_wallet_name" placeholder="Основной рабочий кошелёк" 
+                                       style="width: 100%; padding: 12px; background: var(--card-bg); color: var(--text); border: 2px solid var(--border); border-radius: 8px; transition: border 0.3s;"
+                                       onfocus="this.style.borderColor='var(--accent)'; this.style.background='rgba(255,255,255,0.95)'"
+                                       onblur="this.style.borderColor='var(--border)'; this.style.background='var(--card-bg)'">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--accent); font-weight: bold;">Номер телефона</label>
+                                <input type="text" id="new_wallet_number" placeholder="01012345678" 
+                                       style="width: 100%; padding: 12px; background: var(--card-bg); color: var(--text); border: 2px solid var(--border); border-radius: 8px; transition: border 0.3s;"
+                                       onfocus="this.style.borderColor='var(--accent)'; this.style.background='rgba(255,255,255,0.95)'"
+                                       onblur="this.style.borderColor='var(--border)'; this.style.background='var(--card-bg)'">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--accent); font-weight: bold;">Статус</label>
+                                <select id="new_wallet_enabled" 
+                                        style="width: 100%; padding: 12px; background: var(--card-bg); color: var(--text); border: 2px solid var(--border); border-radius: 8px; transition: border 0.3s;"
+                                        onfocus="this.style.borderColor='var(--accent)'; this.style.background='rgba(255,255,255,0.95)'"
+                                        onblur="this.style.borderColor='var(--border)'; this.style.background='var(--card-bg)'">
+                                    <option value="true">✅ Включён</option>
+                                    <option value="false">❌ Отключён</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="btn btn-success" onclick="addWalletToForm('${formName}')" 
+                                    style="flex: 1; padding: 12px; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <span>💾 Добавить кошелёк</span>
+                            </button>
+                            <button class="btn" onclick="saveAllWalletChanges('${formName}')" 
+                                    style="flex: 1; padding: 12px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <span>📤 Сохранить все изменения</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Кнопки управления
+                modalContent += `
+                    <div style="display: flex; justify-content: space-between; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+                        <button class="btn" onclick="testFormWallets('${formName}')" 
+                                style="padding: 10px 20px; display: flex; align-items: center; gap: 8px;">
+                            <span>🧪 Тестировать кошельки</span>
+                        </button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn" onclick="closeEditWalletsModal()" 
+                                    style="padding: 10px 20px; background: rgba(231, 76, 60, 0.1); border: 1px solid #e74c3c; color: #e74c3c;">
+                                ❌ Отмена
+                            </button>
+                            <button class="btn btn-success" onclick="applyWalletChanges('${formName}')" 
+                                    id="applyChangesBtn"
+                                    style="padding: 10px 20px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                                <span>✅ Применить изменения</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Анимация появления содержимого
+                const contentDiv = document.getElementById('modalFormContent');
+                contentDiv.style.opacity = '0';
+                contentDiv.innerHTML = modalContent;
+                
+                setTimeout(() => {
+                    contentDiv.style.transition = 'opacity 0.3s ease';
+                    contentDiv.style.opacity = '1';
+                }, 10);
+                
+            } catch (error) {
+                console.error('Ошибка загрузки данных формы:', error);
+                document.getElementById('modalFormContent').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #e74c3c;">
+                        <p style="font-size: 48px; margin-bottom: 20px;">❌</p>
+                        <p><strong>Ошибка загрузки</strong></p>
+                        <p style="color: #95a5a6; margin: 15px 0; font-size: 14px;">
+                            ${error.message}
+                        </p>
+                        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 30px;">
+                            <button class="btn" onclick="closeEditWalletsModal()">
+                                Закрыть
+                            </button>
+                            <button class="btn" onclick="showEditWalletsModal('${formName}')">
+                                🔄 Повторить попытку
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }, 800); // Задержка для видимости индикатора загрузки
         
     } catch (error) {
         console.error('Ошибка открытия модального окна:', error);
-        alert('Ошибка загрузки данных формы: ' + error.message);
+        alert('Ошибка: ' + error.message);
+    }
+}
+
+        // Показать индикатор загрузки на кнопке
+function showButtonLoader(buttonId, text = 'Загрузка...') {
+    const button = typeof buttonId === 'string' ? document.getElementById(buttonId) : buttonId;
+    if (button) {
+        button.dataset.originalText = button.innerHTML;
+        button.innerHTML = `
+            <div class="loader" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></div>
+            <span style="vertical-align: middle;">${text}</span>
+        `;
+        button.disabled = true;
+    }
+}
+
+// Скрыть индикатор загрузки на кнопке
+function hideButtonLoader(buttonId, originalText = null) {
+    const button = typeof buttonId === 'string' ? document.getElementById(buttonId) : buttonId;
+    if (button) {
+        button.innerHTML = originalText || button.dataset.originalText || '';
+        button.disabled = false;
+    }
+}
+
+// Обновим функции действий с индикаторами загрузки
+async function addWalletToForm(formName) {
+    const button = event?.target || document.querySelector('button[onclick*="addWalletToForm"]');
+    showButtonLoader(button, 'Добавление...');
+    
+    try {
+        // Имитация загрузки
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Ваш код добавления кошелька
+        alert('Кошелёк добавлен!');
+        
+    } finally {
+        hideButtonLoader(button);
+    }
+}
+
+async function applyWalletChanges(formName) {
+    const button = document.getElementById('applyChangesBtn');
+    showButtonLoader(button, 'Сохранение...');
+    
+    try {
+        // Имитация сохранения
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Ваш код сохранения изменений
+        alert('Изменения сохранены!');
+        
+    } finally {
+        hideButtonLoader(button, '✅ Применить изменения');
     }
 }
 
