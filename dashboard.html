@@ -217,24 +217,39 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbxDaBdYMx44M2W3FsJp5tOECFTRD6rWrhPAC96MuUexROt5Qjgj4U0er4So6Ehsh8xQ5g/exec';
 
         // Скрыть вкладки, к которым нет доступа
-function hideUnauthorizedTabs() {
+        function hideUnauthorizedTabs() {
     const permissions = JSON.parse(localStorage.getItem('admin_permissions') || '{}');
+    
+    // Отладка - посмотрим что в permissions
+    console.log('Permissions from localStorage:', permissions);
+    console.log('Current user:', JSON.parse(localStorage.getItem('admin_user') || '{}'));
+    
+    // Если суперадмин - показываем все вкладки
+    const user = JSON.parse(localStorage.getItem('admin_user') || '{}');
+    if (user.role === 'superadmin') {
+        console.log('Superadmin detected - showing all tabs');
+        return; // Не скрываем вкладки для суперадмина
+    }
+    
     const tabsToCheck = {
         'wallets': permissions.canManageWallets,
-        'forms': permissions.canViewHistory || permissions.canManageWallets, // кто может смотреть формы
+        'forms': permissions.canViewHistory || permissions.canManageWallets,
         'agents': permissions.canManageAdmins,
         'history': permissions.canViewHistory,
         'admins': permissions.canManageAdmins
     };
     
-    // Скрываем вкладки
+    // Отладка - какие вкладки будут скрыты
+    console.log('Tabs check:', tabsToCheck);
+    
     Object.entries(tabsToCheck).forEach(([tabName, hasPermission]) => {
         const tabElement = document.querySelector(`.tab[onclick*="${tabName}"]`);
         if (tabElement && !hasPermission) {
+            console.log(`Hiding tab: ${tabName}`);
             tabElement.style.display = 'none';
         }
-    });
-}
+        });
+    }
         
         document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('admin_token');
