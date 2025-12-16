@@ -99,50 +99,80 @@
     </div>
     
     <div class="content">
-        <!-- Дашборд -->
-        <div id="dashboardTab" class="tab-content active">
-            <h2>📊 Дашборд</h2>
-            <div id="dashboardStats">
-                <p>Загрузка статистики...</p>
-                <div class="loader"></div>
-            </div>
-        </div>
-        
-        <!-- Кошельки -->
-        <div id="walletsTab" class="tab-content">
-            <h2>👛 Управление кошельками</h2>
-            <button class="btn" onclick="loadWallets()">🔄 Обновить список</button>
-            <button class="btn btn-success" onclick="showAddWalletForm()">➕ Добавить кошелёк</button>
-            <div id="walletsList" style="margin-top: 20px;">
-                <p>Загрузка кошельков...</p>
-                <div class="loader"></div>
-            </div>
-        </div>
-        
-        <!-- Формы -->
-        <div id="formsTab" class="tab-content">
-            <h2>🌐 Управление формами</h2>
-            <p>Содержимое вкладки форм...</p>
-        </div>
-        
-        <!-- Агенты -->
-        <div id="agentsTab" class="tab-content">
-            <h2>👥 Управление агентами</h2>
-            <p>Содержимое вкладки агентов...</p>
-        </div>
-        
-        <!-- История -->
-        <div id="historyTab" class="tab-content">
-            <h2>📈 История операций</h2>
-            <p>Содержимое вкладки истории...</p>
-        </div>
-        
-        <!-- Админы -->
-        <div id="adminsTab" class="tab-content">
-            <h2>🛡️ Управление администраторами</h2>
-            <p>Содержимое вкладки админов...</p>
+    <!-- Дашборд -->
+    <div id="dashboardTab" class="tab-content active">
+        <h2>📊 Дашборд</h2>
+        <div id="dashboardStats">
+            <p>Загрузка статистики...</p>
+            <div class="loader"></div>
         </div>
     </div>
+    
+    <!-- Кошельки -->
+    <div id="walletsTab" class="tab-content">
+        <h2>👛 Управление кошельками</h2>
+        <button class="btn" onclick="loadWallets()">🔄 Обновить список</button>
+        <button class="btn btn-success" onclick="showAddWalletForm()">➕ Добавить кошелёк</button>
+        <div id="walletsList" style="margin-top: 20px;">
+            <p>Загрузка кошельков...</p>
+            <div class="loader"></div>
+        </div>
+    </div>
+    
+    <!-- Формы -->
+    <div id="formsTab" class="tab-content">
+        <h2>🌐 Управление формами</h2>
+        <button class="btn" onclick="loadForms()">🔄 Загрузить формы</button>
+        <div id="formsList" style="margin-top: 20px;">
+            <p>Нажмите "Загрузить формы" для отображения</p>
+        </div>
+    </div>
+    
+    <!-- Агенты -->
+    <div id="agentsTab" class="tab-content">
+        <h2>👥 Управление агентами</h2>
+        <button class="btn" onclick="loadAgents()">🔄 Загрузить агентов</button>
+        <div id="agentsList" style="margin-top: 20px;">
+            <p>Нажмите "Загрузить агентов" для отображения</p>
+        </div>
+    </div>
+    
+    <!-- История -->
+    <div id="historyTab" class="tab-content">
+        <h2>📈 История операций</h2>
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="historyFilter" placeholder="Фильтр по форме..." style="padding: 8px; width: 300px; margin-right: 10px;">
+            <button class="btn" onclick="loadHistory()">🔄 Загрузить историю</button>
+            <button class="btn" onclick="clearHistoryFilter()">❌ Очистить фильтр</button>
+        </div>
+        <div id="historyList" style="margin-top: 20px;">
+            <p>Нажмите "Загрузить историю" для отображения</p>
+        </div>
+    </div>
+    
+    <!-- Админы -->
+    <div id="adminsTab" class="tab-content">
+        <h2>🛡️ Управление администраторами</h2>
+        <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+            <h3>Быстрое создание админа</h3>
+            <div style="display: grid; gap: 10px; max-width: 500px;">
+                <input type="text" id="newAdminUsername" placeholder="Логин" style="padding: 10px;">
+                <input type="password" id="newAdminPassword" placeholder="Пароль" style="padding: 10px;">
+                <input type="email" id="newAdminEmail" placeholder="Email" style="padding: 10px;">
+                <select id="newAdminRole" style="padding: 10px;">
+                    <option value="admin">Администратор</option>
+                    <option value="manager">Менеджер</option>
+                    <option value="viewer">Наблюдатель</option>
+                </select>
+                <button class="btn btn-success" onclick="createNewAdmin()">➕ Создать админа</button>
+            </div>
+        </div>
+        <button class="btn" onclick="loadAdmins()">🔄 Обновить список админов</button>
+        <div id="adminsList" style="margin-top: 20px;">
+            <p>Нажмите "Обновить список админов" для отображения</p>
+        </div>
+    </div>
+</div>
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbxDaBdYMx44M2W3FsJp5tOECFTRD6rWrhPAC96MuUexROt5Qjgj4U0er4So6Ehsh8xQ5g/exec';
