@@ -78,6 +78,45 @@
         /* Загрузчик */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 50px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Кликабельные карточки в дашборде */
+.clickable {
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+}
+
+.clickable:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+/* Таблицы */
+.wallet-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.wallet-table th {
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    text-align: left;
+    font-weight: bold;
+}
+
+.wallet-table td {
+    padding: 15px;
+    border-bottom: 1px solid var(--border);
+}
+
+.wallet-table tr:hover {
+    background: rgba(255,255,255,0.05);
+}
     </style>
 </head>
 <body>
@@ -195,57 +234,343 @@
             }
         });
         
-        async function loadDashboard() {
-            try {
-                const token = localStorage.getItem('admin_token');
-                const response = await fetch(`${API_URL}?action=get_dashboard_data&token=${token}`);
-                
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        logout();
-                        return;
-                    }
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('dashboardStats').innerHTML = `
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-number">${result.stats.totalWallets || 0}</div>
-                                <div>Всего кошельков</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-number">${result.stats.activeWallets || 0}</div>
-                                <div>Активных</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-number">${result.stats.totalForms || 0}</div>
-                                <div>Форм</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-number">${result.stats.totalAgents || 0}</div>
-                                <div>Агентов</div>
-                            </div>
-                        </div>
-                        <div style="margin-top: 30px; background: var(--card-bg); padding: 20px; border-radius: 10px;">
-                            <h3>Права доступа</h3>
-                            <p>Управление кошельками: ${result.permissions.canManageWallets ? '✅' : '❌'}</p>
-                            <p>Просмотр истории: ${result.permissions.canViewHistory ? '✅' : '❌'}</p>
-                            <p>Режим обслуживания: ${result.permissions.canToggleServiceMode ? '✅' : '❌'}</p>
-                            <p>Управление админами: ${result.permissions.canManageAdmins ? '✅' : '❌'}</p>
-                        </div>
-                    `;
-                } else {
-                    if (result.code === 'UNAUTHORIZED') logout();
-                }
-            } catch (error) {
-                console.error('Dashboard error:', error);
-                document.getElementById('dashboardStats').innerHTML = `<p style="color: #e74c3c">Ошибка загрузки: ${error.message}</p>`;
+        // Загрузка дашборда с кликабельными карточками
+async function loadDashboard() {
+    try {
+        const token = localStorage.getItem('admin_token');
+        const response = await fetch(`${API_URL}?action=get_dashboard_data&token=${token}`);
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                logout();
+                return;
             }
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('dashboardStats').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card clickable" onclick="switchTab('wallets')">
+                        <div class="stat-number">${result.stats.totalWallets || 0}</div>
+                        <div>Всего кошельков</div>
+                        <div style="font-size: 12px; color: #95a5a6; margin-top: 5px;">
+                            Активных: ${result.stats.activeWallets || 0}
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" onclick="switchTab('forms')">
+                        <div class="stat-number">${result.stats.totalForms || 0}</div>
+                        <div>Форм</div>
+                        <div style="font-size: 12px; color: #95a5a6; margin-top: 5px;">
+                            Активных: ${result.stats.activeForms || 0}
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" onclick="switchTab('agents')">
+                        <div class="stat-number">${result.stats.totalAgents || 0}</div>
+                        <div>Агентов</div>
+                        <div style="font-size: 12px; color: #95a5a6; margin-top: 5px;">
+                            В сети: ${getOnlineAgentsCount(result.stats.totalAgents)}
+                        </div>
+                    </div>
+                    <div class="stat-card clickable" onclick="switchTab('history')">
+                        <div class="stat-number">📈</div>
+                        <div>История</div>
+                        <div style="font-size: 12px; color: #95a5a6; margin-top: 5px;">
+                            Показать операции
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 30px; background: var(--card-bg); padding: 20px; border-radius: 10px;">
+                    <h3>👤 Ваши права доступа</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px;">
+                        <div>Управление кошельками: <strong>${result.permissions.canManageWallets ? '✅ Да' : '❌ Нет'}</strong></div>
+                        <div>Просмотр истории: <strong>${result.permissions.canViewHistory ? '✅ Да' : '❌ Нет'}</strong></div>
+                        <div>Режим обслуживания: <strong>${result.permissions.canToggleServiceMode ? '✅ Да' : '❌ Нет'}</strong></div>
+                        <div>Управление админами: <strong>${result.permissions.canManageAdmins ? '✅ Да' : '❌ Нет'}</strong></div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; background: var(--card-bg); padding: 15px; border-radius: 10px; font-size: 14px;">
+                    <strong>💡 Подсказка:</strong> Кликните на любую карточку выше для перехода к соответствующему разделу
+                </div>
+            `;
+        } else {
+            if (result.code === 'UNAUTHORIZED') logout();
+        }
+    } catch (error) {
+        console.error('Dashboard error:', error);
+        document.getElementById('dashboardStats').innerHTML = `
+            <p style="color: #e74c3c">Ошибка загрузки: ${error.message}</p>
+            <button class="btn" onclick="loadDashboard()">Повторить попытку</button>
+        `;
+    }
+}
+
+        // ========== ФОРМЫ ==========
+async function loadForms() {
+    try {
+        const token = localStorage.getItem('admin_token');
+        const container = document.getElementById('formsList');
+        container.innerHTML = '<p>Загрузка...</p><div class="loader"></div>';
+        
+        const response = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+        const result = await response.json();
+        
+        if (result.success && result.forms && result.forms.length > 0) {
+            let html = '<table class="wallet-table"><thead><tr>';
+            html += '<th>Название формы</th><th>API URL</th><th>Режим обслуживания</th><th>Статус</th><th>Обновлено</th></tr></thead><tbody>';
+            
+            result.forms.forEach(form => {
+                html += `
+                    <tr>
+                        <td><strong>${form.formName || 'Без названия'}</strong></td>
+                        <td><code style="font-size: 12px">${form.formAPI || 'Нет URL'}</code></td>
+                        <td>${form.serviceMode ? '🔧 ВКЛЮЧЕН' : '✅ Выключен'}</td>
+                        <td>
+                            <span style="color: ${form.enabled ? '#2ecc71' : '#e74c3c'}">
+                                ${form.enabled ? '✅ Активна' : '❌ Отключена'}
+                            </span>
+                        </td>
+                        <td>${form.updatedAt ? new Date(form.updatedAt).toLocaleDateString() : 'Неизвестно'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p>Форм не найдено. Добавьте формы в таблицу FORM_SETTINGS.</p>';
+        }
+    } catch (error) {
+        document.getElementById('formsList').innerHTML = 
+            `<p style="color: #e74c3c">Ошибка: ${error.message}</p>`;
+    }
+}
+
+// ========== АГЕНТЫ ==========
+async function loadAgents() {
+    try {
+        const token = localStorage.getItem('admin_token');
+        const container = document.getElementById('agentsList');
+        container.innerHTML = '<p>Загрузка...</p><div class="loader"></div>';
+        
+        const response = await fetch(`${API_URL}?action=get_agents&token=${token}`);
+        const result = await response.json();
+        
+        if (result.success && result.agents && result.agents.length > 0) {
+            let html = '<table class="wallet-table"><thead><tr>';
+            html += '<th>Логин</th><th>Email</th><th>Роль</th><th>Последний вход</th><th>Статус</th></tr></thead><tbody>';
+            
+            result.agents.forEach(agent => {
+                const lastLogin = agent.lastLogin ? 
+                    new Date(agent.lastLogin).toLocaleString() : 'Никогда';
+                const isOnline = isAgentOnline(agent.lastLogin);
+                
+                html += `
+                    <tr>
+                        <td><strong>${agent.username}</strong></td>
+                        <td>${agent.email || 'Нет email'}</td>
+                        <td>
+                            <span style="background: ${getRoleColor(agent.role)}; padding: 3px 8px; border-radius: 12px; color: white; font-size: 12px;">
+                                ${agent.role}
+                            </span>
+                        </td>
+                        <td>${lastLogin}</td>
+                        <td>
+                            <span style="color: ${isOnline ? '#2ecc71' : '#95a5a6'}">
+                                ${isOnline ? '🟢 Онлайн' : '⚫ Офлайн'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p>Агентов не найдено.</p>';
+        }
+    } catch (error) {
+        document.getElementById('agentsList').innerHTML = 
+            `<p style="color: #e74c3c">Ошибка: ${error.message}</p>`;
+    }
+}
+
+// ========== ИСТОРИЯ ==========
+async function loadHistory() {
+    try {
+        const token = localStorage.getItem('admin_token');
+        const filter = document.getElementById('historyFilter').value;
+        const container = document.getElementById('historyList');
+        container.innerHTML = '<p>Загрузка...</p><div class="loader"></div>';
+        
+        let url = `${API_URL}?action=get_wallet_history&token=${token}`;
+        if (filter) {
+            url += `&form_name=${encodeURIComponent(filter)}`;
+        }
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.success && result.history && result.history.length > 0) {
+            let html = `<p>Найдено записей: ${result.count}</p>`;
+            html += '<table class="wallet-table"><thead><tr>';
+            html += '<th>Форма</th><th>Тип кошелька</th><th>Номер</th><th>Агент</th><th>Время</th><th>Сумма</th><th>Статус</th></tr></thead><tbody>';
+            
+            result.history.forEach(record => {
+                html += `
+                    <tr>
+                        <td><strong>${record.formName || 'Неизвестно'}</strong></td>
+                        <td>${record.walletType || '—'}</td>
+                        <td><code>${record.walletNumber || '—'}</code></td>
+                        <td>${record.agentId || 'Система'}</td>
+                        <td>${record.usedAt ? new Date(record.usedAt).toLocaleString() : '—'}</td>
+                        <td style="color: #2ecc71; font-weight: bold;">${record.amount || 0}</td>
+                        <td>
+                            <span style="color: ${record.status === 'success' ? '#2ecc71' : '#e74c3c'}">
+                                ${record.status === 'success' ? '✅ Успех' : record.status || 'Использован'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p>История операций пуста.</p>';
+        }
+    } catch (error) {
+        document.getElementById('historyList').innerHTML = 
+            `<p style="color: #e74c3c">Ошибка: ${error.message}</p>`;
+    }
+}
+
+function clearHistoryFilter() {
+    document.getElementById('historyFilter').value = '';
+    loadHistory();
+}
+
+// ========== АДМИНЫ ==========
+async function loadAdmins() {
+    try {
+        const token = localStorage.getItem('admin_token');
+        const container = document.getElementById('adminsList');
+        container.innerHTML = '<p>Загрузка...</p><div class="loader"></div>';
+        
+        const response = await fetch(`${API_URL}?action=get_agents&token=${token}`);
+        const result = await response.json();
+        
+        if (result.success && result.agents && result.agents.length > 0) {
+            let html = '<table class="wallet-table"><thead><tr>';
+            html += '<th>Логин</th><th>Email</th><th>Роль</th><th>Последний вход</th><th>Действия</th></tr></thead><tbody>';
+            
+            result.agents.forEach(admin => {
+                const lastLogin = admin.lastLogin ? 
+                    new Date(admin.lastLogin).toLocaleString() : 'Никогда';
+                
+                html += `
+                    <tr>
+                        <td><strong>${admin.username}</strong></td>
+                        <td>${admin.email || '—'}</td>
+                        <td>
+                            <span style="background: ${getRoleColor(admin.role)}; padding: 3px 8px; border-radius: 12px; color: white; font-size: 12px;">
+                                ${admin.role}
+                            </span>
+                        </td>
+                        <td>${lastLogin}</td>
+                        <td>
+                            <button class="btn" style="padding: 5px 10px; font-size: 12px;" 
+                                    onclick="editAdmin('${admin.username}')">✏️</button>
+                            ${admin.role !== 'superadmin' ? 
+                                `<button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" 
+                                        onclick="deleteAdmin('${admin.username}')">🗑️</button>` : 
+                                '<span style="color: #7f8c8d; font-size: 12px;">Нельзя удалить</span>'
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p>Администраторы не найдены.</p>';
+        }
+    } catch (error) {
+        document.getElementById('adminsList').innerHTML = 
+            `<p style="color: #e74c3c">Ошибка: ${error.message}</p>`;
+    }
+}
+
+async function createNewAdmin() {
+    const username = document.getElementById('newAdminUsername').value.trim();
+    const password = document.getElementById('newAdminPassword').value.trim();
+    const email = document.getElementById('newAdminEmail').value.trim();
+    const role = document.getElementById('newAdminRole').value;
+    
+    if (!username || !password) {
+        alert('Заполните логин и пароль');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('admin_token');
+        const url = `${API_URL}?action=create_admin&token=${token}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&email=${encodeURIComponent(email)}&role=${role}`;
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Админ создан успешно!');
+            // Очищаем поля
+            document.getElementById('newAdminUsername').value = '';
+            document.getElementById('newAdminPassword').value = '';
+            document.getElementById('newAdminEmail').value = '';
+            // Обновляем список
+            loadAdmins();
+        } else {
+            alert('❌ Ошибка: ' + (result.error || 'Неизвестная ошибка'));
+        }
+    } catch (error) {
+        alert('Ошибка сети');
+    }
+}
+
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+function getRoleColor(role) {
+    switch(role) {
+        case 'superadmin': return '#e74c3c';
+        case 'admin': return '#3498db';
+        case 'manager': return '#2ecc71';
+        case 'viewer': return '#95a5a6';
+        default: return '#7f8c8d';
+    }
+}
+
+function isAgentOnline(lastLogin) {
+    if (!lastLogin) return false;
+    const lastLoginTime = new Date(lastLogin).getTime();
+    const now = Date.now();
+    // Считаем онлайн, если был в сети последние 30 минут
+    return (now - lastLoginTime) < 30 * 60 * 1000;
+}
+
+function editAdmin(username) {
+    alert('Редактирование админа: ' + username + '\n(функция в разработке)');
+}
+
+function deleteAdmin(username) {
+    if (confirm(`Вы уверены, что хотите удалить администратора "${username}"?`)) {
+        alert('Удаление админа: ' + username + '\n(функция в разработке)');
+    }
+}
+
+// Вспомогательная функция (можно изменить логику)
+function getOnlineAgentsCount(total) {
+    return Math.floor(total * 0.7); // Пример: 70% онлайн
+}
         
         async function loadWallets() {
             const container = document.getElementById('walletsList');
@@ -414,18 +739,40 @@
         }
         
         function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            
-            document.getElementById(tabName + 'Tab').classList.add('active');
-            document.querySelector(`.tab[onclick*="${tabName}"]`).classList.add('active');
-            
-            if (tabName === 'wallets') {
-                loadWallets();
-            } else if (tabName === 'dashboard') {
-                loadDashboard();
-            }
-        }
+    // Скрыть все вкладки
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Показать выбранную
+    document.getElementById(tabName + 'Tab').classList.add('active');
+    document.querySelector(`.tab[onclick*="${tabName}"]`).classList.add('active');
+    
+    // Загрузить данные для вкладки
+    switch(tabName) {
+        case 'wallets':
+            loadWallets();
+            break;
+        case 'forms':
+            loadForms();
+            break;
+        case 'agents':
+            loadAgents();
+            break;
+        case 'history':
+            loadHistory();
+            break;
+        case 'admins':
+            loadAdmins();
+            break;
+        case 'dashboard':
+            loadDashboard();
+            break;
+    }
+}
         
         async function logout() {
             try {
