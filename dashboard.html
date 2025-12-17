@@ -892,24 +892,37 @@ function getAgentsForForm(formName) {
             return;
         }
         
-        // Подготовим данные для отображения
-        const allWallets = [];
+                // Подготовим данные для отображения
+                const allWallets = [];
         if (walletsResult.wallets) {
-            Object.entries(walletsResult.wallets).forEach(([walletType, walletData]) => {
-                if (walletData.availableNumbers && walletData.availableNumbers.length > 0) {
-                    walletData.availableNumbers.forEach((walletNumber, index) => {
-                        const isEnabled = walletData.enabled !== false;
-                        allWallets.push({
-                            type: walletType,
-                            name: walletData.name || walletType,
-                            number: walletNumber,
-                            enabled: isEnabled,
-                            originalEnabled: isEnabled, // Для отслеживания изменений
-                            index: index
-                        });
-                    });
-                }
-            });
+          Object.entries(walletsResult.wallets).forEach(([walletType, walletData]) => {
+            // Проверяем наличие новой структуры с numbersInfo
+            if (walletData.numbersInfo) {
+              // Используем новую структуру с индивидуальными статусами
+              Object.entries(walletData.numbersInfo).forEach(([walletNumber, walletInfo], index) => {
+                allWallets.push({
+                  type: walletType,
+                  name: walletInfo.name || walletType,
+                  number: walletNumber,
+                  enabled: walletInfo.enabled,
+                  originalEnabled: walletInfo.enabled,
+                  index: index
+                });
+              });
+            } else if (walletData.availableNumbers && walletData.availableNumbers.length > 0) {
+              // Старая структура для совместимости
+              walletData.availableNumbers.forEach((walletNumber, index) => {
+                allWallets.push({
+                  type: walletType,
+                  name: walletData.name || walletType,
+                  number: walletNumber,
+                  enabled: true, // предположение для совместимости
+                  originalEnabled: true,
+                  index: index
+                });
+              });
+            }
+          });
         }
         
         console.log('Все кошельки из формы:', allWallets);
