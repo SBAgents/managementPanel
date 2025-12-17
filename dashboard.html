@@ -842,6 +842,7 @@ async function refreshWalletsCache() {
 
         // ========== ФОРМЫ ==========
         async function loadForms() {
+            const formAgentsMap = {};
     try {
         const token = localStorage.getItem('admin_token');
         const container = document.getElementById('formsList');
@@ -913,8 +914,8 @@ async function refreshWalletsCache() {
                             </div>
                         </td>
                         <td>
-                            ${getAgentsForForm(form.formName).length > 0 ? 
-                                getAgentsForForm(form.formName).map(agent => 
+                            ${formAgentsMap[form.formName] && formAgentsMap[form.formName].length > 0 ? 
+                                formAgentsMap[form.formName].map(agent => 
                                     `<span style="background: #9b59b6; color: white; padding: 3px 8px; border-radius: 10px; margin: 2px; display: inline-block; font-size: 11px;">
                                         ${agent}
                                     </span>`
