@@ -781,10 +781,18 @@ async function refreshWalletsCache() {
         const activeWallets = walletsArray.filter(w => w.enabled);
         
         // 3. Загружаем формы пользователя для отображения
-        const formsResponse = await fetch(`${API_URL}?action=get_user_forms&token=${token}`);
-        const formsResult = await formsResponse.json();
-        
-        const userForms = formsResult.success ? formsResult.forms : [];
+        let userForms = [];
+        if (currentUser.role === 'superadmin' || currentUser.role === 'admin') {
+            // Для админов – все формы
+            const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+            const formsResult = await formsResponse.json();
+            userForms = formsResult.success ? formsResult.forms : [];
+        } else {
+            // Для менеджеров/наблюдателей – только назначенные формы
+            const formsResponse = await fetch(`${API_URL}?action=get_user_forms&token=${token}`);
+            const formsResult = await formsResponse.json();
+            userForms = formsResult.success ? formsResult.forms : [];
+        }
         
         // 4. Отображаем дашборд с ограниченными данными
         container.innerHTML = `
