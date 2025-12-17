@@ -466,39 +466,39 @@ async function refreshWalletsCache() {
 }
 
         // Скрыть вкладки, к которым нет доступа
-        function hideUnauthorizedTabs() {
-    const permissions = JSON.parse(localStorage.getItem('admin_permissions') || '{}');
-    
-    // Отладка - посмотрим что в permissions
-    console.log('Permissions from localStorage:', permissions);
-    console.log('Current user:', JSON.parse(localStorage.getItem('admin_user') || '{}'));
-    
-    // Если суперадмин - показываем все вкладки
-    const user = JSON.parse(localStorage.getItem('admin_user') || '{}');
-    if (user.role === 'superadmin') {
-        console.log('Superadmin detected - showing all tabs');
-        return; // Не скрываем вкладки для суперадмина
-    }
-    
-    const tabsToCheck = {
-        'wallets': permissions.canManageWallets,
-        'forms': permissions.canViewHistory || permissions.canManageWallets,
-        'agents': permissions.canManageAdmins,
-        'history': permissions.canViewHistory,
-        'admins': permissions.canManageAdmins
-    };
-    
-    // Отладка - какие вкладки будут скрыты
-    console.log('Tabs check:', tabsToCheck);
-    
-    Object.entries(tabsToCheck).forEach(([tabName, hasPermission]) => {
-        const tabElement = document.querySelector(`.tab[onclick*="${tabName}"]`);
-        if (tabElement && !hasPermission) {
-            console.log(`Hiding tab: ${tabName}`);
-            tabElement.style.display = 'none';
+                function hideUnauthorizedTabs() {
+            const permissions = JSON.parse(localStorage.getItem('admin_permissions') || '{}');
+            const user = JSON.parse(localStorage.getItem('admin_user') || '{}');
+            
+            // Если суперадмин или админ - показываем все вкладки
+            if (user.role === 'superadmin' || user.role === 'admin') {
+                return;
+            }
+            
+            // Для менеджеров проверяем наличие назначенных форм
+            if (user.role === 'manager') {
+                const formsTab = document.querySelector('.tab[onclick*="forms"]');
+                if (formsTab) {
+                    // Показываем вкладку, но доступ будет фильтроваться в loadForms()
+                    // или можно сразу скрыть если нужно
+                }
+            }
+            
+            // Остальная логика скрытия
+            const tabsToCheck = {
+                'wallets': permissions.canManageWallets,
+                'agents': permissions.canManageAdmins,
+                'history': permissions.canViewHistory,
+                'admins': permissions.canManageAdmins
+            };
+            
+            Object.entries(tabsToCheck).forEach(([tabName, hasPermission]) => {
+                const tabElement = document.querySelector(`.tab[onclick*="${tabName}"]`);
+                if (tabElement && !hasPermission) {
+                    tabElement.style.display = 'none';
+                }
+            });
         }
-        });
-    }
         
         document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('admin_token');
@@ -659,17 +659,48 @@ async function loadForms() {
     try {
         const token = localStorage.getItem('admin_token');
         const container = document.getElementById('formsList');
+        const currentUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+        
         container.innerHTML = '<p>Загрузка данных форм...</p><div class="loader"></div>';
         
-        // Загружаем список форм и кошельки
-        const [formsResponse, walletsData] = await Promise.all([
-            fetch(`${API_URL}?action=get_all_forms&token=${token}`),
-            loadAllWalletsFromForms() // Используем кэшированные данные
-        ]);
-        
+        // Загружаем список форм
+        const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
         const formsResult = await formsResponse.json();
         
         if (formsResult.success && formsResult.forms && formsResult.forms.length > 0) {
+            // Фильтруем формы по доступу
+            let accessibleForms = formsResult.forms;
+            
+            // Если пользователь не суперадмин и не админ, показываем только назначенные формы
+            if (currentUser.role !== 'superadmin' && currentUser.role !== 'admin') {
+                // Получаем формы назначенные этому менеджеру
+                const assignedForms = await getAssignedForms(currentUser.username);
+                if (assignedForms.length > 0) {
+                    accessibleForms = formsResult.forms.filter(form => 
+                        assignedForms.includes(form.formName)
+                    );
+                } else {
+                    accessibleForms = []; // Нет назначенных форм
+                }
+            }
+            
+            if (accessibleForms.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: var(--card-bg); border-radius: 10px;">
+                        <p style="color: #95a5a6; font-size: 24px; margin-bottom: 10px;">📭</p>
+                        <p>У вас нет доступа к формам</p>
+                        ${currentUser.role === 'manager' ? 
+                            '<p style="color: #95a5a6; font-size: 14px; margin-top: 10px;">Обратитесь к администратору для получения доступа к формам</p>' : 
+                            '<p style="color: #95a5a6; font-size: 14px; margin-top: 10px;">Нет доступных форм</p>'
+                        }
+                    </div>
+                `;
+                return;
+            }
+            
+            // Загружаем кошельки из доступных форм
+            const walletsData = await loadAllWalletsFromForms();
+            
             // Преобразуем walletsData в удобный формат для поиска
             const walletsByForm = {};
             Object.values(walletsData).forEach(wallet => {
@@ -683,7 +714,10 @@ async function loadForms() {
             
             let html = `
                 <div style="margin-bottom: 20px; color: #95a5a6; font-size: 14px;">
-                    Найдено форм: ${formsResult.forms.length}
+                    Найдено форм: ${accessibleForms.length}
+                    ${currentUser.role !== 'superadmin' && currentUser.role !== 'admin' ? 
+                        `(доступно вам: ${accessibleForms.length})` : ''
+                    }
                 </div>
                 <table class="wallet-table">
                     <thead>
@@ -699,12 +733,14 @@ async function loadForms() {
                     <tbody>
             `;
             
-            formsResult.forms.forEach(form => {
+            accessibleForms.forEach(form => {
                 const formWallets = walletsByForm[form.formName] || [];
                 const activeWallets = formWallets.filter(w => w.enabled);
                 
-                // Получаем список агентов для этой формы (будет реализовано позже)
-                const agents = getAgentsForForm(form.formName); // Временная заглушка
+                // Проверяем права доступа к действиям
+                const canEditWallets = currentUser.role === 'superadmin' || 
+                                       currentUser.role === 'admin' || 
+                                       (currentUser.role === 'manager' && accessibleForms.includes(form));
                 
                 html += `
                     <tr>
@@ -722,20 +758,22 @@ async function loadForms() {
                             </div>
                         </td>
                         <td>
-                            ${agents.length > 0 ? 
-                                agents.map(agent => 
+                            ${getAgentsForForm(form.formName).length > 0 ? 
+                                getAgentsForForm(form.formName).map(agent => 
                                     `<span style="background: #9b59b6; color: white; padding: 3px 8px; border-radius: 10px; margin: 2px; display: inline-block; font-size: 11px;">
                                         ${agent}
                                     </span>`
                                 ).join('') :
                                 '<span style="color: #95a5a6; font-size: 12px;">Нет агентов</span>'
                             }
-                            <div style="margin-top: 5px;">
-                                <button class="btn" style="padding: 3px 8px; font-size: 11px;" 
-                                        onclick="manageFormAgents('${form.formName}')">
-                                    👥 Управление
-                                </button>
-                            </div>
+                            ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? `
+                                <div style="margin-top: 5px;">
+                                    <button class="btn" style="padding: 3px 8px; font-size: 11px;" 
+                                            onclick="manageFormAgents('${form.formName}')">
+                                        👥 Управление
+                                    </button>
+                                </div>
+                            ` : ''}
                         </td>
                         <td>
                             <div style="margin-bottom: 10px;">
@@ -777,18 +815,27 @@ async function loadForms() {
                         </td>
                         <td>
                             <div style="display: flex; flex-direction: column; gap: 8px;">
-                                <button class="btn btn-success" style="padding: 6px 12px; font-size: 12px;" 
-                                        onclick="showEditWalletsModal('${form.formName}')">
-                                    🏦 Изменить кошельки
-                                </button>
+                                ${canEditWallets ? `
+                                    <button class="btn btn-success" style="padding: 6px 12px; font-size: 12px;" 
+                                            onclick="showEditWalletsModal('${form.formName}')">
+                                        🏦 Изменить кошельки
+                                    </button>
+                                ` : `
+                                    <button class="btn" style="padding: 6px 12px; font-size: 12px; background: #95a5a6;" 
+                                            disabled title="Недостаточно прав">
+                                        🔒 Нет доступа
+                                    </button>
+                                `}
                                 <button class="btn" style="padding: 6px 12px; font-size: 12px;" 
                                         onclick="testFormConnection('${form.formName}', '${form.formAPI}')">
                                     🧪 Тестировать
                                 </button>
-                                <button class="btn" style="padding: 6px 12px; font-size: 12px;" 
-                                        onclick="editFormSettings('${form.formName}')">
-                                    ⚙️ Настройки
-                                </button>
+                                ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? `
+                                    <button class="btn" style="padding: 6px 12px; font-size: 12px;" 
+                                            onclick="editFormSettings('${form.formName}')">
+                                        ⚙️ Настройки
+                                    </button>
+                                ` : ''}
                             </div>
                         </td>
                     </tr>
@@ -805,9 +852,11 @@ async function loadForms() {
                     <p style="color: #95a5a6; font-size: 14px; margin-top: 10px;">
                         Добавьте формы в таблицу FORM_SETTINGS или создайте новую
                     </p>
-                    <button class="btn btn-success" onclick="showAddFormModal()" style="margin-top: 20px;">
-                        ➕ Создать новую форму
-                    </button>
+                    ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? `
+                        <button class="btn btn-success" onclick="showAddFormModal()" style="margin-top: 20px;">
+                            ➕ Создать новую форму
+                        </button>
+                    ` : ''}
                 </div>
             `;
         }
@@ -822,6 +871,31 @@ async function loadForms() {
         `;
     }
 }
+
+        // Функция для получения форм, назначенных пользователю
+        async function getAssignedForms(username) {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}?action=get_assigned_forms&token=${token}&username=${encodeURIComponent(username)}`);
+                
+                if (!response.ok) {
+                    console.warn('Не удалось получить назначенные формы, возвращаем пустой массив');
+                    return [];
+                }
+                
+                const result = await response.json();
+                
+                if (result.success && result.forms) {
+                    return result.forms;
+                }
+                
+                return [];
+                
+            } catch (error) {
+                console.error('Ошибка получения назначенных форм:', error);
+                return [];
+            }
+        }
 
 // Временная заглушка для агентов
 function getAgentsForForm(formName) {
