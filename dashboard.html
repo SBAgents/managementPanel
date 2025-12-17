@@ -824,7 +824,7 @@ function getAgentsForForm(formName) {
         }
         
         // Получаем ВСЕ кошельки из формы (включая отключенные)
-        const walletsResponse = await fetch(`${form.formAPI}?action=get_wallets`);
+        const walletsResponse = await fetch(`${form.formAPI}?action=get_wallets&show_all=true`);
         const walletsResult = await walletsResponse.json();
         
         if (walletsResult.status !== 'success') {
