@@ -80,92 +80,136 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* Кликабельные карточки в дашборде */
-.clickable {
-    cursor: pointer;
-    transition: all 0.3s;
-    border: 2px solid transparent;
-}
-
-.clickable:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-}
-
-/* Таблицы */
-.wallet-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--card-bg);
-    border-radius: 10px;
-    overflow: hidden;
-    margin-top: 20px;
-}
-
-.wallet-table th {
-    background: rgba(0,0,0,0.3);
-    padding: 15px;
-    text-align: left;
-    font-weight: bold;
-}
-
-.wallet-table td {
-    padding: 15px;
-    border-bottom: 1px solid var(--border);
-}
-
-.wallet-table tr:hover {
-    background: rgba(255,255,255,0.05);
-}
-
-.modal-fade-in {
-    animation: modalFadeIn 0.3s ease;
-}
-
-@keyframes modalFadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.loading-pulse {
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; }
-    100% { opacity: 0.6; }
-}
-
-#editWalletsModal > div {
-    background: rgba(26, 35, 44, 0.95) !important;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-
-.wallet-status-select {
-    transition: all 0.2s ease;
-}
-
-.wallet-status-select:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-#saveChangesBtn {
-    transition: all 0.3s ease;
-}
-
-#saveChangesBtn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
-}
-
-#saveChangesBtn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
+        .clickable {
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .clickable:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        /* Таблицы */
+        .wallet-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        
+        .wallet-table th {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .wallet-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .wallet-table tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .modal-fade-in {
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading-pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        #editWalletsModal > div {
+            background: rgba(26, 35, 44, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .wallet-status-select {
+            transition: all 0.2s ease;
+        }
+        
+        .wallet-status-select:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        #saveChangesBtn {
+            transition: all 0.3s ease;
+        }
+        
+        #saveChangesBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+        }
+        
+        #saveChangesBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+                /* Анимация для маленького лоадера */
+        .loader-small {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        /* Плавная анимация кнопки */
+        #saveChangesBtn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #saveChangesBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+        }
+        
+        /* Пульсирующая анимация при загрузке */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .loading-pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* Анимация успеха */
+        .success-animation {
+            animation: successPulse 0.5s ease;
+        }
+        
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -1177,7 +1221,7 @@ async function addNewWalletToForm(formAPI, walletData) {
     }
 }
 
-            async function saveAllWalletChanges(formName) {
+            async function saveAllWalletChanges(formName) async function saveAllWalletChanges(formName) {
     try {
         // Получаем данные формы
         const token = localStorage.getItem('admin_token');
@@ -1190,10 +1234,18 @@ async function addNewWalletToForm(formAPI, walletData) {
             return;
         }
         
-        // Показываем индикатор загрузки
+        // Получаем кнопку и сохраняем оригинальный вид
         const button = document.getElementById('saveChangesBtn');
-        const originalText = button.innerHTML;
-        button.innerHTML = '<div class="loader" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px;"></div>Сохранение...';
+        const originalHTML = button.innerHTML;
+        const originalClasses = button.className;
+        
+        // Мгновенная обратная связь - меняем вид кнопки
+        button.innerHTML = `
+            <div class="loader-small" style="width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; margin-right: 10px; vertical-align: middle;"></div>
+            <span style="vertical-align: middle;">Сохранение...</span>
+        `;
+        button.style.background = 'linear-gradient(135deg, #3498db, #2980b9)';
+        button.style.transform = 'scale(0.98)';
         button.disabled = true;
         
         // Собираем ТОЛЬКО ИЗМЕНЕННЫЕ статусы
@@ -1206,7 +1258,6 @@ async function addNewWalletToForm(formAPI, walletData) {
             const newEnabled = select.value === 'true';
             const originalEnabled = select.dataset.originalEnabled === 'true';
             
-            // Добавляем только если статус изменился
             if (newEnabled !== originalEnabled) {
                 changedWallets.push({
                     type: walletType,
@@ -1217,7 +1268,7 @@ async function addNewWalletToForm(formAPI, walletData) {
             }
         });
         
-        // Проверяем, есть ли новый кошелёк для добавления
+        // Проверяем новый кошелёк
         const newWalletData = {};
         const addForm = document.getElementById('addWalletForm');
         if (addForm && addForm.style.display !== 'none') {
@@ -1240,28 +1291,60 @@ async function addNewWalletToForm(formAPI, walletData) {
             }
         }
         
-        console.log('Изменения для сохранения:', changedWallets);
-        
+        // Если нет изменений
         if (changedWallets.length === 0) {
-            // Восстанавливаем кнопку
-            button.innerHTML = originalText;
-            button.disabled = false;
+            // Анимация "ничего не изменилось"
+            button.innerHTML = '<span style="color: #95a5a6;">✓ Нет изменений</span>';
+            button.style.background = 'rgba(149, 165, 166, 0.1)';
+            button.style.border = '1px solid rgba(149, 165, 166, 0.3)';
             
-            alert('⚠️ Нет изменений для сохранения');
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.style.background = '';
+                button.style.border = '';
+                button.style.transform = '';
+                button.disabled = false;
+            }, 1500);
             return;
         }
         
-        // Отправляем изменения ТОЛЬКО для измененных кошельков
+        // Показываем прогресс
+        const progressContainer = document.createElement('div');
+        progressContainer.style.cssText = `
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            font-size: 13px;
+        `;
+        progressContainer.innerHTML = `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>Прогресс:</span>
+                <span id="progressText">0/${changedWallets.length}</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                <div id="progressBar" style="width: 0%; height: 100%; background: #3498db; transition: width 0.3s ease;"></div>
+            </div>
+        `;
+        
+        button.parentNode.insertBefore(progressContainer, button.nextSibling);
+        
+        // Отправляем изменения
         let successCount = 0;
         let errorCount = 0;
-        const results = [];
         
-        for (const change of changedWallets) {
+        for (let i = 0; i < changedWallets.length; i++) {
+            const change = changedWallets[i];
+            
+            // Обновляем прогресс
+            const progress = Math.round(((i + 1) / changedWallets.length) * 100);
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `${i + 1}/${changedWallets.length}`;
+            
             try {
                 let result;
                 
                 if (change.isNew) {
-                    // Добавляем новый кошелек
                     result = await addNewWalletToForm(form.formAPI, {
                         type: change.type,
                         name: newWalletData.name,
@@ -1269,19 +1352,12 @@ async function addNewWalletToForm(formAPI, walletData) {
                         enabled: change.enabled
                     });
                 } else {
-                    // Обновляем существующий
                     result = await updateWalletInForm(form.formAPI, change.type, change.number, change.enabled);
                 }
                 
                 if (result.success) {
                     successCount++;
-                    results.push({
-                        type: change.type,
-                        number: change.number,
-                        status: '✅ Успешно'
-                    });
-                    
-                    // Обновляем data-атрибут для отслеживания изменений
+                    // Обновляем оригинальный статус
                     if (!change.isNew) {
                         const select = document.querySelector(`select[data-wallet-type="${change.type}"][data-wallet-number="${change.number}"]`);
                         if (select) {
@@ -1290,63 +1366,32 @@ async function addNewWalletToForm(formAPI, walletData) {
                     }
                 } else {
                     errorCount++;
-                    results.push({
-                        type: change.type,
-                        number: change.number,
-                        status: '❌ Ошибка',
-                        error: result.error
-                    });
-                    console.error('Ошибка обновления:', change, result.error);
                 }
             } catch (error) {
                 errorCount++;
-                results.push({
-                    type: change.type,
-                    number: change.number,
-                    status: '❌ Ошибка',
-                    error: error.message
-                });
-                console.error('Ошибка обновления:', change, error);
             }
             
-            // Небольшая задержка между запросами
-            await new Promise(resolve => setTimeout(resolve, 50));
+            // Минимальная задержка между запросами
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
         
-        // Восстанавливаем кнопку с улучшенной анимацией
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.disabled = false;
-            
-            // Добавляем зеленую анимацию на успех
-            if (errorCount === 0 && successCount > 0) {
-                button.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
-                button.style.transform = 'translateY(0)';
-                button.style.boxShadow = '0 5px 15px rgba(46, 204, 113, 0.4)';
-                
-                // Через 2 секунды возвращаем обычный стиль
-                setTimeout(() => {
-                    button.style.background = '';
-                    button.style.transform = '';
-                    button.style.boxShadow = '';
-                }, 2000);
-            }
-        }, 500);
+        // Убираем индикатор прогресса
+        progressContainer.remove();
         
-        // Показываем результат
-        let message = '';
+        // Обновляем кэш
+        loadAllWalletsFromForms(true);
+        
+        // Показываем результат на кнопке
         if (errorCount === 0) {
-            message = `✅ Успешно сохранено!\n\n`;
-            message += `Обработано: ${successCount} кошельков\n`;
+            // Успех - зеленая анимация
+            button.innerHTML = `
+                <span style="color: white; font-size: 18px; margin-right: 8px;">✓</span>
+                <span>Успешно сохранено!</span>
+            `;
+            button.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+            button.style.boxShadow = '0 0 20px rgba(46, 204, 113, 0.4)';
             
-            if (newWalletData.type) {
-                message += `Добавлен новый: ${newWalletData.type} - ${newWalletData.number}\n`;
-            }
-            
-            // Обновляем кэш и закрываем модальное окно
-            loadAllWalletsFromForms(true);
-            
-            // Показываем краткий результат перед закрытием
+            // Автоматически закрываем через 1.5 секунды
             setTimeout(() => {
                 closeEditWalletsModal();
                 
@@ -1356,48 +1401,70 @@ async function addNewWalletToForm(formAPI, walletData) {
                 }
                 
                 // Краткое уведомление
-                if (successCount === 1) {
+                if (changedWallets.length === 1) {
                     alert('✅ Изменение сохранено!');
                 } else {
-                    alert(`✅ ${successCount} изменений сохранены!`);
+                    alert(`✅ ${changedWallets.length} изменений сохранены!`);
                 }
-            }, 1000);
+            }, 1500);
+            
+        } else if (successCount > 0) {
+            // Частичный успех - оранжевая анимация
+            button.innerHTML = `
+                <span style="color: white; font-size: 18px; margin-right: 8px;">⚠️</span>
+                <span>Сохранено ${successCount}/${changedWallets.length}</span>
+            `;
+            button.style.background = 'linear-gradient(135deg, #e67e22, #d35400)';
+            
+            // Восстанавливаем через 2 секунды
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.style.background = '';
+                button.style.boxShadow = '';
+                button.style.transform = '';
+                button.disabled = false;
+            }, 2000);
+            
+            alert(`⚠️ Частично сохранено: ${successCount} успешно, ${errorCount} с ошибками`);
             
         } else {
-            message = `⚠️ Частично сохранено\n\n`;
-            message += `Успешно: ${successCount}\n`;
-            message += `Ошибок: ${errorCount}\n\n`;
+            // Полная ошибка - красная анимация
+            button.innerHTML = `
+                <span style="color: white; font-size: 18px; margin-right: 8px;">❌</span>
+                <span>Ошибка сохранения</span>
+            `;
+            button.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+            button.style.boxShadow = '0 0 20px rgba(231, 76, 60, 0.4)';
             
-            if (errorCount > 0) {
-                message += 'Кошельки с ошибками:\n';
-                results.filter(r => r.status.includes('❌')).forEach(r => {
-                    message += `• ${r.type}: ${r.number}\n`;
-                });
-            }
+            // Восстанавливаем через 2 секунды
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.style.background = '';
+                button.style.boxShadow = '';
+                button.style.transform = '';
+                button.disabled = false;
+            }, 2000);
             
-            // Обновляем кэш частично
-            loadAllWalletsFromForms(true);
-        }
-        
-        // Показываем подробный результат только если есть ошибки
-        if (errorCount > 0) {
-            const detailedMessage = message + '\n\nПодробности в консоли (F12)';
-            alert(detailedMessage);
+            alert('❌ Все изменения не удалось сохранить. Проверьте консоль (F12)');
         }
         
     } catch (error) {
-        console.error('Ошибка сохранения изменений:', error);
+        console.error('Ошибка сохранения:', error);
         
-        // Восстанавливаем кнопку с анимацией ошибки
+        // Восстанавливаем кнопку при ошибке
         const button = document.getElementById('saveChangesBtn');
         if (button) {
-            button.innerHTML = '💾 Сохранить все изменения';
-            button.disabled = false;
-            
-            // Анимация ошибки
+            button.innerHTML = `
+                <span style="color: white; font-size: 18px; margin-right: 8px;">❌</span>
+                <span>Ошибка соединения</span>
+            `;
             button.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+            
             setTimeout(() => {
+                button.innerHTML = '💾 Сохранить все изменения';
                 button.style.background = '';
+                button.style.transform = '';
+                button.disabled = false;
             }, 2000);
         }
         
