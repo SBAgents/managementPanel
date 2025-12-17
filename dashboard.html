@@ -841,21 +841,14 @@ async function refreshWalletsCache() {
         
         container.innerHTML = '<p>Загрузка данных форм...</p><div class="loader"></div>';
         
-        // Используем новую функцию для получения форм пользователя
-        const formsResponse = await fetch(`${API_URL}?action=get_user_forms&token=${token}`);
-        const formsResult = await formsResponse.json();
+        // Загружаем формы через API
+        const response = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+        const result = await response.json();
         
-        if (formsResult.success && formsResult.forms && formsResult.forms.length > 0) {
-            // Сохраняем назначенные формы в кэш
-            if (currentUser.role !== 'superadmin' && currentUser.role !== 'admin') {
-                const assignedForms = formsResult.forms.map(f => f.formName);
-                saveAssignedFormsToCache(assignedForms);
-            }
-            
+        if (result.success && result.forms && result.forms.length > 0) {
             // Загружаем кошельки ТОЛЬКО из доступных форм
             const walletsData = await loadAllWalletsFromForms(false, true);
             
-            // Остальной код остаётся прежним...
             const walletsByForm = {};
             Object.values(walletsData).forEach(wallet => {
                 wallet.forms.forEach(formName => {
@@ -864,12 +857,13 @@ async function refreshWalletsCache() {
                     }
                     walletsByForm[formName].push(wallet);
                 });
-            });            
+            });
+            
             let html = `
                 <div style="margin-bottom: 20px; color: #95a5a6; font-size: 14px;">
-                    Найдено форм: ${accessibleForms.length}
+                    Найдено форм: ${result.forms.length}
                     ${currentUser.role !== 'superadmin' && currentUser.role !== 'admin' ? 
-                        `(доступно вам: ${accessibleForms.length})` : ''
+                        `(доступно вам: ${result.forms.length})` : ''
                     }
                 </div>
                 <table class="wallet-table">
@@ -886,14 +880,14 @@ async function refreshWalletsCache() {
                     <tbody>
             `;
             
-            accessibleForms.forEach(form => {
+            result.forms.forEach(form => {
                 const formWallets = walletsByForm[form.formName] || [];
                 const activeWallets = formWallets.filter(w => w.enabled);
                 
                 // Проверяем права доступа к действиям
                 const canEditWallets = currentUser.role === 'superadmin' || 
                                        currentUser.role === 'admin' || 
-                                       (currentUser.role === 'manager' && accessibleForms.includes(form));
+                                       currentUser.role === 'manager';
                 
                 html += `
                     <tr>
