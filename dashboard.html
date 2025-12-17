@@ -938,136 +938,82 @@ async function refreshWalletsCache() {
     try {
         const container = document.getElementById('dashboardStats');
         const currentUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
-        
-        container.innerHTML = `
-            <div style="text-align:center;padding:40px;">
-                <div class="loader"></div>
-                <p>Тестирование подключения...</p>
-            </div>
-        `;
-        
         const token = localStorage.getItem('admin_token');
         
-        // 1. Тестируем базовый API
-        const testResponse = await fetch(`${API_URL}?action=test&token=${token}`);
-        const testResult = await testResponse.json();
-        console.log('API test:', testResult);
+        container.innerHTML = '<p>Загрузка... <small>проверка API</small></p>';
         
-        // 2. Пробуем загрузить формы
-        const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
-        const formsResult = await formsResponse.json();
-        console.log('Forms result:', formsResult);
+        // Тест 1: Проверка API
+        const test1 = await fetch(`${API_URL}?action=test&token=${token}`);
+        const result1 = await test1.json();
         
-        // 3. Пробуем загрузить кошельки из бэкенда (не из форм)
-        const walletsResponse = await fetch(`${API_URL}?action=get_all_wallets&token=${token}`);
-        const walletsResult = await walletsResponse.json();
-        console.log('Wallets result:', walletsResult);
+        // Тест 2: Отладочная информация
+        const test2 = await fetch(`${API_URL}?action=debug_forms&token=${token}`);
+        const result2 = await test2.json();
+        
+        console.log('DEBUG result:', result2);
+        
+        // Тест 3: Получение форм
+        const test3 = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+        const result3 = await test3.json();
         
         let forms = [];
-        let wallets = [];
+        let debugInfo = '';
         
-        if (formsResult.success && formsResult.forms) {
-            forms = Array.isArray(formsResult.forms) ? formsResult.forms : [];
+        if (result2.success) {
+            debugInfo = `Лист: ${result2.debug.sheetExists ? 'есть' : 'нет'}, Строк: ${result2.debug.lastRow}`;
+            forms = result2.debug.data || [];
         }
         
-        if (walletsResult.success && walletsResult.wallets) {
-            wallets = Array.isArray(walletsResult.wallets) ? walletsResult.wallets : [];
+        if (result3.success && result3.forms) {
+            forms = result3.forms;
         }
-        
-        const activeWallets = wallets.filter(w => w.enabled);
         
         container.innerHTML = `
-            <div style="margin-bottom:30px;background:var(--card-bg);padding:20px;border-radius:10px;">
-                <h3>🛠️ Тест системы</h3>
-                <div style="margin-top:15px;display:grid;gap:10px;">
-                    <div style="display:flex;justify-content:space-between;">
-                        <span>API тест:</span>
-                        <span style="color:${testResult.success ? '#2ecc71' : '#e74c3c'}">
-                            ${testResult.success ? '✅ Работает' : '❌ Ошибка'}
-                        </span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;">
-                        <span>Пользователь:</span>
-                        <span style="color:#3498db">${currentUser.username} (${currentUser.role})</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;">
-                        <span>Найдено форм:</span>
-                        <span style="color:${forms.length > 0 ? '#2ecc71' : '#e74c3c'}">
-                            ${forms.length}
-                        </span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;">
-                        <span>Кошельков в БД:</span>
-                        <span style="color:${wallets.length > 0 ? '#2ecc71' : '#e74c3c'}">
-                            ${wallets.length}
-                        </span>
-                    </div>
+            <div style="background:var(--card-bg);padding:20px;border-radius:10px;margin-bottom:20px;">
+                <h3>🔧 Отладка системы</h3>
+                <div style="margin-top:15px;display:grid;gap:10px;font-size:14px;">
+                    <div><strong>API тест:</strong> ${result1.success ? '✅' : '❌'}</div>
+                    <div><strong>FORM_SETTINGS:</strong> ${debugInfo}</div>
+                    <div><strong>Форм найдено:</strong> ${forms.length}</div>
+                    <div><strong>Пользователь:</strong> ${currentUser.username} (${currentUser.role})</div>
                 </div>
+                <button class="btn" onclick="loadDashboard()" style="margin-top:15px;">🔄 Обновить</button>
             </div>
             
-            <div class="stats-grid">
-                <div class="stat-card clickable" onclick="switchTab('wallets')">
-                    <div class="stat-number">${activeWallets.length}</div>
-                    <div>Активных кошельков</div>
-                    <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
-                        Всего: ${wallets.length}
+            ${forms.length > 0 ? `
+                <div style="background:var(--card-bg);padding:20px;border-radius:10px;">
+                    <h3>🌐 Найденные формы (${forms.length})</h3>
+                    <div style="margin-top:15px;display:grid;gap:10px;">
+                        ${forms.map(f => `
+                            <div style="padding:10px;background:rgba(255,255,255,0.05);border-radius:8px;">
+                                <strong>${f.formName}</strong>
+                                <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
+                                    API: ${f.formAPI ? '✅' : '❌'} | Статус: ${f.enabled ? 'Активна' : 'Отключена'}
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
-                <div class="stat-card clickable" onclick="switchTab('forms')">
-                    <div class="stat-number">${forms.length}</div>
-                    <div>Форм в системе</div>
-                    <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
-                        Загружено из API
-                    </div>
-                </div>
-                <div class="stat-card clickable" onclick="loadDashboard()">
-                    <div class="stat-number">🔄</div>
-                    <div>Обновить</div>
-                    <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
-                        Тест данных
-                    </div>
-                </div>
-                <div class="stat-card clickable" onclick="console.log('Forms:', forms, 'Wallets:', wallets)">
-                    <div class="stat-number">📊</div>
-                    <div>Консоль</div>
-                    <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
-                        Открыть F12
-                    </div>
-                </div>
-            </div>
-            
-            <div style="margin-top:30px;background:var(--card-bg);padding:20px;border-radius:10px;">
-                <h3>Действия</h3>
-                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px;margin-top:15px;">
-                    <button class="btn" onclick="loadDashboard()" style="padding:12px;display:flex;align-items:center;justify-content:center;gap:10px;">
-                        🔄 Тест API
-                    </button>
-                    <button class="btn" onclick="initializeSheets()" style="padding:12px;display:flex;align-items:center;justify-content:center;gap:10px;">
-                        📊 Инициализировать
-                    </button>
-                    <button class="btn" onclick="switchTab('forms')" style="padding:12px;display:flex;align-items:center;justify-content:center;gap:10px;">
-                        🌐 Формы
-                    </button>
-                    <button class="btn" onclick="switchTab('wallets')" style="padding:12px;display:flex;align-items:center;justify-content:center;gap:10px;">
-                        👛 Кошельки
+            ` : `
+                <div style="text-align:center;padding:40px;background:var(--card-bg);border-radius:10px;">
+                    <p>❌ Формы не найдены</p>
+                    <p style="color:#95a5a6;font-size:14px;margin-top:10px;">
+                        Проверьте таблицу FORM_SETTINGS в Google Sheets
+                    </p>
+                    <button class="btn" onclick="window.open('https://docs.google.com/spreadsheets/d/' + SpreadsheetApp.getActiveSpreadsheet().getId())" style="margin-top:15px;">
+                        📊 Открыть таблицу
                     </button>
                 </div>
-            </div>
+            `}
         `;
         
     } catch (error) {
-        console.error('Dashboard error:', error);
         container.innerHTML = `
-            <div style="text-align:center;padding:20px;color:#e74c3c">
-                <h3>❌ КРИТИЧЕСКАЯ ОШИБКА</h3>
-                <p><strong>${error.message}</strong></p>
-                <p style="color:#95a5a6;margin-top:10px;">Проверьте:</p>
-                <ol style="text-align:left;display:inline-block;margin-top:10px;">
-                    <li>Работает ли API: ${API_URL}</li>
-                    <li>Есть ли токен в localStorage</li>
-                    <li>Консоль браузера (F12) на ошибки</li>
-                </ol>
-                <button class="btn" onclick="logout()" style="margin-top:20px;">🚪 Выйти и проверить</button>
+            <div style="text-align:center;padding:40px;color:#e74c3c">
+                <h3>❌ Ошибка подключения</h3>
+                <p>${error.message}</p>
+                <p style="color:#95a5a6;margin-top:15px;">URL: ${API_URL}</p>
+                <button class="btn" onclick="loadDashboard()" style="margin-top:20px;">Повторить</button>
             </div>
         `;
     }
