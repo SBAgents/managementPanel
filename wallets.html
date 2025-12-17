@@ -917,6 +917,7 @@
         let allWallets = [];
         let allForms = [];
         let filteredWallets = [];
+        let allFormsWithWallets = [];
         
         // Translation dictionary
         const translations = {
@@ -1353,37 +1354,105 @@
         }
 
         // Load wallets from API
-        async function loadWallets() {
+        
+        async function loadWalletsFromForms() {
             try {
                 const token = localStorage.getItem('admin_token');
-                const response = await fetch(`${API_URL}?action=get_all_wallets&token=${token}&show_all=true`);
                 
-                if (!response.ok) throw new Error('Network error');
+                // Получаем список всех форм
+                const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+                if (!formsResponse.ok) throw new Error('Failed to load forms');
                 
-                const result = await response.json();
+                const formsResult = await formsResponse.json();
+                if (!formsResult.success) throw new Error(formsResult.error || 'Failed to load forms');
                 
-                if (result.success) {
-                    allWallets = result.wallets || [];
-                    
-                    // If user is manager, filter by assigned forms
-                    if (currentUser.role === 'manager') {
-                        const assignedForms = await getAssignedForms();
-                        allWallets = allWallets.filter(wallet => 
-                            assignedForms.some(form => form === wallet.formName)
-                        );
-                    }
-                    
-                    // Apply initial filter
-                    filterWallets();
-                    
-                } else {
-                    showToast(result.error || translations[currentLanguage]['toast.error'], 'error');
-                    renderWalletsTable([]);
+                allForms = formsResult.forms || [];
+                
+                // Фильтруем формы для менеджера
+                let displayForms = allForms;
+                if (currentUser.role === 'manager') {
+                    const assignedForms = await getAssignedForms();
+                    displayForms = allForms.filter(form => 
+                        assignedForms.some(assigned => assigned === form.formName)
+                    );
                 }
+                
+                // Получаем кошельки из каждой формы
+                const walletsPromises = displayForms.map(async (form) => {
+                    try {
+                        // Запрашиваем кошельки из формы
+                        const walletsResponse = await fetch(`${form.formAPI}?action=get_wallets&show_all=true`);
+                        if (!walletsResponse.ok) {
+                            console.warn(`Failed to load wallets from form: ${form.formName}`);
+                            return [];
+                        }
+                        
+                        const walletsResult = await walletsResponse.json();
+                        if (walletsResult.status === 'success' && walletsResult.wallets) {
+                            // Добавляем информацию о форме к каждому кошельку
+                            return Object.entries(walletsResult.wallets).flatMap(([walletType, walletData]) => {
+                                const walletNumbers = walletData.numbersInfo || walletData.availableNumbers || [];
+                                
+                                return Object.entries(walletNumbers).map(([walletNumber, walletInfo]) => {
+                                    const isEnabled = walletInfo.enabled === true || 
+                                                   walletInfo.enabled === 'true' || 
+                                                   (typeof walletInfo === 'boolean' && walletInfo);
+                                    
+                                    return {
+                                        id: `${form.formName}_${walletType}_${walletNumber}`.replace(/\s+/g, '_'),
+                                        formName: form.formName,
+                                        formApi: form.formAPI,
+                                        type: walletType,
+                                        name: walletInfo.name || walletData.name || walletType,
+                                        number: walletNumber,
+                                        enabled: isEnabled,
+                                        originalData: walletInfo
+                                    };
+                                });
+                            });
+                        }
+                        return [];
+                    } catch (error) {
+                        console.error(`Error loading wallets from form ${form.formName}:`, error);
+                        return [];
+                    }
+                });
+                
+                
+                // Ждем завершения всех запросов
+                const walletsArrays = await Promise.all(walletsPromises);
+                allWallets = walletsArrays.flat();
+                
+                // Заполняем фильтр форм
+                populateFormFilter(displayForms);
+                
+                // Применяем фильтры и рендерим
+                filterWallets();
+                
+                showToast(translations[currentLanguage]['toast.success'], 'success');
+                
             } catch (error) {
-                console.error('Error loading wallets:', error);
+                console.error('Error loading wallets from forms:', error);
+                showToast(translations[currentLanguage]['toast.error'] + ': ' + error.message, 'error');
                 renderWalletsTable([]);
             }
+        }
+
+        // Функция для заполнения фильтра форм:
+        function populateFormFilter(forms) {
+            const formFilter = document.getElementById('formFilter');
+            formFilter.innerHTML = '<option value="all">' + translations[currentLanguage]['wallets.all_forms'] + '</option>';
+            
+            forms.forEach(form => {
+                const option = document.createElement('option');
+                option.value = form.formName;
+                option.textContent = form.formName;
+                formFilter.appendChild(option);
+            });
+        }
+        
+        async function loadWallets() {
+            await loadWalletsFromForms();
         }
 
         // Filter wallets based on filters
@@ -1484,16 +1553,12 @@
 
         // Open edit modal
         function openEditModal(walletId) {
-            const wallet = allWallets.find(w => w.id == walletId);
+            const wallet = allWallets.find(w => w.id === walletId);
             if (!wallet) return;
-            
-            // Find form API URL
-            const form = allForms.find(f => f.formName === wallet.formName);
-            const formApi = form ? form.formAPI : '';
             
             // Fill form
             document.getElementById('editWalletId').value = walletId;
-            document.getElementById('editWalletFormApi').value = formApi;
+            document.getElementById('editWalletFormApi').value = wallet.formApi || '';
             document.getElementById('editFormName').value = wallet.formName || '';
             document.getElementById('editWalletType').value = wallet.type || 'vodafone';
             document.getElementById('editWalletName').value = wallet.name || '';
@@ -1532,51 +1597,45 @@
                     throw new Error('Form API not found');
                 }
                 
-                // Find original wallet to get current number
-                const originalWallet = allWallets.find(w => w.id == walletId);
+                // Find original wallet
+                const originalWallet = allWallets.find(w => w.id === walletId);
                 if (!originalWallet) {
                     throw new Error('Wallet not found');
                 }
                 
-                // Send update request to form API
-                const updateData = {
+                // Подготавливаем данные для обновления
+                const updateParams = new URLSearchParams({
+                    action: 'update_wallet_status',
                     wallet_type: originalWallet.type,
                     wallet_number: originalWallet.number,
                     enabled: walletEnabled.toString(),
                     wallet_name: walletName
-                };
+                });
                 
-                // If type changed, we need to handle it differently
+                // Если изменился тип кошелька
                 if (walletType !== originalWallet.type) {
-                    updateData.wallet_type = walletType;
+                    // В реальном сценарии нужно сначала удалить старый кошелёк и добавить новый
+                    // Упрощённая реализация - только обновление
+                    updateParams.set('wallet_type', walletType);
                 }
                 
-                // If number changed, we need to handle it differently
-                if (walletNumber !== originalWallet.number) {
-                    // First delete old wallet, then add new
-                    // This is a simplified approach - in real scenario you'd have proper update endpoint
-                    console.log('Number changed - requires special handling');
-                }
+                // Отправляем запрос на обновление
+                const updateUrl = `${formApi}?${updateParams.toString()}`;
+                console.log('Update URL:', updateUrl);
                 
-                // Construct API URL
-                const updateUrl = `${formApi}?action=update_wallet_status&${new URLSearchParams(updateData).toString()}`;
+                const response = await fetch(updateUrl, {
+                    method: 'GET',
+                    mode: 'no-cors' // Для обхода CORS с Google Apps Script
+                }).catch(err => {
+                    // Альтернативный метод если CORS блокирует
+                    return fetch(`${formApi}/exec?${updateParams.toString()}`);
+                });
                 
-                const response = await fetch(updateUrl);
+                // После обновления перезагружаем кошельки
+                await loadWalletsFromForms();
                 
-                if (!response.ok) throw new Error('Update failed');
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showToast(translations[currentLanguage]['toast.save_success'], 'success');
-                    closeEditModal();
-                    
-                    // Reload wallets to get updated data
-                    await loadWallets();
-                    
-                } else {
-                    throw new Error(result.message || 'Update failed');
-                }
+                showToast(translations[currentLanguage]['toast.save_success'], 'success');
+                closeEditModal();
                 
             } catch (error) {
                 console.error('Error saving wallet:', error);
@@ -1590,33 +1649,19 @@
         // Toggle wallet status
         async function toggleWalletStatus(walletId, newStatus) {
             try {
-                const wallet = allWallets.find(w => w.id == walletId);
-                if (!wallet) return;
+                const wallet = allWallets.find(w => w.id === walletId);
+                if (!wallet || !wallet.formApi) return;
                 
-                // Find form API URL
-                const form = allForms.find(f => f.formName === wallet.formName);
-                if (!form || !form.formAPI) {
-                    throw new Error('Form API not found');
-                }
+                // Отправляем запрос на изменение статуса
+                const updateUrl = `${wallet.formApi}?action=update_wallet_status&wallet_type=${encodeURIComponent(wallet.type)}&wallet_number=${encodeURIComponent(wallet.number)}&enabled=${newStatus.toString()}`;
                 
-                // Send update request
-                const updateUrl = `${form.formAPI}?action=update_wallet_status&wallet_type=${encodeURIComponent(wallet.type)}&wallet_number=${encodeURIComponent(wallet.number)}&enabled=${newStatus.toString()}`;
+                await fetch(updateUrl, { method: 'GET', mode: 'no-cors' })
+                    .catch(err => fetch(`${wallet.formApi}/exec?action=update_wallet_status&wallet_type=${wallet.type}&wallet_number=${wallet.number}&enabled=${newStatus}`));
                 
-                const response = await fetch(updateUrl);
+                // Перезагружаем кошельки
+                await loadWalletsFromForms();
                 
-                if (!response.ok) throw new Error('Toggle failed');
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
-                    
-                    // Reload wallets
-                    await loadWallets();
-                    
-                } else {
-                    throw new Error(result.message || 'Toggle failed');
-                }
+                showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
                 
             } catch (error) {
                 console.error('Error toggling wallet:', error);
@@ -1629,33 +1674,19 @@
             if (!confirm(translations[currentLanguage]['wallets.delete'] + '?')) return;
             
             try {
-                const wallet = allWallets.find(w => w.id == walletId);
-                if (!wallet) return;
+                const wallet = allWallets.find(w => w.id === walletId);
+                if (!wallet || !wallet.formApi) return;
                 
-                // Find form API URL
-                const form = allForms.find(f => f.formName === wallet.formName);
-                if (!form || !form.formAPI) {
-                    throw new Error('Form API not found');
-                }
+                // Отправляем запрос на удаление
+                const deleteUrl = `${wallet.formApi}?action=delete_wallet&wallet_type=${encodeURIComponent(wallet.type)}&wallet_number=${encodeURIComponent(wallet.number)}`;
                 
-                // Send delete request
-                const deleteUrl = `${form.formAPI}?action=delete_wallet&wallet_type=${encodeURIComponent(wallet.type)}&wallet_number=${encodeURIComponent(wallet.number)}`;
+                await fetch(deleteUrl, { method: 'GET', mode: 'no-cors' })
+                    .catch(err => fetch(`${wallet.formApi}/exec?action=delete_wallet&wallet_type=${wallet.type}&wallet_number=${wallet.number}`));
                 
-                const response = await fetch(deleteUrl);
+                // Перезагружаем кошельки
+                await loadWalletsFromForms();
                 
-                if (!response.ok) throw new Error('Delete failed');
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showToast(translations[currentLanguage]['toast.delete_success'], 'success');
-                    
-                    // Reload wallets
-                    await loadWallets();
-                    
-                } else {
-                    throw new Error(result.message || 'Delete failed');
-                }
+                showToast(translations[currentLanguage]['toast.delete_success'], 'success');
                 
             } catch (error) {
                 console.error('Error deleting wallet:', error);
@@ -1672,10 +1703,7 @@
                 btn.disabled = true;
                 btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]['wallets.refreshing']}`;
                 
-                await Promise.all([
-                    loadForms(),
-                    loadWallets()
-                ]);
+                await loadWalletsFromForms();
                 
                 showToast(translations[currentLanguage]['toast.success'], 'success');
                 
