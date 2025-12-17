@@ -936,16 +936,17 @@ async function refreshWalletsCache() {
         // Загрузка дашборда с кликабельными карточками
           async function loadDashboard() {
     try {
-        const token = localStorage.getItem('admin_token');
-        const currentUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
         const container = document.getElementById('dashboardStats');
         container.innerHTML = '<p>Загрузка дашборда...</p><div class="loader"></div>';
         
-        // Загружаем кошельки пользователя
-        const userWallets = await loadUserWallets();
+        const currentUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+        const token = localStorage.getItem('admin_token');
+        
+        // Загружаем кошельки напрямую
+        const userWallets = await loadWalletsDirect();
         const activeWallets = userWallets.filter(w => w.enabled);
         
-        // Загружаем формы пользователя
+        // Загружаем формы
         let userForms = [];
         if (currentUser.role === 'superadmin' || currentUser.role === 'admin') {
             const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
@@ -957,80 +958,43 @@ async function refreshWalletsCache() {
             userForms = formsResult.success ? formsResult.forms : [];
         }
         
-        // Определяем карточки статистики
-        const statsCards = [];
-        
-        // 1. Кошельки
-        statsCards.push(`
-            <div class="stat-card clickable" onclick="switchTab('wallets')">
-                <div class="stat-number">${activeWallets.length}</div>
-                <div>Активных кошельков</div>
-                <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
-                    ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 
-                      `Всего: ${userWallets.length}` : 
-                      `В ваших формах: ${userWallets.length}`}
-                </div>
-            </div>
-        `);
-        
-        // 2. Формы
-        statsCards.push(`
-            <div class="stat-card clickable" onclick="switchTab('forms')">
-                <div class="stat-number">${userForms.length}</div>
-                <div>${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 'Всех форм' : 'Ваших форм'}</div>
-                <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
-                    Активных: ${userForms.filter(f => f.enabled).length}
-                </div>
-            </div>
-        `);
-        
-        // 3. Агенты (только для админов)
-        if (currentUser.role === 'superadmin' || currentUser.role === 'admin') {
-            const agentsResponse = await fetch(`${API_URL}?action=get_agents&token=${token}`);
-            const agentsResult = await agentsResponse.json();
-            const totalAgents = agentsResult.success ? (agentsResult.agents || []).length : 0;
-            
-            statsCards.push(`
-                <div class="stat-card clickable" onclick="switchTab('agents')">
-                    <div class="stat-number">${totalAgents}</div>
-                    <div>Агентов</div>
-                    <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
-                        В системе
-                    </div>
-                </div>
-            `);
-        }
-        
-        // 4. Общая статистика
-        statsCards.push(`
-            <div class="stat-card clickable" onclick="switchTab('history')">
-                <div class="stat-number">${userWallets.length}</div>
-                <div>Всего кошельков</div>
-                <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
-                    ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 'В системе' : 'В ваших формах'}
-                </div>
-            </div>
-        `);
-        
+        // Статистика
         container.innerHTML = `
             <div class="stats-grid">
-                ${statsCards.join('')}
+                <div class="stat-card clickable" onclick="switchTab('wallets')">
+                    <div class="stat-number">${activeWallets.length}</div>
+                    <div>Активных кошельков</div>
+                    <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
+                        Всего: ${userWallets.length}
+                    </div>
+                </div>
+                <div class="stat-card clickable" onclick="switchTab('forms')">
+                    <div class="stat-number">${userForms.length}</div>
+                    <div>${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 'Всех форм' : 'Ваших форм'}</div>
+                    <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
+                        Активных: ${userForms.filter(f => f.enabled).length}
+                    </div>
+                </div>
+                ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? `
+                    <div class="stat-card clickable" onclick="switchTab('agents')">
+                        <div class="stat-number">0</div>
+                        <div>Агентов</div>
+                        <div style="font-size:12px;color:#95a5a6;margin-top:5px;">В системе</div>
+                    </div>
+                ` : ''}
+                <div class="stat-card clickable" onclick="switchTab('history')">
+                    <div class="stat-number">${userWallets.length}</div>
+                    <div>Всего кошельков</div>
+                    <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
+                        ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 'В системе' : 'В ваших формах'}
+                    </div>
+                </div>
             </div>
             
             <div style="margin-top:30px;background:var(--card-bg);padding:20px;border-radius:10px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-                    <h3>
-                        ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 
-                          '🔥 Все активные кошельки' : 
-                          '🔥 Ваши активные кошельки'} 
-                        (${activeWallets.length})
-                    </h3>
-                    <div>
-                        <button class="btn" onclick="loadDashboard()" style="margin-right:10px;" data-loading-text="Обновление...">🔄 Обновить</button>
-                        ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? `
-                            <button class="btn btn-success" onclick="showAddWalletForm()">➕ Добавить</button>
-                        ` : ''}
-                    </div>
+                    <h3>${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 'Все активные кошельки' : 'Ваши активные кошельки'} (${activeWallets.length})</h3>
+                    <button class="btn" onclick="loadDashboard()">🔄 Обновить</button>
                 </div>
                 ${activeWallets.length > 0 ? `
                     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:15px;">
@@ -1040,7 +1004,7 @@ async function refreshWalletsCache() {
                                     <span style="background:${getWalletTypeColor(wallet.type)};padding:5px 10px;border-radius:15px;color:white;font-size:12px;">
                                         ${wallet.type}
                                     </span>
-                                    <span style="color:#2ecc71;font-size:12px;">✅</span>
+                                    <span style="color:#2ecc71;">✅</span>
                                 </div>
                                 <div style="margin-top:10px;">
                                     <div style="font-weight:bold;color:white;">${wallet.name}</div>
@@ -1055,33 +1019,16 @@ async function refreshWalletsCache() {
                             </div>
                         `).join('')}
                     </div>
-                    ${activeWallets.length > 6 ? `
-                        <div style="text-align:center;margin-top:15px;">
-                            <button class="btn" onclick="switchTab('wallets')">
-                                Показать все кошельки (${activeWallets.length})
-                            </button>
-                        </div>
-                    ` : ''}
-                ` : `
-                    <div style="text-align:center;padding:30px;color:#95a5a6;">
-                        <p>${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 
-                            'Нет активных кошельков' : 
-                            'В ваших формах нет активных кошельков'}</p>
-                        ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? `
-                            <button class="btn" onclick="showAddWalletForm()" style="margin-top:10px;">➕ Добавить первый кошелёк</button>
-                        ` : ''}
-                    </div>
-                `}
+                ` : '<p style="text-align:center;padding:30px;color:#95a5a6;">Нет активных кошельков</p>'}
             </div>
         `;
         
     } catch (error) {
-        console.error('Dashboard error:', error);
         container.innerHTML = `
             <div style="text-align:center;padding:20px;color:#e74c3c">
                 <p><strong>Ошибка загрузки дашборда:</strong></p>
                 <p>${error.message}</p>
-                <button class="btn" onclick="loadDashboard()" style="margin-top:10px;">Повторить попытку</button>
+                <button class="btn" onclick="loadDashboard()">Повторить</button>
             </div>
         `;
     }
@@ -1096,18 +1043,27 @@ async function refreshWalletsCache() {
         
         container.innerHTML = '<p>Загрузка данных форм...</p><div class="loader"></div>';
         
-        const response = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
-        const result = await response.json();
+        // Загружаем формы напрямую
+        let formsResponse;
+        if (currentUser.role === 'superadmin' || currentUser.role === 'admin') {
+            formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+        } else {
+            formsResponse = await fetch(`${API_URL}?action=get_user_forms&token=${token}`);
+        }
+        
+        const result = await formsResponse.json();
         
         if (result.success && result.forms && result.forms.length > 0) {
-            // ФИЛЬТРАЦИЯ ПО РОЛИ
+            // Для менеджеров фильтруем формы по названиям
             let filteredForms = result.forms;
             if (currentUser.role === 'manager' || currentUser.role === 'viewer') {
-                const assignedResponse = await fetch(`${API_URL}?action=get_assigned_forms&token=${token}&username=${encodeURIComponent(currentUser.username)}`);
+                const assignedResponse = await fetch(`${API_URL}?action=get_user_forms&token=${token}`);
                 const assignedResult = await assignedResponse.json();
                 if (assignedResult.success && assignedResult.forms) {
                     const assignedSet = new Set(assignedResult.forms);
-                    filteredForms = result.forms.filter(form => assignedSet.has(form.formName));
+                    filteredForms = result.forms.filter(form => 
+                        typeof form === 'object' ? assignedSet.has(form.formName) : assignedSet.has(form)
+                    );
                 } else {
                     filteredForms = [];
                 }
@@ -1115,141 +1071,113 @@ async function refreshWalletsCache() {
             
             if (filteredForms.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; background: var(--card-bg); border-radius: 10px;">
-                        <p>${currentUser.role === 'manager' || currentUser.role === 'viewer' ? 'Вам не назначены формы' : 'Форм не найдено'}</p>
-                        ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? `
-                            <button class="btn btn-success" onclick="showAddFormModal()" style="margin-top: 20px;">
-                                ➕ Создать новую форму
-                            </button>
-                        ` : ''}
+                    <div style="text-align:center;padding:40px;">
+                        <p>Вам не назначены формы</p>
                     </div>
                 `;
                 return;
             }
             
-            const walletsData = await loadAllWalletsFromForms(false, true);
+            // Преобразуем формы если это массив строк
+            const forms = filteredForms.map(form => 
+                typeof form === 'string' ? { formName: form, formAPI: '' } : form
+            );
+            
+            // Загружаем кошельки для статистики
+            const wallets = await loadWalletsDirect();
             const walletsByForm = {};
-            Object.values(walletsData).forEach(wallet => {
-                wallet.forms.forEach(formName => {
-                    if (!walletsByForm[formName]) walletsByForm[formName] = [];
-                    walletsByForm[formName].push(wallet);
-                });
+            wallets.forEach(wallet => {
+                if (!walletsByForm[wallet.formName]) walletsByForm[wallet.formName] = [];
+                walletsByForm[wallet.formName].push(wallet);
             });
             
-            const formAgentsMap = {};
-            for (const form of filteredForms) {
-                const agentsResponse = await fetch(`${API_URL}?action=get_form_agents&token=${token}&form_name=${encodeURIComponent(form.formName)}`);
-                const agentsResult = await agentsResponse.json();
-                formAgentsMap[form.formName] = agentsResult.success ? agentsResult.agents : [];
-            }
-            
             let html = `
-                <div style="margin-bottom: 20px; color: #95a5a6; font-size: 14px;">
-                    Форм: ${filteredForms.length}
-                    ${currentUser.role !== 'superadmin' && currentUser.role !== 'admin' ? '(ваших)' : ''}
+                <div style="margin-bottom:20px;color:#95a5a6;">
+                    Форм: ${forms.length} ${currentUser.role !== 'superadmin' && currentUser.role !== 'admin' ? '(ваших)' : ''}
                 </div>
-                <table class="wallet-table">
-                    <thead>
-                        <tr>
-                            <th>Название формы</th>
-                            <th>API URL</th>
-                            <th>Агенты</th>
-                            <th>Кошельки</th>
-                            <th>Статус</th>
-                            <th style="width: 150px;">Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px;">
             `;
             
-            filteredForms.forEach(form => {
+            forms.forEach(form => {
                 const formWallets = walletsByForm[form.formName] || [];
                 const activeWallets = formWallets.filter(w => w.enabled);
-                const formAgents = formAgentsMap[form.formName] || [];
                 const canEdit = currentUser.role === 'superadmin' || currentUser.role === 'admin' || currentUser.role === 'manager';
-                const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
                 
                 html += `
-                    <tr>
-                        <td><strong>${form.formName}</strong></td>
-                        <td><code style="font-size:11px;background:rgba(0,0,0,0.2);padding:3px 6px;border-radius:3px;">${form.formAPI || '—'}</code></td>
-                        <td>
-                            ${formAgents.length > 0 ? 
-                                formAgents.map(a => `<span style="background:#9b59b6;color:white;padding:2px 6px;border-radius:10px;margin:1px;display:inline-block;font-size:11px;">${a}</span>`).join('') : 
-                                '<span style="color:#95a5a6;font-size:12px;">—</span>'
-                            }
-                        </td>
-                        <td>
-                            <span style="color:${activeWallets.length > 0 ? '#2ecc71' : '#e74c3c'}">${activeWallets.length} акт.</span>
-                            <span style="color:#95a5a6;font-size:11px;margin-left:5px">/${formWallets.length}</span>
-                        </td>
-                        <td>
-                            <span style="color:${form.enabled ? '#2ecc71' : '#e74c3c'}">${form.enabled ? '✅' : '❌'}</span>
-                            ${form.serviceMode ? '<span style="color:#e67e22;margin-left:5px">🔧</span>' : ''}
-                        </td>
-                        <td>
-                            <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start;">
-                                ${canEdit ? `
-                                    <button class="btn" style="width:100%;padding:6px 10px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;" 
-                                            onclick="showEditWalletsModal('${form.formName}')"
-                                            data-loading-text="Загрузка...">
-                                        <span>🏦</span>
-                                        <span>Кошельки</span>
-                                    </button>
-                                ` : `
-                                    <button class="btn" style="width:100%;padding:6px 10px;font-size:12px;background:#95a5a6;" disabled>
-                                        <span>🔒</span>
-                                        <span>Нет доступа</span>
-                                    </button>
-                                `}
-                                <button class="btn" style="width:100%;padding:6px 10px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;" 
-                                        onclick="testFormConnection('${form.formName}', '${form.formAPI}')"
-                                        data-loading-text="Тестирование...">
-                                    <span>🧪</span>
-                                    <span>Тест API</span>
-                                </button>
-                                ${isAdmin ? `
-                                    <button class="btn" style="width:100%;padding:6px 10px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;" 
-                                            onclick="manageFormAgents('${form.formName}')"
-                                            data-loading-text="Загрузка...">
-                                        <span>👥</span>
-                                        <span>Агенты</span>
-                                    </button>
-                                    <button class="btn" style="width:100%;padding:6px 10px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;" 
-                                            onclick="editFormSettings('${form.formName}')"
-                                            data-loading-text="Загрузка...">
-                                        <span>⚙️</span>
-                                        <span>Настройки</span>
-                                    </button>
-                                ` : ''}
+                    <div style="background:var(--card-bg);border-radius:10px;padding:20px;border:1px solid rgba(255,255,255,0.1);">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px;">
+                            <div>
+                                <strong style="font-size:16px;">${form.formName}</strong>
+                                <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
+                                    ${form.formAPI ? '🟢 API есть' : '🔴 Нет API'}
+                                </div>
                             </div>
-                        </td>
-                    </tr>
+                            <span style="color:${form.enabled ? '#2ecc71' : '#e74c3c'};">
+                                ${form.enabled ? '✅' : '❌'}
+                            </span>
+                        </div>
+                        
+                        <div style="margin:15px 0;padding:10px;background:rgba(0,0,0,0.2);border-radius:6px;">
+                            <div style="font-size:12px;color:#95a5a6;">Кошельки</div>
+                            <div style="display:flex;justify-content:space-between;margin-top:5px;">
+                                <span style="color:${activeWallets.length > 0 ? '#2ecc71' : '#e74c3c'}">
+                                    ${activeWallets.length} активных
+                                </span>
+                                <span style="color:#95a5a6">${formWallets.length} всего</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display:flex;flex-direction:column;gap:8px;margin-top:20px;">
+                            ${canEdit ? `
+                                <button class="btn btn-success" style="width:100%;padding:8px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;" 
+                                        onclick="showEditWalletsModal('${form.formName}')">
+                                    🏦 Управление кошельками
+                                </button>
+                            ` : `
+                                <button class="btn" style="width:100%;padding:8px;font-size:13px;background:#95a5a6;" disabled>
+                                    🔒 Нет доступа
+                                </button>
+                            `}
+                            <button class="btn" style="width:100%;padding:8px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;" 
+                                    onclick="testFormConnection('${form.formName}', '${form.formAPI}')">
+                                🧪 Тестировать API
+                            </button>
+                            ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? `
+                                <button class="btn" style="width:100%;padding:8px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;" 
+                                        onclick="manageFormAgents('${form.formName}')">
+                                    👥 Управление агентами
+                                </button>
+                                <button class="btn" style="width:100%;padding:8px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;" 
+                                        onclick="editFormSettings('${form.formName}')">
+                                    ⚙️ Настройки формы
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
                 `;
             });
             
-            html += '</tbody></table>';
+            html += `</div>`;
             container.innerHTML = html;
             
         } else {
             container.innerHTML = `
-                <div style="text-align: center; padding: 40px; background: var(--card-bg); border-radius: 10px;">
+                <div style="text-align:center;padding:40px;">
                     <p>Форм не найдено</p>
                     ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? `
-                        <button class="btn btn-success" onclick="showAddFormModal()" style="margin-top: 20px;">
-                            ➕ Создать новую форму
+                        <button class="btn btn-success" onclick="showAddFormModal()" style="margin-top:20px;">
+                            ➕ Создать форму
                         </button>
                     ` : ''}
                 </div>
             `;
         }
     } catch (error) {
-        console.error('Forms loading error:', error);
         container.innerHTML = `
-            <div style="color:#e74c3c;text-align:center;padding:20px;">
-                <p><strong>Ошибка загрузки форм:</strong></p>
+            <div style="text-align:center;padding:20px;color:#e74c3c">
+                <p><strong>Ошибка:</strong></p>
                 <p>${error.message}</p>
-                <button class="btn" onclick="loadForms()" style="margin-top:10px;">Повторить</button>
+                <button class="btn" onclick="loadForms()">Повторить</button>
             </div>
         `;
     }
@@ -3087,118 +3015,180 @@ function getOnlineAgentsCount(total) {
 }
         
                 // ========== КОШЕЛЬКИ (обновленная версия) ==========
-           async function loadWallets(forceRefresh = false) {
+
+        async function loadWalletsDirect() {
+    try {
+        const token = localStorage.getItem('admin_token');
+        const currentUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+        
+        console.log('Прямая загрузка кошельков для:', currentUser.username);
+        
+        // 1. Получаем доступные формы
+        let availableForms = [];
+        
+        if (currentUser.role === 'superadmin' || currentUser.role === 'admin') {
+            const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+            const formsResult = await formsResponse.json();
+            if (formsResult.success && formsResult.forms) {
+                availableForms = formsResult.forms;
+            }
+        } else {
+            // Для менеджера/наблюдателя
+            const formsResponse = await fetch(`${API_URL}?action=get_user_forms&token=${token}`);
+            const formsResult = await formsResponse.json();
+            
+            if (formsResult.success && formsResult.forms) {
+                // Получаем полную информацию о назначенных формах
+                const allFormsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+                const allFormsResult = await allFormsResponse.json();
+                
+                if (allFormsResult.success && allFormsResult.forms) {
+                    availableForms = allFormsResult.forms.filter(form => 
+                        formsResult.forms.includes(form.formName)
+                    );
+                }
+            }
+        }
+        
+        if (availableForms.length === 0) {
+            console.log('Нет доступных форм');
+            return [];
+        }
+        
+        // 2. Загружаем кошельки из каждой формы
+        const allWallets = [];
+        
+        for (const form of availableForms) {
+            if (!form.formAPI) continue;
+            
+            try {
+                console.log(`Запрашиваем кошельки из: ${form.formName}`);
+                const response = await fetch(`${form.formAPI}?action=get_wallets&show_all=true`);
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.wallets) {
+                    Object.entries(result.wallets).forEach(([type, data]) => {
+                        if (data.numbersInfo) {
+                            // Новая структура
+                            Object.entries(data.numbersInfo).forEach(([number, info]) => {
+                                allWallets.push({
+                                    type: type,
+                                    name: info.name || type,
+                                    number: number,
+                                    enabled: info.enabled,
+                                    formName: form.formName,
+                                    formAPI: form.formAPI
+                                });
+                            });
+                        } else if (data.availableNumbers) {
+                            // Старая структура
+                            data.availableNumbers.forEach(number => {
+                                allWallets.push({
+                                    type: type,
+                                    name: data.name || type,
+                                    number: number,
+                                    enabled: data.enabled !== false,
+                                    formName: form.formName,
+                                    formAPI: form.formAPI
+                                });
+                            });
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error(`Ошибка загрузки из ${form.formName}:`, error);
+            }
+        }
+        
+        console.log(`Загружено кошельков: ${allWallets.length}`);
+        return allWallets;
+        
+    } catch (error) {
+        console.error('Ошибка прямой загрузки кошельков:', error);
+        return [];
+    }
+}
+        
+           async function loadWallets() {
     try {
         const container = document.getElementById('walletsList');
         const currentUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
         
         container.innerHTML = '<p>Загрузка кошельков...</p><div class="loader"></div>';
         
-        // Загружаем кошельки пользователя
-        const userWallets = await loadUserWallets();
-        
-        console.log('Кошельки для', currentUser.username + ':', userWallets.length);
+        // Загружаем напрямую
+        const userWallets = await loadWalletsDirect();
         
         if (userWallets.length === 0) {
             container.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
+                <div style="text-align:center;padding:40px;">
                     <p>${currentUser.role === 'manager' || currentUser.role === 'viewer' ? 
-                        'В назначенных вам формах нет кошельков' : 
+                        'В ваших формах нет кошельков' : 
                         'Нет кошельков в формах'}</p>
-                    ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? `
-                        <button class="btn" onclick="loadWallets(true)" style="margin-top: 10px;">
-                            🔄 Обновить данные
-                        </button>
-                        <button class="btn btn-success" onclick="showAddWalletForm()" style="margin-top: 10px; margin-left: 10px;">
-                            ➕ Добавить кошелёк
-                        </button>
-                    ` : ''}
+                    <button class="btn" onclick="loadWallets()" style="margin-top:10px;">
+                        🔄 Обновить
+                    </button>
                 </div>
             `;
             return;
         }
         
         // Группируем по формам
-        const formsMap = {};
+        const groupedByForm = {};
         userWallets.forEach(wallet => {
-            if (!formsMap[wallet.formName]) {
-                formsMap[wallet.formName] = [];
+            if (!groupedByForm[wallet.formName]) {
+                groupedByForm[wallet.formName] = [];
             }
-            formsMap[wallet.formName].push(wallet);
+            groupedByForm[wallet.formName].push(wallet);
         });
         
         let html = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div>
-                    <h3>Кошельки: ${userWallets.length}</h3>
-                    <div style="font-size: 14px; color: #95a5a6; margin-top: 5px;">
-                        ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 
-                          'Из всех форм' : 
-                          'Из ваших форм'} • Форм: ${Object.keys(formsMap).length}
-                    </div>
-                </div>
-                <div>
-                    <button class="btn" onclick="loadWallets(true)" title="Обновить данные" data-loading-text="Обновление...">
-                        🔄 Обновить
-                    </button>
-                </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3>Кошельки: ${userWallets.length} (форм: ${Object.keys(groupedByForm).length})</h3>
+                <button class="btn" onclick="loadWallets()">🔄 Обновить</button>
             </div>
         `;
         
-        // Показываем кошельки сгруппированные по формам
-        Object.entries(formsMap).forEach(([formName, wallets]) => {
-            const activeWallets = wallets.filter(w => w.enabled);
+        // Отображаем по формам
+        Object.entries(groupedByForm).forEach(([formName, wallets]) => {
+            const activeCount = wallets.filter(w => w.enabled).length;
             
             html += `
-                <div style="background: var(--card-bg); border-radius: 10px; margin-bottom: 20px; overflow: hidden;">
-                    <div style="background: rgba(0,0,0,0.3); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="background:var(--card-bg);border-radius:10px;margin-bottom:20px;overflow:hidden;">
+                    <div style="background:rgba(0,0,0,0.3);padding:12px 20px;display:flex;justify-content:space-between;align-items:center;">
                         <div>
                             <strong>${formName}</strong>
-                            <div style="font-size: 12px; color: #95a5a6; margin-top: 3px;">
-                                ${activeWallets.length} активных / ${wallets.length} всего
+                            <div style="font-size:12px;color:#95a5a6;margin-top:3px;">
+                                ${activeCount} активных / ${wallets.length} всего
                             </div>
                         </div>
                         ${currentUser.role === 'superadmin' || currentUser.role === 'admin' || currentUser.role === 'manager' ? `
-                            <button class="btn btn-success" style="padding: 6px 12px; font-size: 12px;" 
+                            <button class="btn btn-success" style="padding:6px 12px;font-size:12px;" 
                                     onclick="showEditWalletsModal('${formName}')">
-                                🏦 Управление кошельками
+                                🏦 Управление
                             </button>
                         ` : ''}
                     </div>
-                    <div style="padding: 15px;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="background: rgba(0,0,0,0.2);">
-                                    <th style="padding: 10px; text-align: left; font-size: 12px;">Тип</th>
-                                    <th style="padding: 10px; text-align: left; font-size: 12px;">Название</th>
-                                    <th style="padding: 10px; text-align: left; font-size: 12px;">Номер</th>
-                                    <th style="padding: 10px; text-align: left; font-size: 12px;">Статус</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${wallets.map(wallet => `
-                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                        <td style="padding: 10px;">
-                                            <span style="background: ${getWalletTypeColor(wallet.type)}; padding: 4px 8px; border-radius: 12px; color: white; font-size: 11px;">
-                                                ${wallet.type}
-                                            </span>
-                                        </td>
-                                        <td style="padding: 10px; font-size: 13px;">${wallet.name}</td>
-                                        <td style="padding: 10px;">
-                                            <code style="background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;" 
-                                                  onclick="copyToClipboard('${wallet.number}')">
-                                                ${wallet.number}
-                                            </code>
-                                        </td>
-                                        <td style="padding: 10px;">
-                                            <span style="color: ${wallet.enabled ? '#2ecc71' : '#e74c3c'};">
-                                                ${wallet.enabled ? '✅ Активен' : '❌ Отключён'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
+                    <div style="padding:15px;">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
+                            ${wallets.map(wallet => `
+                                <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                        <span style="background:${getWalletTypeColor(wallet.type)};padding:3px 8px;border-radius:10px;color:white;font-size:11px;">
+                                            ${wallet.type}
+                                        </span>
+                                        <span style="color:${wallet.enabled ? '#2ecc71' : '#e74c3c'};font-size:12px;">
+                                            ${wallet.enabled ? '✅' : '❌'}
+                                        </span>
+                                    </div>
+                                    <div style="font-weight:bold;font-size:13px;margin-bottom:5px;">${wallet.name}</div>
+                                    <code style="display:block;background:rgba(0,0,0,0.3);padding:6px;border-radius:4px;font-size:12px;cursor:pointer;text-align:center;" 
+                                          onclick="copyToClipboard('${wallet.number}')">
+                                        ${wallet.number}
+                                    </code>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
             `;
@@ -3207,10 +3197,9 @@ function getOnlineAgentsCount(total) {
         container.innerHTML = html;
         
     } catch (error) {
-        console.error('Ошибка загрузки кошельков:', error);
         container.innerHTML = `
-            <p style="color: #e74c3c">Ошибка загрузки кошельков: ${error.message}</p>
-            <button class="btn" onclick="loadWallets(true)">Повторить попытку</button>
+            <p style="color:#e74c3c">Ошибка: ${error.message}</p>
+            <button class="btn" onclick="loadWallets()">Повторить</button>
         `;
     }
 }
