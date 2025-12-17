@@ -422,6 +422,46 @@
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbxDaBdYMx44M2W3FsJp5tOECFTRD6rWrhPAC96MuUexROt5Qjgj4U0er4So6Ehsh8xQ5g/exec';
 
+        
+function setButtonLoading(button, isLoading, loadingText = null) {
+    if (!button) return;
+    
+    if (isLoading) {
+        button.dataset.originalText = button.innerHTML;
+        button.innerHTML = `
+            <div class="loader-small" style="display:inline-block;margin-right:8px;"></div>
+            <span>${loadingText || button.dataset.loadingText || 'Загрузка...'}</span>
+        `;
+        button.disabled = true;
+    } else {
+        if (button.dataset.originalText) {
+            button.innerHTML = button.dataset.originalText;
+            delete button.dataset.originalText;
+        }
+        button.disabled = false;
+    }
+}
+
+        async function testFormConnection(formName, formAPI) {
+    const button = event.target.closest('button');
+    setButtonLoading(button, true, 'Тестирование...');
+    
+    try {
+        const response = await fetch(`${formAPI}?action=test`);
+        const result = await response.json();
+        
+        if (result.status === 'success' || result.success) {
+            alert(`✅ Форма "${formName}" работает корректно\n\n${result.message || 'API отвечает'}`);
+        } else {
+            alert(`⚠️ Форма "${formName}" имеет проблемы:\n\n${result.message || 'Неизвестная ошибка'}`);
+        }
+    } catch (error) {
+        alert(`❌ Ошибка подключения к форме "${formName}":\n\n${error.message}`);
+    } finally {
+        setButtonLoading(button, false);
+    }
+}
+
         // ========== СИСТЕМА КЭШИРОВАНИЯ КОШЕЛЬКОВ ==========
 
 // Ключи для localStorage
@@ -761,7 +801,6 @@ async function refreshWalletsCache() {
         const container = document.getElementById('dashboardStats');
         container.innerHTML = '<p>Загрузка дашборда...</p><div class="loader"></div>';
         
-        // Загружаем статистику
         let dashboardUrl = `${API_URL}?action=get_dashboard_data&token=${token}`;
         if (currentUser.role !== 'superadmin' && currentUser.role !== 'admin') {
             dashboardUrl += '&user_specific=true';
@@ -775,7 +814,7 @@ async function refreshWalletsCache() {
             throw new Error(dashboardResult.error || 'Ошибка загрузки дашборда');
         }
         
-        // Загружаем формы в зависимости от роли
+        // Загружаем формы
         let userForms = [];
         if (currentUser.role === 'superadmin' || currentUser.role === 'admin') {
             const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
@@ -787,30 +826,40 @@ async function refreshWalletsCache() {
             userForms = formsResult.success ? formsResult.forms : [];
         }
         
-        // Загружаем кошельки
         const wallets = await loadAllWalletsFromForms(false, true);
         const walletsArray = Object.values(wallets);
         const activeWallets = walletsArray.filter(w => w.enabled);
         
-        // Отображение дашборда
-        container.innerHTML = `
-            <div class="stats-grid">
-                <div class="stat-card clickable" onclick="switchTab('wallets')">
-                    <div class="stat-number">${activeWallets.length}</div>
-                    <div>Активных кошельков</div>
-                    <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
-                        ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 
-                          `Всего: ${walletsArray.length}` : 
-                          `В ваших формах: ${walletsArray.length}`}
-                    </div>
+        // Определяем карточки статистики в зависимости от роли
+        const statsCards = [];
+        
+        // 1. Кошельки (все видят)
+        statsCards.push(`
+            <div class="stat-card clickable" onclick="switchTab('wallets')">
+                <div class="stat-number">${activeWallets.length}</div>
+                <div>Активных кошельков</div>
+                <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
+                    ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 
+                      `Всего: ${walletsArray.length}` : 
+                      `В ваших формах: ${walletsArray.length}`}
                 </div>
-                <div class="stat-card clickable" onclick="switchTab('forms')">
-                    <div class="stat-number">${userForms.length}</div>
-                    <div>${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 'Всех форм' : 'Ваших форм'}</div>
-                    <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
-                        Активных: ${userForms.filter(f => f.enabled).length}
-                    </div>
+            </div>
+        `);
+        
+        // 2. Формы (все видят)
+        statsCards.push(`
+            <div class="stat-card clickable" onclick="switchTab('forms')">
+                <div class="stat-number">${userForms.length}</div>
+                <div>${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? 'Всех форм' : 'Ваших форм'}</div>
+                <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
+                    Активных: ${userForms.filter(f => f.enabled).length}
                 </div>
+            </div>
+        `);
+        
+        // 3. Агенты (только для админов и суперадминов)
+        if (currentUser.role === 'superadmin' || currentUser.role === 'admin') {
+            statsCards.push(`
                 <div class="stat-card clickable" onclick="switchTab('agents')">
                     <div class="stat-number">${dashboardResult.stats?.totalAgents || 0}</div>
                     <div>Агентов</div>
@@ -818,13 +867,23 @@ async function refreshWalletsCache() {
                         Онлайн: ${Math.floor((dashboardResult.stats?.totalAgents || 0) * 0.7)}
                     </div>
                 </div>
-                <div class="stat-card clickable" onclick="switchTab('history')">
-                    <div class="stat-number">${dashboardResult.stats?.totalWallets || 0}</div>
-                    <div>Всего кошельков</div>
-                    <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
-                        В системе
-                    </div>
+            `);
+        }
+        
+        // 4. История или общая статистика
+        statsCards.push(`
+            <div class="stat-card clickable" onclick="switchTab('history')">
+                <div class="stat-number">${dashboardResult.stats?.totalWallets || 0}</div>
+                <div>Всего кошельков</div>
+                <div style="font-size:12px;color:#95a5a6;margin-top:5px;">
+                    В системе
                 </div>
+            </div>
+        `);
+        
+        container.innerHTML = `
+            <div class="stats-grid">
+                ${statsCards.join('')}
             </div>
             
             <div style="margin-top:30px;background:var(--card-bg);padding:20px;border-radius:10px;">
@@ -836,7 +895,7 @@ async function refreshWalletsCache() {
                         (${activeWallets.length})
                     </h3>
                     <div>
-                        <button class="btn" onclick="loadAllWalletsFromForms(true)" style="margin-right:10px;">🔄 Обновить</button>
+                        <button class="btn" onclick="loadAllWalletsFromForms(true)" style="margin-right:10px;" data-loading-text="Обновление...">🔄 Обновить</button>
                         <button class="btn btn-success" onclick="showAddWalletForm()">➕ Добавить</button>
                     </div>
                 </div>
@@ -900,7 +959,6 @@ async function refreshWalletsCache() {
         
         container.innerHTML = '<p>Загрузка данных форм...</p><div class="loader"></div>';
         
-        // Загружаем все формы
         const response = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
         const result = await response.json();
         
@@ -932,7 +990,6 @@ async function refreshWalletsCache() {
                 return;
             }
             
-            // Загружаем кошельки
             const walletsData = await loadAllWalletsFromForms(false, true);
             const walletsByForm = {};
             Object.values(walletsData).forEach(wallet => {
@@ -942,7 +999,6 @@ async function refreshWalletsCache() {
                 });
             });
             
-            // Загружаем агентов для каждой формы
             const formAgentsMap = {};
             for (const form of filteredForms) {
                 const agentsResponse = await fetch(`${API_URL}?action=get_form_agents&token=${token}&form_name=${encodeURIComponent(form.formName)}`);
@@ -950,7 +1006,6 @@ async function refreshWalletsCache() {
                 formAgentsMap[form.formName] = agentsResult.success ? agentsResult.agents : [];
             }
             
-            // Генерация таблицы
             let html = `
                 <div style="margin-bottom: 20px; color: #95a5a6; font-size: 14px;">
                     Форм: ${filteredForms.length}
@@ -964,7 +1019,7 @@ async function refreshWalletsCache() {
                             <th>Агенты</th>
                             <th>Кошельки</th>
                             <th>Статус</th>
-                            <th>Действия</th>
+                            <th style="width: 150px;">Действия</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -975,6 +1030,7 @@ async function refreshWalletsCache() {
                 const activeWallets = formWallets.filter(w => w.enabled);
                 const formAgents = formAgentsMap[form.formName] || [];
                 const canEdit = currentUser.role === 'superadmin' || currentUser.role === 'admin' || currentUser.role === 'manager';
+                const isAdmin = currentUser.role === 'superadmin' || currentUser.role === 'admin';
                 
                 html += `
                     <tr>
@@ -995,15 +1051,39 @@ async function refreshWalletsCache() {
                             ${form.serviceMode ? '<span style="color:#e67e22;margin-left:5px">🔧</span>' : ''}
                         </td>
                         <td>
-                            <div style="display:flex;gap:5px;">
+                            <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start;">
                                 ${canEdit ? `
-                                    <button class="btn" style="padding:4px 8px;font-size:12px;" onclick="showEditWalletsModal('${form.formName}')">🏦</button>
+                                    <button class="btn" style="width:100%;padding:6px 10px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;" 
+                                            onclick="showEditWalletsModal('${form.formName}')"
+                                            data-loading-text="Загрузка...">
+                                        <span>🏦</span>
+                                        <span>Кошельки</span>
+                                    </button>
                                 ` : `
-                                    <button class="btn" style="padding:4px 8px;font-size:12px;background:#95a5a6;" disabled>🔒</button>
+                                    <button class="btn" style="width:100%;padding:6px 10px;font-size:12px;background:#95a5a6;" disabled>
+                                        <span>🔒</span>
+                                        <span>Нет доступа</span>
+                                    </button>
                                 `}
-                                <button class="btn" style="padding:4px 8px;font-size:12px;" onclick="testFormConnection('${form.formName}', '${form.formAPI}')">🧪</button>
-                                ${currentUser.role === 'superadmin' || currentUser.role === 'admin' ? `
-                                    <button class="btn" style="padding:4px 8px;font-size:12px;" onclick="manageFormAgents('${form.formName}')">👥</button>
+                                <button class="btn" style="width:100%;padding:6px 10px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;" 
+                                        onclick="testFormConnection('${form.formName}', '${form.formAPI}')"
+                                        data-loading-text="Тестирование...">
+                                    <span>🧪</span>
+                                    <span>Тест API</span>
+                                </button>
+                                ${isAdmin ? `
+                                    <button class="btn" style="width:100%;padding:6px 10px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;" 
+                                            onclick="manageFormAgents('${form.formName}')"
+                                            data-loading-text="Загрузка...">
+                                        <span>👥</span>
+                                        <span>Агенты</span>
+                                    </button>
+                                    <button class="btn" style="width:100%;padding:6px 10px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;" 
+                                            onclick="editFormSettings('${form.formName}')"
+                                            data-loading-text="Загрузка...">
+                                        <span>⚙️</span>
+                                        <span>Настройки</span>
+                                    </button>
                                 ` : ''}
                             </div>
                         </td>
