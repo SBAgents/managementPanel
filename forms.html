@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Формы | Панель управления</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #042F28 0%, #0A5C4A 100%);
+            --accent: #D0E41E;
+            --accent-hover: #b8cc1a;
+            --text: white;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --sidebar-bg: rgba(0, 0, 0, 0.3);
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --info: #3498db;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        body {
+            background: var(--primary-bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        /* Sidebar (такой же как в предыдущих страницах) */
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            color: var(--accent);
+        }
+        
+        .logo p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .nav-links {
+            flex: 1;
+        }
+        
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid var(--accent);
+        }
+        
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 3px solid var(--accent);
+        }
+        
+        .nav-links a i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .user-info {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-details h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .user-details span {
+            font-size: 12px;
+            opacity: 0.7;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+            color: #ff6b6b;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+        
+        /* Language Selector */
+        .language-selector {
+            position: relative;
+            margin-left: 10px;
+        }
+        
+        .language-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        
+        .language-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .language-dropdown {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            border-radius: 8px;
+            margin-bottom: 5px;
+            min-width: 140px;
+            display: none;
+            overflow: hidden;
+            z-index: 100;
+        }
+        
+        .language-dropdown.show {
+            display: block;
+        }
+        
+        .language-option {
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .language-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .language-flag {
+            width: 20px;
+            height: 14px;
+            object-fit: cover;
+            border-radius: 2px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h2 {
+            font-size: 28px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: #2c3e50;
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        /* Forms Table */
+        .section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-header h3 {
+            font-size: 20px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status.active {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+        
+        .status.inactive {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        
+        .status.maintenance {
+            background: rgba(243, 156, 18, 0.2);
+            color: #f39c12;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            margin-right: 5px;
+        }
+        
+        .action-btn.manage {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+        
+        .action-btn.manage:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+        
+        .action-btn.toggle {
+            background: rgba(243, 156, 18, 0.2);
+            color: #f39c12;
+            border: 1px solid rgba(243, 156, 18, 0.3);
+        }
+        
+        .action-btn.toggle:hover {
+            background: rgba(243, 156, 18, 0.3);
+        }
+        
+        /* Agent Management Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.show .modal {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            font-size: 20px;
+            color: var(--accent);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        
+        .modal-close:hover {
+            opacity: 1;
+        }
+        
+        .modal-subtitle {
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+        
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .agent-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .agent-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .agent-email {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+        
+        .agent-role {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+        
+        .agent-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .agent-btn {
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+        
+        .agent-btn.assign {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+        
+        .agent-btn.assign:hover {
+            background: rgba(46, 204, 113, 0.3);
+        }
+        
+        .agent-btn.remove {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+        
+        .agent-btn.remove:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+        
+        .agent-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            opacity: 0.9;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: white;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            transform: scale(1.2);
+        }
+        
+        .checkbox-group label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+        
+        /* Loader */
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.9);
+            border-left: 4px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(150%);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast i {
+            font-size: 20px;
+        }
+        
+        .toast.success i { color: #2ecc71; }
+        .toast.error i { color: #e74c3c; }
+        .toast.warning i { color: #f39c12; }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.7;
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .logo h1, .logo p, .nav-links a span, .user-details h3, .user-details span {
+                display: none;
+            }
+            
+            .nav-links a {
+                justify-content: center;
+                padding: 15px 0;
+            }
+            
+            .nav-links a i {
+                margin-right: 0;
+                font-size: 20px;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .language-selector {
+                margin-left: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                padding: 10px;
+            }
+            
+            .logo {
+                padding: 0 10px;
+                border-bottom: none;
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                margin-bottom: 0;
+                margin-right: 10px;
+            }
+            
+            .nav-links {
+                display: flex;
+                flex: 1;
+            }
+            
+            .nav-links a {
+                flex: 1;
+                justify-content: center;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+            
+            .nav-links a:hover, .nav-links a.active {
+                border-left: none;
+                border-bottom: 3px solid var(--accent);
+            }
+            
+            .user-info {
+                border-top: none;
+                border-left: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 0 10px;
+                min-width: 120px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* RTL Support */
+        body[dir="rtl"] .nav-links a i {
+            margin-right: 0;
+            margin-left: 12px;
+        }
+        
+        body[dir="rtl"] .sidebar {
+            border-right: none;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        body[dir="rtl"] .language-selector {
+            margin-left: 0;
+            margin-right: 10px;
+        }
+        
+        body[dir="rtl"] .language-dropdown {
+            right: auto;
+            left: 0;
+        }
+        
+        @media (max-width: 1024px) {
+            body[dir="rtl"] .nav-links a i {
+                margin-left: 0;
+            }
+        }
+        
+        body[dir="rtl"] td, body[dir="rtl"] th {
+            text-align: right;
+        }
+        
+        /* Hide API URL column */
+        .api-url {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h1 data-i18n="forms.title">Формы</h1>
+            <p data-i18n="forms.subtitle">Управление формами</p>
+        </div>
+        
+        <div class="nav-links">
+            <a href="dashboard.html" data-i18n="nav.dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Дашборд</span>
+            </a>
+            <a href="wallets.html" data-i18n="nav.wallets">
+                <i class="fas fa-wallet"></i>
+                <span>Кошельки</span>
+            </a>
+            <a href="forms.html" class="active" data-i18n="nav.forms">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Формы</span>
+            </a>
+            <a href="agents.html" data-i18n="nav.agents">
+                <i class="fas fa-users"></i>
+                <span>Агенты</span>
+            </a>
+            <a href="admins.html" data-i18n="nav.admins">
+                <i class="fas fa-user-shield"></i>
+                <span>Администраторы</span>
+            </a>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-details">
+                <h3 id="userName">Загрузка...</h3>
+                <span id="userRole">Загрузка...</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div class="language-selector">
+                    <div class="language-btn" id="languageBtn">
+                        <span id="currentLanguage">🌐 RU</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="language-dropdown" id="languageDropdown">
+                        <div class="language-option" data-lang="ru">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjE2IiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB5PSI1IiB3aWR0aD0iMjQiIGhlaWdodD0iNiIgZmlsbD0iI0Q1MjgzNCIvPgo8cmVjdCB5PSIxMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIGZpbGw9IiMwMDlDOTkiLz4KPC9zdmc+" alt="RU" class="language-flag">
+                            Русский
+                        </div>
+                        <div class="language-option" data-lang="en">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjE2IiBmaWxsPSIjMDEyMTY5Ii8+CjxwYXRoIGQ9Ik0wIDBMMjQgMEwyNCAyTDIgMkwyIDZMMjQgNkwyNCA4TDIgOEwyIDE0TDI0IDE0TDI0IDE2TDAgMTZaTTAgMEwwIDE2TDAgMFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0wIDBMMjQgMEwyNCAxTDIgMUwyIDVMMjQgNUwyNCA3TDIgN0wyIDEzTDI0IDEzTDI0IDE1TDAgMTVaTTAgMEwwIDE1TDAgMFoiIGZpbGw9IiNFNDAyMzMiLz4KPC9zdmc+" alt="EN" class="language-flag">
+                            English
+                        </div>
+                        <div class="language-option" data-lang="fr">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iMTYiIHdpZHRoPSI4IiBoZWlnaHQ9IjE2IiBmaWxsPSIjRjUxRTIyIi8+CjxyZWN0IHg9IjgiIHdpZHRoPSI4IiBoZWlnaHQ9IjE2IiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSIxNiIgZmlsbD0iIzAwMjY1MyIvPgo8L3N2Zz4=" alt="FR" class="language-flag">
+                            Français
+                        </div>
+                        <div class="language-option" data-lang="ar">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjE2IiBmaWxsPSIjQ0VBMjMxIi8+CjxwYXRoIGQ9Ik0wIDBIMjRWMUgweiIgZmlsbD0iI0U3MDM0NCIvPgo8cGF0aCBkPSJNMCAxNUgyNFYxNkwyNlYxNUgweiIgZmlsbD0iIzAwNzc0MSIvPgo8cGF0aCBkPSJNNS44IDkuMjFMMy42NiA4LjM5IDQuMDggNi4yOSA2LjIgNy4xMiA4LjMzIDYuMjkgOC43NSA4LjM5IDYuNjQgOS4yMSA4Ljc3IDEwLjA0IDguMzUgMTIuMTQgNi4yIDExLjMgNC4wOCAxIEMgMy42NiAxMC4wNCA1LjggOS4yMVoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPg==" alt="AR" class="language-flag">
+                            العربية
+                        </div>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()" data-i18n="nav.logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h2 data-i18n="forms.welcome">Управление формами</h2>
+            <div class="header-actions">
+                <!-- Только кнопка Обновить, остальные убраны по ТЗ -->
+                <button class="btn btn-primary" onclick="refreshForms()" id="refreshBtn" data-i18n="forms.refresh">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Обновить</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Forms Table -->
+        <div class="section">
+            <div class="section-header">
+                <h3 data-i18n="forms.list">Список форм</h3>
+                <div class="table-info">
+                    <span id="formsCount">0</span> <span data-i18n="forms.forms_found">форм найдено</span>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table id="formsTable">
+                    <thead>
+                        <tr>
+                            <th data-i18n="forms.table_name">Название формы</th>
+                            <!-- API URL скрыт по ТЗ -->
+                            <th class="api-url" data-i18n="forms.table_api">API URL</th>
+                            <th data-i18n="forms.table_status">Статус</th>
+                            <th data-i18n="forms.table_service">Режим обслуживания</th>
+                            <th data-i18n="forms.table_wallets">Кошельки</th>
+                            <th data-i18n="forms.table_agents">Агенты</th>
+                            <th data-i18n="forms.table_actions">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="formsTableBody">
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="noForms" class="empty-state" style="display: none;">
+                <i class="fas fa-clipboard-list"></i>
+                <h4 data-i18n="forms.no_forms">Формы не найдены</h4>
+                <p data-i18n="forms.no_forms_desc">Нет доступных форм для отображения</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Agent Management Modal -->
+    <div class="modal-overlay" id="agentsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalFormName">Управление агентами</h3>
+                <button class="modal-close" onclick="closeAgentsModal()">&times;</button>
+            </div>
+            
+            <div class="modal-subtitle" id="modalFormApi"></div>
+            
+            <!-- Assigned Agents -->
+            <h4 data-i18n="forms.assigned_agents">Назначенные агенты</h4>
+            <div class="agents-grid" id="assignedAgentsGrid">
+                <!-- Assigned agents will be loaded here -->
+            </div>
+            
+            <!-- Available Agents -->
+            <h4 data-i18n="forms.available_agents">Доступные агенты</h4>
+            <div class="agents-grid" id="availableAgentsGrid">
+                <!-- Available agents will be loaded here -->
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeAgentsModal()" data-i18n="forms.close">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Успешно обновлено</span>
+    </div>
+    
+    <script>
+        // API Configuration
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxDaBdYMx44M2W3FsJp5tOECFTRD6rWrhPAC96MuUexROt5Qjgj4U0er4So6Ehsh8xQ5g/exec';
+        
+        // State
+        let currentUser = null;
+        let currentPermissions = null;
+        let currentLanguage = 'ru';
+        let allForms = [];
+        let allAgents = [];
+        let currentFormName = '';
+        let currentFormApi = '';
+        
+        // Translation dictionary
+        const translations = {
+            ru: {
+                // Navigation
+                "nav.dashboard": "Дашборд",
+                "nav.wallets": "Кошельки",
+                "nav.forms": "Формы",
+                "nav.agents": "Агенты",
+                "nav.admins": "Администраторы",
+                "nav.logout": "Выход",
+                
+                // Forms page
+                "forms.title": "Формы",
+                "forms.subtitle": "Управление формами",
+                "forms.welcome": "Управление формами",
+                "forms.refresh": "Обновить",
+                "forms.refreshing": "Обновление...",
+                "forms.list": "Список форм",
+                "forms.forms_found": "форм найдено",
+                
+                // Table
+                "forms.table_name": "Название формы",
+                "forms.table_api": "API URL",
+                "forms.table_status": "Статус",
+                "forms.table_service": "Режим обслуживания",
+                "forms.table_wallets": "Кошельки",
+                "forms.table_agents": "Агенты",
+                "forms.table_actions": "Действия",
+                
+                // Actions
+                "forms.manage_agents": "Управление агентами",
+                "forms.toggle_status": "Переключить статус",
+                "forms.toggle_service": "Переключить режим обслуживания",
+                
+                // Status
+                "status.active": "Активна",
+                "status.inactive": "Неактивна",
+                "status.enabled": "Включён",
+                "status.disabled": "Выключен",
+                "status.maintenance": "Обслуживание",
+                "status.normal": "Нормальный",
+                
+                // Modal
+                "forms.assigned_agents": "Назначенные агенты",
+                "forms.available_agents": "Доступные агенты",
+                "forms.assign_agent": "Назначить",
+                "forms.remove_agent": "Удалить",
+                "forms.close": "Закрыть",
+                
+                // Empty states
+                "forms.no_forms": "Формы не найдены",
+                "forms.no_forms_desc": "Нет доступных форм для отображения",
+                "forms.no_assigned_agents": "Нет назначенных агентов",
+                "forms.no_available_agents": "Нет доступных агентов",
+                
+                // Toast messages
+                "toast.success": "Данные успешно обновлены",
+                "toast.error": "Ошибка при загрузке данных",
+                "toast.assign_success": "Агент успешно назначен",
+                "toast.assign_error": "Ошибка при назначении агента",
+                "toast.remove_success": "Агент успешно удалён",
+                "toast.remove_error": "Ошибка при удалении агента",
+                "toast.toggle_success": "Статус формы изменён",
+                "toast.toggle_error": "Ошибка при изменении статуса",
+                "toast.logout_success": "Выход выполнен успешно",
+                "toast.logout_error": "Ошибка при выходе",
+                
+                // Roles
+                "role.superadmin": "Супер-админ",
+                "role.admin": "Администратор",
+                "role.manager": "Менеджер",
+                "role.viewer": "Наблюдатель"
+            },
+            en: {
+                "nav.dashboard": "Dashboard",
+                "nav.wallets": "Wallets",
+                "nav.forms": "Forms",
+                "nav.agents": "Agents",
+                "nav.admins": "Administrators",
+                "nav.logout": "Logout",
+                "forms.title": "Forms",
+                "forms.subtitle": "Forms Management",
+                "forms.welcome": "Forms Management",
+                "forms.refresh": "Refresh",
+                "forms.refreshing": "Refreshing...",
+                "forms.list": "Forms List",
+                "forms.forms_found": "forms found",
+                "forms.table_name": "Form Name",
+                "forms.table_api": "API URL",
+                "forms.table_status": "Status",
+                "forms.table_service": "Maintenance Mode",
+                "forms.table_wallets": "Wallets",
+                "forms.table_agents": "Agents",
+                "forms.table_actions": "Actions",
+                "forms.manage_agents": "Manage Agents",
+                "forms.toggle_status": "Toggle Status",
+                "forms.toggle_service": "Toggle Maintenance",
+                "status.active": "Active",
+                "status.inactive": "Inactive",
+                "status.enabled": "Enabled",
+                "status.disabled": "Disabled",
+                "status.maintenance": "Maintenance",
+                "status.normal": "Normal",
+                "forms.assigned_agents": "Assigned Agents",
+                "forms.available_agents": "Available Agents",
+                "forms.assign_agent": "Assign",
+                "forms.remove_agent": "Remove",
+                "forms.close": "Close",
+                "forms.no_forms": "No forms found",
+                "forms.no_forms_desc": "No forms available to display",
+                "forms.no_assigned_agents": "No assigned agents",
+                "forms.no_available_agents": "No available agents",
+                "toast.success": "Data updated successfully",
+                "toast.error": "Error loading data",
+                "toast.assign_success": "Agent assigned successfully",
+                "toast.assign_error": "Error assigning agent",
+                "toast.remove_success": "Agent removed successfully",
+                "toast.remove_error": "Error removing agent",
+                "toast.toggle_success": "Form status changed",
+                "toast.toggle_error": "Error changing form status",
+                "toast.logout_success": "Logout successful",
+                "toast.logout_error": "Logout error",
+                "role.superadmin": "Super Admin",
+                "role.admin": "Administrator",
+                "role.manager": "Manager",
+                "role.viewer": "Viewer"
+            },
+            fr: {
+                "nav.dashboard": "Tableau de bord",
+                "nav.wallets": "Portefeuilles",
+                "nav.forms": "Formulaires",
+                "nav.agents": "Agents",
+                "nav.admins": "Administrateurs",
+                "nav.logout": "Déconnexion",
+                "forms.title": "Formulaires",
+                "forms.subtitle": "Gestion des formulaires",
+                "forms.welcome": "Gestion des formulaires",
+                "forms.refresh": "Rafraîchir",
+                "forms.refreshing": "Rafraîchissement...",
+                "forms.list": "Liste des formulaires",
+                "forms.forms_found": "formulaires trouvés",
+                "forms.table_name": "Nom du formulaire",
+                "forms.table_api": "URL API",
+                "forms.table_status": "Statut",
+                "forms.table_service": "Mode maintenance",
+                "forms.table_wallets": "Portefeuilles",
+                "forms.table_agents": "Agents",
+                "forms.table_actions": "Actions",
+                "forms.manage_agents": "Gérer les agents",
+                "forms.toggle_status": "Changer le statut",
+                "forms.toggle_service": "Changer la maintenance",
+                "status.active": "Actif",
+                "status.inactive": "Inactif",
+                "status.enabled": "Activé",
+                "status.disabled": "Désactivé",
+                "status.maintenance": "Maintenance",
+                "status.normal": "Normal",
+                "forms.assigned_agents": "Agents assignés",
+                "forms.available_agents": "Agents disponibles",
+                "forms.assign_agent": "Assigner",
+                "forms.remove_agent": "Retirer",
+                "forms.close": "Fermer",
+                "forms.no_forms": "Aucun formulaire trouvé",
+                "forms.no_forms_desc": "Aucun formulaire disponible à afficher",
+                "forms.no_assigned_agents": "Aucun agent assigné",
+                "forms.no_available_agents": "Aucun agent disponible",
+                "toast.success": "Données mises à jour avec succès",
+                "toast.error": "Erreur de chargement des données",
+                "toast.assign_success": "Agent assigné avec succès",
+                "toast.assign_error": "Erreur d'assignation d'agent",
+                "toast.remove_success": "Agent retiré avec succès",
+                "toast.remove_error": "Erreur de retrait d'agent",
+                "toast.toggle_success": "Statut du formulaire changé",
+                "toast.toggle_error": "Erreur de changement de statut",
+                "toast.logout_success": "Déconnexion réussie",
+                "toast.logout_error": "Erreur de déconnexion",
+                "role.superadmin": "Super Admin",
+                "role.admin": "Administrateur",
+                "role.manager": "Manager",
+                "role.viewer": "Observateur"
+            },
+            ar: {
+                "nav.dashboard": "لوحة التحكم",
+                "nav.wallets": "المحافظ",
+                "nav.forms": "النماذج",
+                "nav.agents": "الوكلاء",
+                "nav.admins": "المشرفين",
+                "nav.logout": "تسجيل الخروج",
+                "forms.title": "النماذج",
+                "forms.subtitle": "إدارة النماذج",
+                "forms.welcome": "إدارة النماذج",
+                "forms.refresh": "تحديث",
+                "forms.refreshing": "جاري التحديث...",
+                "forms.list": "قائمة النماذج",
+                "forms.forms_found": "نموذج وجد",
+                "forms.table_name": "اسم النموذج",
+                "forms.table_api": "رابط API",
+                "forms.table_status": "الحالة",
+                "forms.table_service": "وضع الصيانة",
+                "forms.table_wallets": "المحافظ",
+                "forms.table_agents": "الوكلاء",
+                "forms.table_actions": "الإجراءات",
+                "forms.manage_agents": "إدارة الوكلاء",
+                "forms.toggle_status": "تغيير الحالة",
+                "forms.toggle_service": "تغيير الصيانة",
+                "status.active": "نشط",
+                "status.inactive": "غير نشط",
+                "status.enabled": "مفعل",
+                "status.disabled": "معطل",
+                "status.maintenance": "صيانة",
+                "status.normal": "طبيعي",
+                "forms.assigned_agents": "الوكلاء المعينون",
+                "forms.available_agents": "الوكلاء المتاحون",
+                "forms.assign_agent": "تعيين",
+                "forms.remove_agent": "إزالة",
+                "forms.close": "إغلاق",
+                "forms.no_forms": "لم يتم العثور على نماذج",
+                "forms.no_forms_desc": "لا توجد نماذج متاحة للعرض",
+                "forms.no_assigned_agents": "لا يوجد وكلاء معينون",
+                "forms.no_available_agents": "لا يوجد وكلاء متاحون",
+                "toast.success": "تم تحديث البيانات بنجاح",
+                "toast.error": "خطأ في تحميل البيانات",
+                "toast.assign_success": "تم تعيين الوكيل بنجاح",
+                "toast.assign_error": "خطأ في تعيين الوكيل",
+                "toast.remove_success": "تم إزالة الوكيل بنجاح",
+                "toast.remove_error": "خطأ في إزالة الوكيل",
+                "toast.toggle_success": "تم تغيير حالة النموذج",
+                "toast.toggle_error": "خطأ في تغيير الحالة",
+                "toast.logout_success": "تم تسجيل الخروج بنجاح",
+                "toast.logout_error": "خطأ في تسجيل الخروج",
+                "role.superadmin": "مشرف رئيسي",
+                "role.admin": "مشرف",
+                "role.manager": "مدير",
+                "role.viewer": "مشاهد"
+            }
+        };
+
+        // Apply translation
+        function applyTranslation(lang) {
+            const dict = translations[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) el.textContent = dict[key];
+            });
+            
+            document.getElementById('currentLanguage').textContent = 
+                lang === 'ru' ? '🌐 RU' : 
+                lang === 'en' ? '🌐 EN' : 
+                lang === 'fr' ? '🌐 FR' : '🌐 AR';
+            
+            // Set RTL for Arabic
+            if (lang === 'ar') {
+                document.body.setAttribute('dir', 'rtl');
+            } else {
+                document.body.removeAttribute('dir');
+            }
+            
+            currentLanguage = lang;
+            localStorage.setItem('dashboard_language', lang);
+            
+            // Update role translation
+            if (currentUser && currentUser.role) {
+                const roleKey = `role.${currentUser.role}`;
+                if (dict[roleKey]) {
+                    document.getElementById('userRole').textContent = dict[roleKey];
+                }
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = toast.querySelector('i');
+            
+            toastMessage.textContent = message;
+            toast.className = `toast ${type}`;
+            toastIcon.className = type === 'success' ? 'fas fa-check-circle' : 
+                                type === 'error' ? 'fas fa-exclamation-circle' : 
+                                'fas fa-exclamation-triangle';
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Load page data
+        async function loadPageData() {
+            try {
+                const token = localStorage.getItem('admin_token');
+                if (!token) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                // Load user info
+                const userData = localStorage.getItem('admin_user');
+                const permissionsData = localStorage.getItem('admin_permissions');
+                
+                if (userData && permissionsData) {
+                    currentUser = JSON.parse(userData);
+                    currentPermissions = JSON.parse(permissionsData);
+                    
+                    document.getElementById('userName').textContent = currentUser.username;
+                    const roleTranslation = translations[currentLanguage][`role.${currentUser.role}`] || currentUser.role;
+                    document.getElementById('userRole').textContent = roleTranslation;
+                }
+                
+                // Load language
+                const savedLang = localStorage.getItem('dashboard_language') || localStorage.getItem('preferred_language') || 'ru';
+                applyTranslation(savedLang);
+                
+                // Load forms and agents
+                await Promise.all([
+                    loadForms(),
+                    loadAgents()
+                ]);
+                
+            } catch (error) {
+                console.error('Error loading page:', error);
+                showToast(translations[currentLanguage]['toast.error'], 'error');
+            }
+        }
+
+        // Load forms
+        async function loadForms() {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    allForms = result.forms || [];
+                    
+                    // Filter forms for manager
+                    if (currentUser.role === 'manager') {
+                        const assignedForms = await getAssignedForms();
+                        allForms = allForms.filter(form => 
+                            assignedForms.some(assigned => assigned === form.formName)
+                        );
+                    }
+                    
+                    renderFormsTable(allForms);
+                    updateFormsCount();
+                    
+                } else {
+                    showToast(result.error || translations[currentLanguage]['toast.error'], 'error');
+                    renderFormsTable([]);
+                }
+            } catch (error) {
+                console.error('Error loading forms:', error);
+                renderFormsTable([]);
+            }
+        }
+
+        // Get assigned forms for manager
+        async function getAssignedForms() {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const username = currentUser.username;
+                
+                const response = await fetch(`${API_URL}?action=get_assigned_forms&token=${token}&username=${encodeURIComponent(username)}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    return result.forms || [];
+                }
+                return [];
+            } catch (error) {
+                console.error('Error getting assigned forms:', error);
+                return [];
+            }
+        }
+
+        // Load agents
+        async function loadAgents() {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}?action=get_assigned_forms&token=${token}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                // This would normally load agents from ADMINS table
+                // For now, we'll use a simplified approach
+                allAgents = [];
+                
+            } catch (error) {
+                console.error('Error loading agents:', error);
+                allAgents = [];
+            }
+        }
+
+        // Update forms count display
+        function updateFormsCount() {
+            const countElement = document.getElementById('formsCount');
+            countElement.textContent = allForms.length;
+        }
+
+        // Render forms table
+        function renderFormsTable(forms) {
+            const tbody = document.getElementById('formsTableBody');
+            const noForms = document.getElementById('noForms');
+            
+            tbody.innerHTML = '';
+            
+            if (forms.length === 0) {
+                noForms.style.display = 'block';
+                return;
+            }
+            
+            noForms.style.display = 'none';
+            
+            forms.forEach(form => {
+                const row = document.createElement('tr');
+                
+                // Get form status
+                const isActive = form.enabled === true || form.enabled === 'true';
+                const isMaintenance = form.serviceMode === true || form.serviceMode === 'true';
+                
+                const statusClass = isActive ? 'active' : 'inactive';
+                const statusText = isActive ? 
+                    translations[currentLanguage]['status.active'] : 
+                    translations[currentLanguage]['status.inactive'];
+                
+                const serviceClass = isMaintenance ? 'maintenance' : 'active';
+                const serviceText = isMaintenance ? 
+                    translations[currentLanguage]['status.maintenance'] : 
+                    translations[currentLanguage]['status.normal'];
+                
+                // Count wallets for this form (would need to load from form API)
+                const walletCount = 0; // This would need to be loaded separately
+                
+                // Count agents for this form
+                const agentCount = 0; // This would need to be loaded from form assignments
+                
+                row.innerHTML = `
+                    <td><strong>${form.formName || ''}</strong></td>
+                    <!-- API URL скрыт -->
+                    <td class="api-url">${form.formAPI || ''}</td>
+                    <td><span class="status ${statusClass}">${statusText}</span></td>
+                    <td><span class="status ${serviceClass}">${serviceText}</span></td>
+                    <td>${walletCount}</td>
+                    <td>${agentCount}</td>
+                    <td>
+                        ${currentPermissions.canManageAdmins ? `
+                            <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}">
+                                <i class="fas fa-users"></i>
+                            </button>
+                        ` : ''}
+                        ${currentPermissions.canToggleServiceMode ? `
+                            <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
+                                <i class="fas fa-power-off"></i>
+                            </button>
+                            <button class="action-btn toggle" onclick="toggleServiceMode('${form.formName}', ${!isMaintenance})" title="${translations[currentLanguage]['forms.toggle_service']}">
+                                <i class="fas fa-tools"></i>
+                            </button>
+                        ` : ''}
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Open agents management modal
+        async function openAgentsModal(formName, formApi) {
+            currentFormName = formName;
+            currentFormApi = formApi;
+            
+            // Set modal title
+            document.getElementById('modalFormName').textContent = 
+                `${translations[currentLanguage]['forms.manage_agents']}: ${formName}`;
+            document.getElementById('modalFormApi').textContent = formApi || '';
+            
+            try {
+                // Load form assignments
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}?action=get_form_assignments&token=${token}&form_name=${encodeURIComponent(formName)}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Render assigned agents
+                    renderAssignedAgents(result.assignments || []);
+                    
+                    // Render available agents
+                    renderAvailableAgents(result.availableAgents || []);
+                    
+                } else {
+                    showToast(result.error || translations[currentLanguage]['toast.error'], 'error');
+                    renderAssignedAgents([]);
+                    renderAvailableAgents([]);
+                }
+                
+            } catch (error) {
+                console.error('Error loading form assignments:', error);
+                showToast(translations[currentLanguage]['toast.error'], 'error');
+                renderAssignedAgents([]);
+                renderAvailableAgents([]);
+            }
+            
+            // Show modal
+            document.getElementById('agentsModal').classList.add('show');
+        }
+
+        // Close agents modal
+        function closeAgentsModal() {
+            document.getElementById('agentsModal').classList.remove('show');
+            currentFormName = '';
+            currentFormApi = '';
+        }
+
+        // Render assigned agents
+        function renderAssignedAgents(assignments) {
+            const grid = document.getElementById('assignedAgentsGrid');
+            grid.innerHTML = '';
+            
+            if (assignments.length === 0) {
+                grid.innerHTML = `<div class="empty-state">
+                    <p>${translations[currentLanguage]['forms.no_assigned_agents']}</p>
+                </div>`;
+                return;
+            }
+            
+            assignments.forEach(agent => {
+                const card = document.createElement('div');
+                card.className = 'agent-card';
+                
+                card.innerHTML = `
+                    <div class="agent-header">
+                        <div class="agent-name">${agent.agentId || ''}</div>
+                        <span class="agent-role">${agent.accessLevel || ''}</span>
+                    </div>
+                    <div class="agent-email">${agent.email || ''}</div>
+                    <div class="agent-actions">
+                        <button class="agent-btn remove" onclick="removeAgentFromForm('${agent.agentId}')" 
+                                title="${translations[currentLanguage]['forms.remove_agent']}">
+                            <i class="fas fa-user-minus"></i> ${translations[currentLanguage]['forms.remove_agent']}
+                        </button>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        // Render available agents
+        function renderAvailableAgents(agents) {
+            const grid = document.getElementById('availableAgentsGrid');
+            grid.innerHTML = '';
+            
+            if (agents.length === 0) {
+                grid.innerHTML = `<div class="empty-state">
+                    <p>${translations[currentLanguage]['forms.no_available_agents']}</p>
+                </div>`;
+                return;
+            }
+            
+            agents.forEach(agent => {
+                if (agent.isAssigned) return; // Skip already assigned agents
+                
+                const card = document.createElement('div');
+                card.className = 'agent-card';
+                
+                card.innerHTML = `
+                    <div class="agent-header">
+                        <div class="agent-name">${agent.username || ''}</div>
+                        <span class="agent-role">${agent.role || ''}</span>
+                    </div>
+                    <div class="agent-email">${agent.email || ''}</div>
+                    <div class="agent-actions">
+                        <button class="agent-btn assign" onclick="assignAgentToForm('${agent.username}')" 
+                                title="${translations[currentLanguage]['forms.assign_agent']}">
+                            <i class="fas fa-user-plus"></i> ${translations[currentLanguage]['forms.assign_agent']}
+                        </button>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        // Assign agent to form
+        async function assignAgentToForm(agentId) {
+            try {
+                const token = localStorage.getItem('admin_token');
+                
+                const response = await fetch(`${API_URL}?action=assign_agent_to_form&token=${token}&agent_id=${encodeURIComponent(agentId)}&form_name=${encodeURIComponent(currentFormName)}&form_api=${encodeURIComponent(currentFormApi)}&access_level=full`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(translations[currentLanguage]['toast.assign_success'], 'success');
+                    
+                    // Reload modal data
+                    await openAgentsModal(currentFormName, currentFormApi);
+                    
+                    // Reload forms table to update agent count
+                    await loadForms();
+                    
+                } else {
+                    throw new Error(result.error || 'Assignment failed');
+                }
+                
+            } catch (error) {
+                console.error('Error assigning agent:', error);
+                showToast(translations[currentLanguage]['toast.assign_error'] + ': ' + error.message, 'error');
+            }
+        }
+
+        // Remove agent from form
+        async function removeAgentFromForm(agentId) {
+            try {
+                const token = localStorage.getItem('admin_token');
+                
+                const response = await fetch(`${API_URL}?action=remove_agent_from_form&token=${token}&agent_id=${encodeURIComponent(agentId)}&form_name=${encodeURIComponent(currentFormName)}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(translations[currentLanguage]['toast.remove_success'], 'success');
+                    
+                    // Reload modal data
+                    await openAgentsModal(currentFormName, currentFormApi);
+                    
+                    // Reload forms table to update agent count
+                    await loadForms();
+                    
+                } else {
+                    throw new Error(result.error || 'Removal failed');
+                }
+                
+            } catch (error) {
+                console.error('Error removing agent:', error);
+                showToast(translations[currentLanguage]['toast.remove_error'] + ': ' + error.message, 'error');
+            }
+        }
+
+        // Toggle form status (active/inactive)
+        async function toggleFormStatus(formName, newStatus) {
+            // This would need to update the form settings in the database
+            // For now, we'll show a message
+            showToast(`${translations[currentLanguage]['toast.toggle_success']}: ${formName}`, 'success');
+            
+            // Reload forms
+            await loadForms();
+        }
+
+        // Toggle service mode
+        async function toggleServiceMode(formName, newStatus) {
+            // This would need to update the form settings in the database
+            // For now, we'll show a message
+            showToast(`${translations[currentLanguage]['status.maintenance']} ${newStatus ? translations[currentLanguage]['status.enabled'] : translations[currentLanguage]['status.disabled']}: ${formName}`, 'success');
+            
+            // Reload forms
+            await loadForms();
+        }
+
+        // Refresh forms
+        async function refreshForms() {
+            const btn = document.getElementById('refreshBtn');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]['forms.refreshing']}`;
+                
+                await Promise.all([
+                    loadForms(),
+                    loadAgents()
+                ]);
+                
+                showToast(translations[currentLanguage]['toast.success'], 'success');
+                
+            } catch (error) {
+                console.error('Error refreshing:', error);
+                showToast(translations[currentLanguage]['toast.error'], 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}?action=logout&token=${token}`);
+                
+                // Clear local storage
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_user');
+                localStorage.removeItem('admin_permissions');
+                
+                // Redirect to login
+                window.location.href = 'index.html';
+                
+            } catch (error) {
+                console.error('Logout error:', error);
+                showToast(translations[currentLanguage]['toast.logout_error'], 'error');
+            }
+        }
+
+        // Initialize page when loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Language selector
+            const languageBtn = document.getElementById('languageBtn');
+            const languageDropdown = document.getElementById('languageDropdown');
+            
+            languageBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                languageDropdown.classList.toggle('show');
+            });
+            
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const lang = this.getAttribute('data-lang');
+                    applyTranslation(lang);
+                    languageDropdown.classList.remove('show');
+                    // Refresh data to update translations
+                    refreshForms();
+                });
+            });
+            
+            document.addEventListener('click', function() {
+                languageDropdown.classList.remove('show');
+            });
+            
+            // Load page data
+            loadPageData();
+        });
+    </script>
+</body>
+</html>
