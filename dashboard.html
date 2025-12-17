@@ -168,7 +168,7 @@
         }
         
                 /* Анимация для маленького лоадера */
-        .loader-small {
+        /*.loader-small {
             width: 20px;
             height: 20px;
             border: 2px solid rgba(255,255,255,0.3);
@@ -177,6 +177,33 @@
             animation: spin 0.6s linear infinite;
             display: inline-block;
             vertical-align: middle;
+        }*/
+
+                .loader-small {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+                /* Стили для полей ввода */
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent) !important;
+        }
+
+                /* Анимация появления */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .wallet-table tbody tr {
+            animation: fadeIn 0.3s ease;
         }
         
         /* Плавная анимация кнопки */
@@ -282,28 +309,114 @@
         </div>
     </div>
     
-    <!-- Админы -->
-    <div id="adminsTab" class="tab-content">
-        <h2>🛡️ Управление администраторами</h2>
-        <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-            <h3>Быстрое создание админа</h3>
-            <div style="display: grid; gap: 10px; max-width: 500px;">
-                <input type="text" id="newAdminUsername" placeholder="Логин" style="padding: 10px;">
-                <input type="password" id="newAdminPassword" placeholder="Пароль" style="padding: 10px;">
-                <input type="email" id="newAdminEmail" placeholder="Email" style="padding: 10px;">
-                <select id="newAdminRole" style="padding: 10px;">
-                    <option value="admin">Администратор</option>
-                    <option value="manager">Менеджер</option>
-                    <option value="viewer">Наблюдатель</option>
-                </select>
-                <button class="btn btn-success" onclick="createNewAdmin()">➕ Создать админа</button>
+            <!-- Админы -->
+        <div id="adminsTab" class="tab-content">
+            <h2>🛡️ Управление администраторами</h2>
+            
+            <!-- Форма создания нового админа -->
+            <div style="background: var(--card-bg); padding: 25px; border-radius: 10px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.1);">
+                <h3 style="margin-bottom: 20px; color: var(--accent);">➕ Создать нового администратора</h3>
+                
+                <div id="createAdminForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #95a5a6;">Логин *</label>
+                        <input type="text" id="newAdminUsername" placeholder="Введите уникальный логин" 
+                               style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); 
+                                      color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px;"
+                               onfocus="this.style.borderColor='var(--accent)'" 
+                               onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+                        <div style="font-size: 11px; color: #95a5a6; margin-top: 5px;">Только латинские буквы и цифры</div>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #95a5a6;">Пароль *</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="password" id="newAdminPassword" placeholder="Минимум 8 символов" 
+                                   style="flex: 1; padding: 12px; background: rgba(255,255,255,0.05); 
+                                          color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px;"
+                                   onfocus="this.style.borderColor='var(--accent)'" 
+                                   onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+                            <button type="button" onclick="generatePassword()" 
+                                    style="padding: 12px 15px; background: rgba(52, 152, 219, 0.2); 
+                                           border: 1px solid #3498db; color: #3498db; border-radius: 5px; 
+                                           cursor: pointer; white-space: nowrap;">
+                                🔄 Сгенерировать
+                            </button>
+                        </div>
+                        <div id="passwordStrength" style="font-size: 11px; margin-top: 5px;"></div>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #95a5a6;">Email</label>
+                        <input type="email" id="newAdminEmail" placeholder="user@example.com" 
+                               style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); 
+                                      color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px;"
+                               onfocus="this.style.borderColor='var(--accent)'" 
+                               onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+                        <div style="font-size: 11px; color: #95a5a6; margin-top: 5px;">Для уведомлений и восстановления</div>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #95a5a6;">Роль *</label>
+                        <select id="newAdminRole" 
+                                style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); 
+                                       color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px;
+                                       cursor: pointer;"
+                                onfocus="this.style.borderColor='var(--accent)'" 
+                                onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+                            <option value="viewer">👁️ Наблюдатель (только просмотр)</option>
+                            <option value="manager">👨‍💼 Менеджер (управление формами)</option>
+                            <option value="admin">🛡️ Администратор (полный доступ)</option>
+                        </select>
+                        <div style="font-size: 11px; color: #95a5a6; margin-top: 5px;">
+                            <span id="selectedRoleDescription">Только просмотр статистики</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size: 13px; color: #95a5a6;">
+                        <span style="color: #e74c3c;">*</span> Обязательные поля
+                    </div>
+                    <button class="btn btn-success" onclick="createNewAdmin()" id="createAdminBtn" 
+                            style="padding: 12px 30px; font-size: 14px;">
+                        ➕ Создать администратора
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Список админов -->
+            <div style="background: var(--card-bg); padding: 25px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="color: var(--accent);">📋 Список администраторов</h3>
+                    <button class="btn" onclick="loadAdmins(true)" id="refreshAdminsBtn" 
+                            style="padding: 8px 15px; display: flex; align-items: center; gap: 8px;">
+                        <span>🔄</span>
+                        <span>Обновить список</span>
+                    </button>
+                </div>
+                
+                <div id="adminsList">
+                    <div style="text-align: center; padding: 40px; color: #95a5a6;">
+                        <p>Список администраторов не загружен</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Нажмите "Обновить список" для загрузки</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Модальное окно редактирования -->
+            <div id="editAdminModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+                <div style="background: var(--card-bg); padding: 30px; border-radius: 15px; max-width: 500px; width: 90%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 id="editAdminModalTitle">Редактирование администратора</h3>
+                        <button onclick="closeEditAdminModal()" style="background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer;">×</button>
+                    </div>
+                    <div id="editAdminModalContent">
+                        <!-- Содержимое будет загружено динамически -->
+                    </div>
+                </div>
             </div>
         </div>
-        <button class="btn" onclick="loadAdmins()">🔄 Обновить список админов</button>
-        <div id="adminsList" style="margin-top: 20px;">
-            <p>Нажмите "Обновить список админов" для отображения</p>
-        </div>
-    </div>
 </div>
 
     <script>
@@ -1940,101 +2053,439 @@ function clearHistoryFilter() {
 }
 
 // ========== АДМИНЫ ==========
-async function loadAdmins() {
-    try {
-        const token = localStorage.getItem('admin_token');
-        const container = document.getElementById('adminsList');
-        container.innerHTML = '<p>Загрузка...</p><div class="loader"></div>';
-        
-        const response = await fetch(`${API_URL}?action=get_agents&token=${token}`);
-        const result = await response.json();
-        
-        if (result.success && result.agents && result.agents.length > 0) {
-            let html = '<table class="wallet-table"><thead><tr>';
-            html += '<th>Логин</th><th>Email</th><th>Роль</th><th>Последний вход</th><th>Действия</th></tr></thead><tbody>';
-            
-            result.agents.forEach(admin => {
-                const lastLogin = admin.lastLogin ? 
-                    new Date(admin.lastLogin).toLocaleString() : 'Никогда';
-                
-                html += `
-                    <tr>
-                        <td><strong>${admin.username}</strong></td>
-                        <td>${admin.email || '—'}</td>
-                        <td>
-                            <span style="background: ${getRoleColor(admin.role)}; padding: 3px 8px; border-radius: 12px; color: white; font-size: 12px;">
-                                ${admin.role}
-                            </span>
-                        </td>
-                        <td>${lastLogin}</td>
-                        <td>
-                            <button class="btn" style="padding: 5px 10px; font-size: 12px;" 
-                                    onclick="editAdmin('${admin.username}')">✏️</button>
-                            ${admin.role !== 'superadmin' ? 
-                                `<button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" 
-                                        onclick="deleteAdmin('${admin.username}')">🗑️</button>` : 
-                                '<span style="color: #7f8c8d; font-size: 12px;">Нельзя удалить</span>'
-                            }
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        } else {
-            container.innerHTML = '<p>Администраторы не найдены.</p>';
-        }
-    } catch (error) {
-        document.getElementById('adminsList').innerHTML = 
-            `<p style="color: #e74c3c">Ошибка: ${error.message}</p>`;
-    }
-}
 
-async function createNewAdmin() {
-    const username = document.getElementById('newAdminUsername').value.trim();
-    const password = document.getElementById('newAdminPassword').value.trim();
-    const email = document.getElementById('newAdminEmail').value.trim();
-    const role = document.getElementById('newAdminRole').value;
-    
-    if (!username || !password) {
-        alert('Заполните логин и пароль');
-        return;
-    }
-    
-    try {
-        const token = localStorage.getItem('admin_token');
-        const url = `${API_URL}?action=create_admin&token=${token}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&email=${encodeURIComponent(email)}&role=${role}`;
-        
-        const response = await fetch(url);
-        const result = await response.json();
-        
-        if (result.success) {
-            alert('✅ Админ создан успешно!');
-            // Очищаем поля
-            document.getElementById('newAdminUsername').value = '';
-            document.getElementById('newAdminPassword').value = '';
-            document.getElementById('newAdminEmail').value = '';
-            // Обновляем список
-            loadAdmins();
-        } else {
-            alert('❌ Ошибка: ' + (result.error || 'Неизвестная ошибка'));
+        // ========== ГЕНЕРАЦИЯ ПАРОЛЯ ==========
+        function generatePassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let password = '';
+            
+            // Минимум 12 символов
+            for (let i = 0; i < 12; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            
+            document.getElementById('newAdminPassword').value = password;
+            document.getElementById('newAdminPassword').type = 'text';
+            
+            // Показываем силу пароля
+            checkPasswordStrength(password);
+            
+            // Через 5 секунд скрываем пароль
+            setTimeout(() => {
+                document.getElementById('newAdminPassword').type = 'password';
+            }, 5000);
         }
-    } catch (error) {
-        alert('Ошибка сети');
-    }
-}
+        
+        function checkPasswordStrength(password) {
+            const strengthDiv = document.getElementById('passwordStrength');
+            let strength = 0;
+            let message = '';
+            let color = '#e74c3c';
+            
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            switch(strength) {
+                case 4:
+                    message = 'Отличный пароль ✓';
+                    color = '#2ecc71';
+                    break;
+                case 3:
+                    message = 'Хороший пароль ✓';
+                    color = '#2ecc71';
+                    break;
+                case 2:
+                    message = 'Средний пароль';
+                    color = '#e67e22';
+                    break;
+                default:
+                    message = 'Слабый пароль';
+                    color = '#e74c3c';
+            }
+            
+            strengthDiv.innerHTML = `<span style="color: ${color}">${message}</span>`;
+        }
+        
+        // Обновляем описание роли при выборе
+        document.addEventListener('DOMContentLoaded', function() {
+            const roleSelect = document.getElementById('newAdminRole');
+            const descriptionSpan = document.getElementById('selectedRoleDescription');
+            
+            if (roleSelect && descriptionSpan) {
+                roleSelect.addEventListener('change', function() {
+                    const descriptions = {
+                        'viewer': 'Только просмотр статистики',
+                        'manager': 'Управление формами и кошельками',
+                        'admin': 'Полный доступ ко всем функциям'
+                    };
+                    descriptionSpan.textContent = descriptions[this.value] || '';
+                });
+                
+                // Инициализируем описание
+                descriptionSpan.textContent = 'Только просмотр статистики';
+            }
+        });
+        
+        // ========== СОЗДАНИЕ АДМИНА ==========
+        async function createNewAdmin() {
+            try {
+                const username = document.getElementById('newAdminUsername').value.trim();
+                const password = document.getElementById('newAdminPassword').value.trim();
+                const email = document.getElementById('newAdminEmail').value.trim();
+                const role = document.getElementById('newAdminRole').value;
+                
+                // Валидация
+                if (!username || !password) {
+                    alert('Заполните логин и пароль');
+                    return;
+                }
+                
+                if (username.length < 3) {
+                    alert('Логин должен быть не менее 3 символов');
+                    return;
+                }
+                
+                if (password.length < 8) {
+                    alert('Пароль должен быть не менее 8 символов');
+                    return;
+                }
+                
+                if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                    alert('Логин может содержать только латинские буквы, цифры и подчеркивание');
+                    return;
+                }
+                
+                const button = document.getElementById('createAdminBtn');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<div class="loader-small" style="display: inline-block; margin-right: 8px;"></div>Создание...';
+                button.disabled = true;
+                
+                const token = localStorage.getItem('admin_token');
+                const url = `${API_URL}?action=create_admin&token=${token}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&email=${encodeURIComponent(email)}&role=${role}`;
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                button.innerHTML = originalText;
+                button.disabled = false;
+                
+                if (result.success) {
+                    // Сбрасываем форму
+                    document.getElementById('newAdminUsername').value = '';
+                    document.getElementById('newAdminPassword').value = '';
+                    document.getElementById('newAdminEmail').value = '';
+                    document.getElementById('passwordStrength').innerHTML = '';
+                    
+                    // Показываем успех
+                    button.innerHTML = '<span style="color: white; margin-right: 8px;">✓</span> Создан!';
+                    button.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+                    
+                    // Обновляем список
+                    setTimeout(() => {
+                        loadAdmins(true);
+                        button.innerHTML = originalText;
+                        button.style.background = '';
+                    }, 1500);
+                    
+                    alert(`✅ Администратор "${username}" успешно создан!\n\nРоль: ${role}\nПароль: ${password}\n\n⚠️ Сохраните пароль! Его нельзя будет посмотреть позже.`);
+                    
+                } else {
+                    alert('❌ Ошибка: ' + (result.error || 'Неизвестная ошибка'));
+                }
+            } catch (error) {
+                alert('Ошибка сети: ' + error.message);
+                const button = document.getElementById('createAdminBtn');
+                if (button) {
+                    button.innerHTML = '➕ Создать администратора';
+                    button.disabled = false;
+                }
+            }
+        }
+        
+        // ========== ЗАГРУЗКА АДМИНОВ ==========
+        async function loadAdmins(forceRefresh = false) {
+            try {
+                const container = document.getElementById('adminsList');
+                const button = document.getElementById('refreshAdminsBtn');
+                const originalText = button.innerHTML;
+                
+                button.innerHTML = '<div class="loader-small" style="display: inline-block; margin-right: 8px;"></div>Загрузка...';
+                button.disabled = true;
+                
+                container.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loader"></div><p>Загрузка списка администраторов...</p></div>';
+                
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}?action=get_agents&token=${token}&force=${forceRefresh ? 'true' : 'false'}`);
+                const result = await response.json();
+                
+                button.innerHTML = originalText;
+                button.disabled = false;
+                
+                if (result.success && result.agents && result.agents.length > 0) {
+                    let html = `
+                        <div style="margin-bottom: 15px; color: #95a5a6; font-size: 14px;">
+                            Всего администраторов: ${result.agents.length}
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="wallet-table" style="min-width: 800px;">
+                                <thead>
+                                    <tr>
+                                        <th>Логин</th>
+                                        <th>Email</th>
+                                        <th>Роль</th>
+                                        <th>Активен</th>
+                                        <th>Создан</th>
+                                        <th>Последний вход</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    result.agents.forEach(admin => {
+                        const createdDate = admin.createdAt ? 
+                            new Date(admin.createdAt).toLocaleDateString('ru-RU') : 'Неизвестно';
+                        const lastLogin = admin.lastLogin ? 
+                            new Date(admin.lastLogin).toLocaleString('ru-RU') : 'Никогда';
+                        const isActive = admin.isActive !== false;
+                        
+                        html += `
+                            <tr>
+                                <td>
+                                    <strong>${admin.username}</strong>
+                                    ${admin.username === 'superadmin' ? 
+                                        '<div style="font-size: 11px; color: #e74c3c;">🔴 Суперадмин</div>' : ''
+                                    }
+                                </td>
+                                <td>${admin.email || '<span style="color: #95a5a6;">—</span>'}</td>
+                                <td>
+                                    <span style="background: ${getRoleColor(admin.role)}; padding: 5px 10px; border-radius: 15px; color: white; font-size: 12px; display: inline-block;">
+                                        ${getRoleName(admin.role)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span style="color: ${isActive ? '#2ecc71' : '#e74c3c'}">
+                                        ${isActive ? '✅ Да' : '❌ Нет'}
+                                    </span>
+                                </td>
+                                <td style="font-size: 13px;">${createdDate}</td>
+                                <td style="font-size: 13px;">${lastLogin}</td>
+                                <td>
+                                    <div style="display: flex; gap: 5px;">
+                                        <button class="btn" style="padding: 6px 10px; font-size: 12px;" 
+                                                onclick="editAdmin('${admin.username}')"
+                                                ${admin.username === 'superadmin' ? 'disabled title="Нельзя редактировать суперадмина"' : ''}>
+                                            ✏️
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" 
+                                                onclick="deleteAdmin('${admin.username}')"
+                                                ${admin.username === 'superadmin' ? 'disabled title="Нельзя удалить суперадмина"' : ''}>
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `</tbody></table></div>`;
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #95a5a6;">
+                            <p>Администраторы не найдены</p>
+                            <p style="font-size: 14px; margin-top: 10px;">Создайте первого администратора</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('adminsList').innerHTML = `
+                    <div style="color: #e74c3c; text-align: center; padding: 20px;">
+                        <p><strong>Ошибка загрузки:</strong></p>
+                        <p>${error.message}</p>
+                        <button class="btn" onclick="loadAdmins(true)" style="margin-top: 15px;">
+                            🔄 Повторить попытку
+                        </button>
+                    </div>
+                `;
+                
+                const button = document.getElementById('refreshAdminsBtn');
+                if (button) {
+                    button.innerHTML = '🔄 Обновить список';
+                    button.disabled = false;
+                }
+            }
+        }
+        
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+        function getRoleName(role) {
+            const names = {
+                'superadmin': 'Суперадмин',
+                'admin': 'Администратор',
+                'manager': 'Менеджер',
+                'viewer': 'Наблюдатель'
+            };
+            return names[role] || role;
+        }
+        
+        function getRoleColor(role) {
+            switch(role) {
+                case 'superadmin': return '#e74c3c';
+                case 'admin': return '#3498db';
+                case 'manager': return '#2ecc71';
+                case 'viewer': return '#95a5a6';
+                default: return '#7f8c8d';
+            }
+        }
+        
+        async function editAdmin(username) {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}?action=get_agents&token=${token}`);
+                const result = await response.json();
+                
+                if (!result.success || !result.agents) {
+                    alert('Не удалось загрузить данные администратора');
+                    return;
+                }
+                
+                const admin = result.agents.find(a => a.username === username);
+                if (!admin) {
+                    alert('Администратор не найден');
+                    return;
+                }
+                
+                // Создаем модальное окно редактирования
+                document.getElementById('editAdminModalTitle').textContent = `Редактирование: ${username}`;
+                
+                document.getElementById('editAdminModalContent').innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #95a5a6;">Логин</label>
+                            <input type="text" value="${admin.username}" disabled
+                                   style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); 
+                                          color: #95a5a6; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #95a5a6;">Email</label>
+                            <input type="email" id="editAdminEmail" value="${admin.email || ''}" placeholder="user@example.com"
+                                   style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); 
+                                          color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #95a5a6;">Роль</label>
+                            <select id="editAdminRole" 
+                                    style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); 
+                                           color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px;">
+                                <option value="viewer" ${admin.role === 'viewer' ? 'selected' : ''}>Наблюдатель</option>
+                                <option value="manager" ${admin.role === 'manager' ? 'selected' : ''}>Менеджер</option>
+                                <option value="admin" ${admin.role === 'admin' ? 'selected' : ''}>Администратор</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #95a5a6;">
+                                <input type="checkbox" id="editAdminActive" ${admin.isActive !== false ? 'checked' : ''}>
+                                Активный аккаунт
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <button onclick="closeEditAdminModal()" 
+                                style="flex: 1; padding: 12px; background: rgba(231, 76, 60, 0.1); 
+                                       border: 1px solid rgba(231, 76, 60, 0.3); color: #e74c3c; 
+                                       border-radius: 8px; cursor: pointer; font-size: 14px;">
+                            ❌ Отмена
+                        </button>
+                        <button onclick="saveAdminChanges('${username}')" id="saveAdminBtn"
+                                style="flex: 2; padding: 12px; background: linear-gradient(135deg, #2ecc71, #27ae60); 
+                                       border: none; color: white; border-radius: 8px; cursor: pointer; 
+                                       font-size: 14px; font-weight: bold;">
+                            💾 Сохранить изменения
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('editAdminModal').style.display = 'flex';
+                
+            } catch (error) {
+                alert('Ошибка загрузки: ' + error.message);
+            }
+        }
+        
+        async function saveAdminChanges(username) {
+            try {
+                const email = document.getElementById('editAdminEmail').value.trim();
+                const role = document.getElementById('editAdminRole').value;
+                const isActive = document.getElementById('editAdminActive').checked;
+                
+                const button = document.getElementById('saveAdminBtn');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<div class="loader-small" style="display: inline-block; margin-right: 8px;"></div>Сохранение...';
+                button.disabled = true;
+                
+                const token = localStorage.getItem('admin_token');
+                const url = `${API_URL}?action=update_admin&token=${token}&username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&role=${role}&is_active=${isActive}`;
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    button.innerHTML = '<span style="color: white; margin-right: 8px;">✓</span> Сохранено!';
+                    button.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+                    
+                    setTimeout(() => {
+                        closeEditAdminModal();
+                        loadAdmins(true);
+                    }, 1000);
+                } else {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                    alert('❌ Ошибка: ' + (result.error || 'Неизвестная ошибка'));
+                }
+            } catch (error) {
+                alert('Ошибка сети: ' + error.message);
+                const button = document.getElementById('saveAdminBtn');
+                if (button) {
+                    button.innerHTML = '💾 Сохранить изменения';
+                    button.disabled = false;
+                }
+            }
+        }
+        
+        function closeEditAdminModal() {
+            document.getElementById('editAdminModal').style.display = 'none';
+        }
+        
+        async function deleteAdmin(username) {
+            if (!confirm(`Вы уверены, что хотите удалить администратора "${username}"?\n\nЭто действие нельзя отменить.`)) {
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('admin_token');
+                const url = `${API_URL}?action=delete_admin&token=${token}&username=${encodeURIComponent(username)}`;
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Администратор удален успешно!');
+                    loadAdmins(true);
+                } else {
+                    alert('❌ Ошибка: ' + (result.error || 'Неизвестная ошибка'));
+                }
+            } catch (error) {
+                alert('Ошибка сети: ' + error.message);
+            }
+        }
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
-function getRoleColor(role) {
-    switch(role) {
-        case 'superadmin': return '#e74c3c';
-        case 'admin': return '#3498db';
-        case 'manager': return '#2ecc71';
-        case 'viewer': return '#95a5a6';
-        default: return '#7f8c8d';
-    }
-}
 
 function isAgentOnline(lastLogin) {
     if (!lastLogin) return false;
