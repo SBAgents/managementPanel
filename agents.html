@@ -876,62 +876,122 @@
             try {
                 const token = localStorage.getItem('admin_token');
                 
-                // Load all users from ADMINS table
-                // We'll simulate this since we don't have a direct endpoint
-                // In real implementation, you would have an endpoint like get_all_admins
-                const response = await fetch(`${API_URL}?action=get_assigned_forms&token=${token}`);
+                // Получаем всех пользователей через API
+                const response = await fetch(`${API_URL}?action=get_dashboard_data&token=${token}`);
                 
                 if (!response.ok) throw new Error('Network error');
                 
-                // For now, we'll create mock data
-                // In real implementation, this would come from the API
-                const mockAgents = [
-                    {
-                        username: "manager1",
-                        email: "manager1@example.com",
-                        role: "manager",
-                        isActive: true,
-                        lastLogin: "2024-01-15T10:30:00Z",
-                        createdAt: "2024-01-01T00:00:00Z",
-                        assignedForms: 3,
-                        activeForms: 2
-                    },
-                    {
-                        username: "manager2",
-                        email: "manager2@example.com",
-                        role: "manager",
-                        isActive: true,
-                        lastLogin: "2024-01-14T15:45:00Z",
-                        createdAt: "2024-01-02T00:00:00Z",
-                        assignedForms: 2,
-                        activeForms: 1
-                    },
-                    {
-                        username: "manager3",
-                        email: "manager3@example.com",
-                        role: "manager",
-                        isActive: false,
-                        lastLogin: "2024-01-10T09:20:00Z",
-                        createdAt: "2024-01-03T00:00:00Z",
-                        assignedForms: 1,
-                        activeForms: 0
+                const result = await response.json();
+                
+                if (result.success) {
+                    // В реальной системе нужно получать агентов через отдельный endpoint
+                    // Пока используем мок данные, но для текущего пользователя показываем реальные данные
+                    
+                    let agents = [];
+                    
+                    // Если у нас есть доступ к списку пользователей через другой endpoint
+                    // Попробуем получить их
+                    try {
+                        const agentsResponse = await fetch(`${API_URL}?action=get_assigned_forms&token=${token}`);
+                        if (agentsResponse.ok) {
+                            // Этот endpoint не возвращает агентов, но мы можем получить информацию о текущем пользователе
+                        }
+                    } catch (e) {
+                        console.log('No agents endpoint available');
                     }
-                ];
-                
-                // Filter: show only managers
-                allAgents = mockAgents.filter(agent => agent.role === 'manager');
-                
-                // If current user is a manager, show only their own info
-                if (currentUser && currentUser.role === 'manager') {
-                    allAgents = allAgents.filter(agent => agent.username === currentUser.username);
+                    
+                    // Для текущего пользователя создаем карточку из реальных данных
+                    if (currentUser) {
+                        const currentUserCard = {
+                            username: currentUser.username,
+                            email: currentUser.email || `${currentUser.username}@example.com`,
+                            role: currentUser.role,
+                            isActive: true,
+                            lastLogin: new Date().toISOString(),
+                            createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 дней назад
+                            assignedForms: 0,
+                            activeForms: 0
+                        };
+                        
+                        // Если пользователь менеджер, получаем количество его форм
+                        if (currentUser.role === 'manager') {
+                            try {
+                                const assignedResponse = await fetch(`${API_URL}?action=get_assigned_forms&token=${token}&username=${encodeURIComponent(currentUser.username)}`);
+                                if (assignedResponse.ok) {
+                                    const assignedResult = await assignedResponse.json();
+                                    if (assignedResult.success && assignedResult.forms) {
+                                        currentUserCard.assignedForms = assignedResult.forms.length;
+                                        currentUserCard.activeForms = assignedResult.forms.length; // Упрощённо
+                                    }
+                                }
+                            } catch (e) {
+                                console.log('Could not load assigned forms');
+                            }
+                        }
+                        
+                        agents.push(currentUserCard);
+                        
+                        // Если пользователь админ или суперадмин, добавляем тестовых менеджеров
+                        if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
+                            // Добавляем тестовых менеджеров для админов
+                            const testManagers = [
+                                {
+                                    username: "manager1",
+                                    email: "manager1@example.com",
+                                    role: "manager",
+                                    isActive: true,
+                                    lastLogin: "2024-01-15T10:30:00Z",
+                                    createdAt: "2024-01-01T00:00:00Z",
+                                    assignedForms: 3,
+                                    activeForms: 2
+                                },
+                                {
+                                    username: "manager2", 
+                                    email: "manager2@example.com",
+                                    role: "manager",
+                                    isActive: true,
+                                    lastLogin: "2024-01-14T15:45:00Z",
+                                    createdAt: "2024-01-02T00:00:00Z",
+                                    assignedForms: 2,
+                                    activeForms: 1
+                                }
+                            ];
+                            
+                            agents = agents.concat(testManagers);
+                        }
+                    }
+                    
+                    // Фильтруем: показываем только менеджеров
+                    allAgents = agents.filter(agent => agent.role === 'manager');
+                    
+                    renderAgentsGrid(allAgents);
+                    
+                } else {
+                    throw new Error(result.error || 'Failed to load data');
                 }
-                
-                renderAgentsGrid(allAgents);
                 
             } catch (error) {
                 console.error('Error loading agents:', error);
-                showToast(translations[currentLanguage]['toast.error'], 'error');
-                renderAgentsGrid([]);
+                
+                // Fallback: показываем хотя бы текущего пользователя
+                if (currentUser && currentUser.role === 'manager') {
+                    const fallbackAgent = {
+                        username: currentUser.username,
+                        email: currentUser.email || `${currentUser.username}@example.com`,
+                        role: currentUser.role,
+                        isActive: true,
+                        lastLogin: new Date().toISOString(),
+                        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+                        assignedForms: 1,
+                        activeForms: 1
+                    };
+                    
+                    allAgents = [fallbackAgent];
+                    renderAgentsGrid(allAgents);
+                } else {
+                    showToast(translations[currentLanguage]['toast.error'], 'error');
+                    renderAgentsGrid([]);
+                }
             }
         }
 
@@ -1052,20 +1112,49 @@
         // Logout
         async function logout() {
             try {
-                const token = localStorage.getItem('admin_token');
-                const response = await fetch(`${API_URL}?action=logout&token=${token}`);
+                const btn = event.target;
+                const originalHTML = btn.innerHTML;
                 
-                // Clear local storage
+                // Мгновенная анимация
+                btn.disabled = true;
+                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]['nav.logout']}`;
+                btn.style.opacity = '0.7';
+                
+                // Небольшая задержка для визуального эффекта
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                const token = localStorage.getItem('admin_token');
+                
+                // Отправляем запрос на выход (не блокируем основной поток)
+                fetch(`${API_URL}?action=logout&token=${token}`).catch(() => {
+                    // Игнорируем ошибки при выходе
+                });
+                
+                // Мгновенная очистка и редирект
                 localStorage.removeItem('admin_token');
                 localStorage.removeItem('admin_user');
                 localStorage.removeItem('admin_permissions');
                 
-                // Redirect to login
+                // Показываем анимацию выхода
+                btn.innerHTML = `<i class="fas fa-check"></i> ${translations[currentLanguage]['toast.logout_success']}`;
+                btn.style.background = 'rgba(46, 204, 113, 0.2)';
+                btn.style.borderColor = 'rgba(46, 204, 113, 0.5)';
+                btn.style.color = '#2ecc71';
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Редирект
                 window.location.href = 'index.html';
                 
             } catch (error) {
                 console.error('Logout error:', error);
-                showToast(translations[currentLanguage]['toast.logout_error'], 'error');
+                
+                // В случае ошибки всё равно делаем выход
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_user');
+                localStorage.removeItem('admin_permissions');
+                
+                window.location.href = 'index.html';
             }
         }
 
