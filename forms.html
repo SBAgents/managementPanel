@@ -1545,8 +1545,52 @@
             }
         }*/
         //====================КОНЕЦ КОММЕНТА====================
+
+        // Новая функция для получения всех счетчиков
+        async function getAllFormCounts(formNames) {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const callbackName = 'allCounts_' + Date.now();
+                
+                return new Promise((resolve, reject) => {
+                    window[callbackName] = function(response) {
+                        delete window[callbackName];
+                        if (response.success) {
+                            resolve(response.counts); // { "Form1": {agents:1, wallets:2}, ... }
+                        } else {
+                            reject(new Error(response.error));
+                        }
+                    };
+                    
+                    const script = document.createElement('script');
+                    script.src = `${API_URL}?action=get_all_form_counts&token=${encodeURIComponent(token)}&form_names=${encodeURIComponent(JSON.stringify(formNames))}&callback=${callbackName}`;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            } catch (error) {
+                console.error('Error getting all counts:', error);
+                return {};
+            }
+        }
+        
+        // Обновленный renderFormsTable
+        async function renderFormsTable(forms) {
+            // ... код очистки таблицы ...
+            
+            // 1. Собираем имена форм
+            const formNames = forms.map(f => f.formName);
+            
+            // 2. ОДИН запрос на бэкенд
+            const allCounts = await getAllFormCounts(formNames);
+            
+            // 3. Создаем строки (уже без промисов)
+            forms.forEach(form => {
+                const counts = allCounts[form.formName] || { agentsCount: 0, walletsCount: 0 };
+                // ... создание строки ...
+            });
+        }
         // Добавим функцию получения счетчиков
-        async function getFormCounts(formName) {
+        /*async function getFormCounts(formName) {
             try {
                 const token = localStorage.getItem('admin_token');
                 const response = await fetch(`${API_URL}?action=get_form_counts&token=${token}&form_name=${encodeURIComponent(formName)}`);
@@ -1566,7 +1610,7 @@
                 console.error('Error getting form counts:', error);
                 return { agentsCount: 0, walletsCount: 0 };
             }
-        }
+        }*/
 
         // Open agents management modal
         async function openAgentsModal(formName, formApi) {
