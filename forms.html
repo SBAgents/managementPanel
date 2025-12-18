@@ -1393,10 +1393,28 @@
             noForms.style.display = 'none';
             
             for (const form of forms) {
-                // Получаем счетчики для каждой формы
-                const counts = await getFormCounts(form.formName);
+                const countPromises = forms.map(form => 
+                getFormCounts(form.formName).catch(error => {
+                    console.error(`Error getting counts for ${form.formName}:`, error);
+                    return { agentsCount: 0, walletsCount: 0 }; // Возвращаем значения по умолчанию при ошибке
+                })
+            );
+            
+            // Ожидаем выполнения ВСЕХ промисов параллельно
+            const allCounts = await Promise.all(countPromises);
+            
+            // Теперь создаем строки таблицы
+            forms.forEach((form, index) => {
+                const counts = allCounts[index];
                 
                 const row = document.createElement('tr');
+                // ... остальной код создания строки
+                tbody.appendChild(row);
+            });
+                // Получаем счетчики для каждой формы
+                /*const counts = await getFormCounts(form.formName);
+                
+                const row = document.createElement('tr');*/
                 
                 // Get form status
                 const isActive = form.enabled === true || form.enabled === 'true';
