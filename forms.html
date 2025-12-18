@@ -33,7 +33,7 @@
             display: flex;
         }
         
-        /* Sidebar (такой же как в предыдущих страницах) */
+        /* Sidebar */
         .sidebar {
             width: 250px;
             background: var(--sidebar-bg);
@@ -162,7 +162,7 @@
             overflow: hidden;
             z-index: 100;
         }
-        /**/
+        
         .language-dropdown.show {
             display: block;
         }
@@ -257,79 +257,70 @@
             padding: 20px;
             margin-bottom: 20px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+        
+        .filter-section.show {
+            display: block;
         }
         
         .filter-row {
             display: flex;
             gap: 15px;
             align-items: flex-end;
+            flex-wrap: wrap;
         }
         
         .filter-group {
             flex: 1;
+            min-width: 200px;
         }
         
         .filter-group label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 600;
-            font-size: 14px;
+            font-weight: bold;
             opacity: 0.9;
+            font-size: 14px;
         }
         
         .filter-input {
             width: 100%;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #34495e;
             border-radius: 8px;
-            color: white;
+            color: #2c3e50;
             font-size: 14px;
-            transition: all 0.3s;
         }
         
         .filter-input:focus {
             outline: none;
             border-color: var(--accent);
-            background: rgba(255, 255, 255, 0.15);
-        }
-        
-        .filter-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            background: white;
         }
         
         .filter-select {
             width: 100%;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #34495e;
             border-radius: 8px;
-            color: white;
+            color: #2c3e50;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.3s;
         }
         
         .filter-select:focus {
             outline: none;
             border-color: var(--accent);
-            background: rgba(255, 255, 255, 0.15);
-        }
-        
-        .filter-select option {
-            background: #2c3e50;
-            color: white;
+            background: white;
         }
         
         .filter-actions {
             display: flex;
             gap: 10px;
-            align-items: flex-end;
-        }
-        
-        .btn-filter {
-            padding: 10px 15px;
-            min-width: 100px;
+            margin-top: 10px;
         }
         
         /* Forms Table */
@@ -354,6 +345,50 @@
         
         .table-container {
             overflow-x: auto;
+            min-height: 300px;
+            position: relative;
+        }
+        
+        .table-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .table-loading.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .table-loading .loader {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        .table-loading p {
+            font-size: 16px;
+            opacity: 0.9;
+            text-align: center;
+            max-width: 300px;
+            line-height: 1.5;
         }
         
         table {
@@ -648,6 +683,14 @@
             margin-right: 10px;
         }
         
+        .loader.small {
+            width: 12px;
+            height: 12px;
+            border-width: 2px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -695,75 +738,6 @@
             opacity: 0.5;
         }
         
-        /* Loading Overlay */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .loading-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        
-        .loading-text {
-            color: white;
-            font-size: 18px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        
-        .loading-subtext {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-            text-align: center;
-            max-width: 400px;
-            line-height: 1.5;
-        }
-        
-        /* Table Footer */
-        .table-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 14px;
-            opacity: 0.8;
-        }
-        
-        .loader.small {
-            width: 12px;
-            height: 12px;
-            border-width: 2px;
-            display: inline-block;
-            margin-right: 5px;
-        }
-        
         /* Responsive */
         @media (max-width: 1024px) {
             .sidebar {
@@ -791,6 +765,14 @@
             
             .language-selector {
                 margin-left: 0;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+            }
+            
+            .filter-group {
+                min-width: 100%;
             }
         }
         
@@ -845,17 +827,15 @@
                 grid-template-columns: 1fr;
             }
             
-            .filter-row {
+            .header {
                 flex-direction: column;
-                gap: 10px;
+                gap: 15px;
+                align-items: flex-start;
             }
             
-            .filter-group, .filter-actions {
+            .header-actions {
                 width: 100%;
-            }
-            
-            .btn-filter {
-                width: 100%;
+                justify-content: flex-end;
             }
         }
         
@@ -888,10 +868,6 @@
         
         body[dir="rtl"] td, body[dir="rtl"] th {
             text-align: right;
-        }
-        
-        body[dir="rtl"] .filter-row {
-            flex-direction: row-reverse;
         }
         
         /* Hide API URL column */
@@ -973,6 +949,7 @@
         <div class="header">
             <h2 data-i18n="forms.welcome">Управление формами</h2>
             <div class="header-actions">
+                <!-- Только кнопка Обновить, остальные убраны по ТЗ -->
                 <button class="btn btn-primary" onclick="refreshForms()" id="refreshBtn" data-i18n="forms.refresh">
                     <i class="fas fa-sync-alt"></i>
                     <span>Обновить</span>
@@ -980,35 +957,30 @@
             </div>
         </div>
         
-        <!-- Filter Section -->
-        <div class="filter-section" id="filterSection" style="display: none;">
+        <!-- Filter Section (Only for Admin and Superadmin) -->
+        <div class="filter-section" id="filterSection">
             <div class="filter-row">
                 <div class="filter-group">
-                    <label for="searchInput" data-i18n="forms.filter.name">Название формы</label>
-                    <input type="text" id="searchInput" class="filter-input" 
-                           placeholder="Введите название формы..." 
-                           data-placeholder-ru="Введите название формы..."
-                           data-placeholder-en="Enter form name..."
-                           data-placeholder-fr="Entrez le nom du formulaire..."
-                           data-placeholder-ar="أدخل اسم النموذج...">
+                    <label for="nameFilter" data-i18n="forms.filter_name">Фильтр по названию</label>
+                    <input type="text" id="nameFilter" class="filter-input" placeholder="Введите название формы..." data-i18n-placeholder="forms.filter_name_placeholder">
                 </div>
                 
                 <div class="filter-group">
-                    <label for="statusFilter" data-i18n="forms.filter.status">Статус</label>
+                    <label for="statusFilter" data-i18n="forms.filter_status">Фильтр по статусу</label>
                     <select id="statusFilter" class="filter-select">
-                        <option value="all" data-i18n="forms.filter.all_status">Все статусы</option>
+                        <option value="all" data-i18n="forms.filter_all">Все статусы</option>
                         <option value="active" data-i18n="status.active">Активна</option>
                         <option value="inactive" data-i18n="status.inactive">Неактивна</option>
                         <option value="maintenance" data-i18n="status.maintenance">Обслуживание</option>
                     </select>
                 </div>
-                
-                <div class="filter-actions">
-                    <button class="btn btn-secondary btn-filter" onclick="clearFilters()" id="clearBtn" data-i18n="forms.filter.clear">
-                        <i class="fas fa-times"></i>
-                        <span>Очистить</span>
-                    </button>
-                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button class="btn btn-secondary" onclick="clearFilters()" id="clearFiltersBtn" data-i18n="forms.clear_filters">
+                    <i class="fas fa-times"></i>
+                    <span>Очистить фильтры</span>
+                </button>
             </div>
         </div>
         
@@ -1016,9 +988,17 @@
         <div class="section">
             <div class="section-header">
                 <h3 data-i18n="forms.list">Список форм</h3>
+                <div class="table-info">
+                    <span id="formsCount">0</span> <span data-i18n="forms.forms_found">форм найдено</span>
+                </div>
             </div>
             
             <div class="table-container">
+                <div class="table-loading" id="tableLoading">
+                    <div class="loader"></div>
+                    <p id="loadingMessage" data-i18n="forms.loading_data">Загрузка данных...</p>
+                </div>
+                
                 <table id="formsTable">
                     <thead>
                         <tr>
@@ -1043,13 +1023,6 @@
                 <h4 data-i18n="forms.no_forms">Формы не найдены</h4>
                 <p data-i18n="forms.no_forms_desc">Нет доступных форм для отображения</p>
             </div>
-            
-            <div class="table-footer">
-                <div class="forms-count">
-                    <span id="formsCount">0</span> <span data-i18n="forms.forms_found">форм найдено</span>
-                    <span id="filteredCount" style="margin-left: 10px; opacity: 0.7;"></span>
-                </div>
-            </div>
         </div>
     </div>
     
@@ -1059,8 +1032,9 @@
             <div class="modal-header">
                 <h3 id="modalFormName">Управление агентами</h3>
                 <div class="modal-subtitle" id="modalFormApi"></div>
-                    <div id="selectedAgentsCount" style="margin-bottom: 15px; font-weight: bold; color: var(--accent);">
-                    </div>
+                <div id="selectedAgentsCount" style="margin-bottom: 15px; font-weight: bold; color: var(--accent);">
+                    <!-- Selected agents count will be here -->
+                </div>
                 <button class="modal-close" onclick="closeAgentsModal()">&times;</button>
             </div>
             
@@ -1089,13 +1063,6 @@
         </div>
     </div>
     
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
-        <div class="loading-text" id="loadingText" data-i18n="loading.loading_data">Загрузка данных...</div>
-        <div class="loading-subtext" id="loadingSubtext" data-i18n="loading.please_wait">Пожалуйста, подождите...</div>
-    </div>
-    
     <!-- Toast Notification -->
     <div class="toast" id="toast">
         <i class="fas fa-check-circle"></i>
@@ -1118,9 +1085,9 @@
         let selectedAgents = new Set();
         
         // Filter state
-        let filterTimeout = null;
-        let currentSearch = '';
-        let currentStatus = 'all';
+        let nameFilter = '';
+        let statusFilter = 'all';
+        let isFilterVisible = false;
         
         // Translation dictionary
         const translations = {
@@ -1142,6 +1109,14 @@
                 "forms.list": "Список форм",
                 "forms.forms_found": "форм найдено",
                 
+                // Filter
+                "forms.filter_name": "Фильтр по названию",
+                "forms.filter_name_placeholder": "Введите название формы...",
+                "forms.filter_status": "Фильтр по статусу",
+                "forms.filter_all": "Все статусы",
+                "forms.clear_filters": "Очистить фильтры",
+                "forms.clear_filters_title": "Очистить все фильтры",
+                
                 // Table
                 "forms.table_name": "Название формы",
                 "forms.table_api": "API URL",
@@ -1155,13 +1130,6 @@
                 "forms.manage_agents": "Управление агентами",
                 "forms.toggle_status": "Переключить статус",
                 "forms.toggle_service": "Переключить режим обслуживания",
-                
-                // Filter
-                "forms.filter.name": "Название формы",
-                "forms.filter.status": "Статус",
-                "forms.filter.all_status": "Все статусы",
-                "forms.filter.clear": "Очистить",
-                "forms.filter.filtered": "(отфильтровано)",
                 
                 // Status
                 "status.active": "Активна",
@@ -1192,19 +1160,17 @@
                 "forms.update_success": "Обновлено успешно",
                 "forms.update_error": "Ошибка обновления",
                 
-                // Loading
-                "loading.loading_data": "Загрузка данных...",
-                "loading.please_wait": "Пожалуйста, подождите...",
-                "loading.filtering": "Применение фильтра...",
-                "loading.loading_forms": "Загрузка списка форм...",
-                "loading.loading_agents": "Загрузка списка агентов...",
+                // Loading messages
+                "forms.loading_data": "Загрузка данных...",
+                "forms.loading_forms": "Загрузка списка форм...",
+                "forms.loading_counts": "Получение информации о формах...",
+                "forms.filtering_forms": "Применение фильтров...",
                 
                 // Empty states
                 "forms.no_forms": "Формы не найдены",
                 "forms.no_forms_desc": "Нет доступных форм для отображения",
                 "forms.no_assigned_agents": "Нет назначенных агентов",
                 "forms.no_available_agents": "Нет доступных агентов",
-                "forms.no_filter_results": "Нет форм, соответствующих фильтру",
                 
                 // Toast messages
                 "toast.success": "Данные успешно обновлены",
@@ -1217,7 +1183,7 @@
                 "toast.toggle_error": "Ошибка при изменении статуса",
                 "toast.logout_success": "Выход выполнен успешно",
                 "toast.logout_error": "Ошибка при выходе",
-                "toast.filter_cleared": "Фильтры очищены",
+                "toast.filters_cleared": "Фильтры очищены",
                 
                 // Roles
                 "role.superadmin": "Супер-админ",
@@ -1239,6 +1205,12 @@
                 "forms.refreshing": "Refreshing...",
                 "forms.list": "Forms List",
                 "forms.forms_found": "forms found",
+                "forms.filter_name": "Filter by name",
+                "forms.filter_name_placeholder": "Enter form name...",
+                "forms.filter_status": "Filter by status",
+                "forms.filter_all": "All statuses",
+                "forms.clear_filters": "Clear filters",
+                "forms.clear_filters_title": "Clear all filters",
                 "forms.table_name": "Form Name",
                 "forms.table_api": "API URL",
                 "forms.table_status": "Status",
@@ -1249,11 +1221,6 @@
                 "forms.manage_agents": "Manage Agents",
                 "forms.toggle_status": "Toggle Status",
                 "forms.toggle_service": "Toggle Maintenance",
-                "forms.filter.name": "Form Name",
-                "forms.filter.status": "Status",
-                "forms.filter.all_status": "All Statuses",
-                "forms.filter.clear": "Clear",
-                "forms.filter.filtered": "(filtered)",
                 "status.active": "Active",
                 "status.inactive": "Inactive",
                 "status.enabled": "Enabled",
@@ -1279,16 +1246,14 @@
                 "forms.saving_changes": "Saving changes...",
                 "forms.update_success": "Updated successfully",
                 "forms.update_error": "Update error",
-                "loading.loading_data": "Loading data...",
-                "loading.please_wait": "Please wait...",
-                "loading.filtering": "Applying filter...",
-                "loading.loading_forms": "Loading forms list...",
-                "loading.loading_agents": "Loading agents list...",
+                "forms.loading_data": "Loading data...",
+                "forms.loading_forms": "Loading forms list...",
+                "forms.loading_counts": "Getting form information...",
+                "forms.filtering_forms": "Applying filters...",
                 "forms.no_forms": "No forms found",
                 "forms.no_forms_desc": "No forms available to display",
                 "forms.no_assigned_agents": "No assigned agents",
-                "forms.no_available_ents": "No available agents",
-                "forms.no_filter_results": "No forms matching filter",
+                "forms.no_available_agents": "No available agents",
                 "toast.success": "Data updated successfully",
                 "toast.error": "Error loading data",
                 "toast.assign_success": "Agent assigned successfully",
@@ -1299,7 +1264,7 @@
                 "toast.toggle_error": "Error changing form status",
                 "toast.logout_success": "Logout successful",
                 "toast.logout_error": "Logout error",
-                "toast.filter_cleared": "Filters cleared",
+                "toast.filters_cleared": "Filters cleared",
                 "role.superadmin": "Super Admin",
                 "role.admin": "Administrator",
                 "role.manager": "Manager",
@@ -1319,6 +1284,12 @@
                 "forms.refreshing": "Rafraîchissement...",
                 "forms.list": "Liste des formulaires",
                 "forms.forms_found": "formulaires trouvés",
+                "forms.filter_name": "Filtrer par nom",
+                "forms.filter_name_placeholder": "Entrez le nom du formulaire...",
+                "forms.filter_status": "Filtrer par statut",
+                "forms.filter_all": "Tous les statuts",
+                "forms.clear_filters": "Effacer les filtres",
+                "forms.clear_filters_title": "Effacer tous les filtres",
                 "forms.table_name": "Nom du formulaire",
                 "forms.table_api": "URL API",
                 "forms.table_status": "Statut",
@@ -1329,11 +1300,6 @@
                 "forms.manage_agents": "Gérer les agents",
                 "forms.toggle_status": "Changer le statut",
                 "forms.toggle_service": "Changer la maintenance",
-                "forms.filter.name": "Nom du formulaire",
-                "forms.filter.status": "Statut",
-                "forms.filter.all_status": "Tous les statuts",
-                "forms.filter.clear": "Effacer",
-                "forms.filter.filtered": "(filtré)",
                 "status.active": "Actif",
                 "status.inactive": "Inactif",
                 "status.enabled": "Activé",
@@ -1359,16 +1325,14 @@
                 "forms.saving_changes": "Enregistrement des modifications...",
                 "forms.update_success": "Mis à jour avec succès",
                 "forms.update_error": "Erreur de mise à jour",
-                "loading.loading_data": "Chargement des données...",
-                "loading.please_wait": "Veuillez patienter...",
-                "loading.filtering": "Application du filtre...",
-                "loading.loading_forms": "Chargement de la liste des formulaires...",
-                "loading.loading_agents": "Chargement de la liste des agents...",
+                "forms.loading_data": "Chargement des données...",
+                "forms.loading_forms": "Chargement de la liste des formulaires...",
+                "forms.loading_counts": "Obtention des informations sur les formulaires...",
+                "forms.filtering_forms": "Application des filtres...",
                 "forms.no_forms": "Aucun formulaire trouvé",
                 "forms.no_forms_desc": "Aucun formulaire disponible à afficher",
                 "forms.no_assigned_agents": "Aucun agent assigné",
                 "forms.no_available_agents": "Aucun agent disponible",
-                "forms.no_filter_results": "Aucun formulaire correspondant au filtre",
                 "toast.success": "Données mises à jour avec succès",
                 "toast.error": "Erreur de chargement des données",
                 "toast.assign_success": "Agent assigné avec succès",
@@ -1379,7 +1343,7 @@
                 "toast.toggle_error": "Erreur de changement de statut",
                 "toast.logout_success": "Déconnexion réussie",
                 "toast.logout_error": "Erreur de déconnexion",
-                "toast.filter_cleared": "Filtres effacés",
+                "toast.filters_cleared": "Filtres effacés",
                 "role.superadmin": "Super Admin",
                 "role.admin": "Administrateur",
                 "role.manager": "Manager",
@@ -1399,6 +1363,12 @@
                 "forms.refreshing": "جاري التحديث...",
                 "forms.list": "قائمة النماذج",
                 "forms.forms_found": "نموذج وجد",
+                "forms.filter_name": "تصفية حسب الاسم",
+                "forms.filter_name_placeholder": "أدخل اسم النموذج...",
+                "forms.filter_status": "تصفية حسب الحالة",
+                "forms.filter_all": "جميع الحالات",
+                "forms.clear_filters": "مسح الفلاتر",
+                "forms.clear_filters_title": "مسح جميع الفلاتر",
                 "forms.table_name": "اسم النموذج",
                 "forms.table_api": "رابط API",
                 "forms.table_status": "الحالة",
@@ -1409,11 +1379,6 @@
                 "forms.manage_agents": "إدارة الوكلاء",
                 "forms.toggle_status": "تغيير الحالة",
                 "forms.toggle_service": "تغيير الصيانة",
-                "forms.filter.name": "اسم النموذج",
-                "forms.filter.status": "الحالة",
-                "forms.filter.all_status": "جميع الحالات",
-                "forms.filter.clear": "مسح",
-                "forms.filter.filtered": "(مفلتر)",
                 "status.active": "نشط",
                 "status.inactive": "غير نشط",
                 "status.enabled": "مفعل",
@@ -1439,16 +1404,14 @@
                 "forms.saving_changes": "جاري حفظ التغييرات...",
                 "forms.update_success": "تم التحديث بنجاح",
                 "forms.update_error": "خطأ في التحديث",
-                "loading.loading_data": "جاري تحميل البيانات...",
-                "loading.please_wait": "يرجى الانتظار...",
-                "loading.filtering": "جاري تطبيق الفلتر...",
-                "loading.loading_forms": "جاري تحميل قائمة النماذج...",
-                "loading.loading_agents": "جاري تحميل قائمة الوكلاء...",
+                "forms.loading_data": "جاري تحميل البيانات...",
+                "forms.loading_forms": "جاري تحميل قائمة النماذج...",
+                "forms.loading_counts": "جاري الحصول على معلومات النماذج...",
+                "forms.filtering_forms": "جاري تطبيق الفلاتر...",
                 "forms.no_forms": "لم يتم العثور على نماذج",
                 "forms.no_forms_desc": "لا توجد نماذج متاحة للعرض",
                 "forms.no_assigned_agents": "لا يوجد وكلاء معينون",
                 "forms.no_available_agents": "لا يوجد وكلاء متاحون",
-                "forms.no_filter_results": "لا توجد نماذج تطابق الفلتر",
                 "toast.success": "تم تحديث البيانات بنجاح",
                 "toast.error": "خطأ في تحميل البيانات",
                 "toast.assign_success": "تم تعيين الوكيل بنجاح",
@@ -1459,7 +1422,7 @@
                 "toast.toggle_error": "خطأ في تغيير الحالة",
                 "toast.logout_success": "تم تسجيل الخروج بنجاح",
                 "toast.logout_error": "خطأ في تسجيل الخروج",
-                "toast.filter_cleared": "تم مسح الفلاتر",
+                "toast.filters_cleared": "تم مسح الفلاتر",
                 "role.superadmin": "مشرف رئيسي",
                 "role.admin": "مشرف",
                 "role.manager": "مدير",
@@ -1475,14 +1438,11 @@
                 if (dict[key]) el.textContent = dict[key];
             });
             
-            // Update placeholders
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                const placeholderKey = `data-placeholder-${lang}`;
-                if (searchInput.hasAttribute(placeholderKey)) {
-                    searchInput.placeholder = searchInput.getAttribute(placeholderKey);
-                }
-            }
+            // Handle placeholders
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (dict[key]) el.placeholder = dict[key];
+            });
             
             document.getElementById('currentLanguage').textContent = 
                 lang === 'ru' ? '🌐 RU' : 
@@ -1506,26 +1466,6 @@
                     document.getElementById('userRole').textContent = dict[roleKey];
                 }
             }
-            
-            // Update filtered count text
-            updateFilteredCount();
-        }
-
-        // Show loading overlay
-        function showLoading(text, subtext) {
-            const overlay = document.getElementById('loadingOverlay');
-            const loadingText = document.getElementById('loadingText');
-            const loadingSubtext = document.getElementById('loadingSubtext');
-            
-            if (text) loadingText.textContent = text;
-            if (subtext) loadingSubtext.textContent = subtext;
-            
-            overlay.classList.add('show');
-        }
-
-        // Hide loading overlay
-        function hideLoading() {
-            document.getElementById('loadingOverlay').classList.remove('show');
         }
 
         // Show toast notification
@@ -1547,13 +1487,28 @@
             }, 3000);
         }
 
+        // Show loading indicator
+        function showLoading(message) {
+            const loadingElement = document.getElementById('tableLoading');
+            const messageElement = document.getElementById('loadingMessage');
+            
+            if (message) {
+                messageElement.textContent = message;
+            } else {
+                messageElement.textContent = translations[currentLanguage]['forms.loading_data'];
+            }
+            
+            loadingElement.classList.add('show');
+        }
+
+        // Hide loading indicator
+        function hideLoading() {
+            const loadingElement = document.getElementById('tableLoading');
+            loadingElement.classList.remove('show');
+        }
+
         // Load page data
         async function loadPageData() {
-            showLoading(
-                translations[currentLanguage]['loading.loading_data'],
-                translations[currentLanguage]['loading.please_wait']
-            );
-            
             try {
                 const token = localStorage.getItem('admin_token');
                 if (!token) {
@@ -1573,12 +1528,10 @@
                     const roleTranslation = translations[currentLanguage][`role.${currentUser.role}`] || currentUser.role;
                     document.getElementById('userRole').textContent = roleTranslation;
                     
-                    // Show filter only for admin and superadmin
-                    const filterSection = document.getElementById('filterSection');
+                    // Show filter section only for admin and superadmin
                     if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
-                        filterSection.style.display = 'block';
-                    } else {
-                        filterSection.style.display = 'none';
+                        document.getElementById('filterSection').classList.add('show');
+                        isFilterVisible = true;
                     }
                 }
                 
@@ -1586,23 +1539,20 @@
                 const savedLang = localStorage.getItem('dashboard_language') || localStorage.getItem('preferred_language') || 'ru';
                 applyTranslation(savedLang);
                 
-                // Load forms and agents
-                await Promise.all([
-                    loadForms(),
-                    loadAgents()
-                ]);
+                // Load forms
+                await loadForms();
                 
             } catch (error) {
                 console.error('Error loading page:', error);
                 showToast(translations[currentLanguage]['toast.error'], 'error');
-            } finally {
-                hideLoading();
             }
         }
 
         // Load forms
         async function loadForms() {
             try {
+                showLoading(translations[currentLanguage]['forms.loading_forms']);
+                
                 const token = localStorage.getItem('admin_token');
                 const response = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
                 
@@ -1621,7 +1571,7 @@
                         );
                     }
                     
-                    // Apply current filter
+                    // Apply current filters
                     applyFilters();
                     
                 } else {
@@ -1632,9 +1582,12 @@
                 }
             } catch (error) {
                 console.error('Error loading forms:', error);
+                showToast(translations[currentLanguage]['toast.error'], 'error');
                 allForms = [];
                 filteredForms = [];
                 renderFormsTable([]);
+            } finally {
+                hideLoading();
             }
         }
 
@@ -1660,71 +1613,42 @@
             }
         }
 
-        // Load agents
-        async function loadAgents() {
-            try {
-                const token = localStorage.getItem('admin_token');
-                const response = await fetch(`${API_URL}?action=get_assigned_forms&token=${token}`);
-                
-                if (!response.ok) throw new Error('Network error');
-                
-                const result = await response.json();
-                
-                // This would normally load agents from ADMINS table
-                allAgents = [];
-                
-            } catch (error) {
-                console.error('Error loading agents:', error);
-                allAgents = [];
-            }
-        }
-
         // Apply filters
         function applyFilters() {
-            let filtered = allForms;
+            showLoading(translations[currentLanguage]['forms.filtering_forms']);
             
-            // Apply search filter
-            if (currentSearch.trim()) {
-                const searchLower = currentSearch.toLowerCase().trim();
-                filtered = filtered.filter(form => 
-                    form.formName.toLowerCase().includes(searchLower)
-                );
-            }
-            
-            // Apply status filter
-            if (currentStatus !== 'all') {
-                filtered = filtered.filter(form => {
-                    const isActive = form.enabled === true || form.enabled === 'true';
-                    const isMaintenance = form.serviceMode === true || form.serviceMode === 'true';
+            // Start filtering
+            setTimeout(() => {
+                filteredForms = allForms.filter(form => {
+                    // Apply name filter
+                    if (nameFilter && !form.formName.toLowerCase().includes(nameFilter.toLowerCase())) {
+                        return false;
+                    }
                     
-                    if (currentStatus === 'active') return isActive && !isMaintenance;
-                    if (currentStatus === 'inactive') return !isActive && !isMaintenance;
-                    if (currentStatus === 'maintenance') return isMaintenance;
+                    // Apply status filter
+                    if (statusFilter !== 'all') {
+                        const isActive = form.enabled === true || form.enabled === 'true';
+                        const isMaintenance = form.serviceMode === true || form.serviceMode === 'true';
+                        
+                        if (statusFilter === 'active' && !isActive) return false;
+                        if (statusFilter === 'inactive' && isActive) return false;
+                        if (statusFilter === 'maintenance' && !isMaintenance) return false;
+                    }
+                    
                     return true;
                 });
-            }
-            
-            filteredForms = filtered;
-            renderFormsTable(filteredForms);
-            updateFormsCount();
-            updateFilteredCount();
+                
+                // Render filtered forms
+                renderFormsTable(filteredForms);
+                updateFormsCount();
+                hideLoading();
+            }, 300); // Small delay for smooth UX
         }
 
         // Update forms count display
         function updateFormsCount() {
             const countElement = document.getElementById('formsCount');
             countElement.textContent = filteredForms.length;
-        }
-
-        // Update filtered count display
-        function updateFilteredCount() {
-            const filteredCountElement = document.getElementById('filteredCount');
-            if (allForms.length !== filteredForms.length) {
-                filteredCountElement.textContent = 
-                    `(${translations[currentLanguage]['forms.filter.filtered']} ${filteredForms.length}/${allForms.length})`;
-            } else {
-                filteredCountElement.textContent = '';
-            }
         }
 
         // Render forms table
@@ -1736,20 +1660,22 @@
             
             if (forms.length === 0) {
                 noForms.style.display = 'block';
-                noForms.querySelector('h4').textContent = allForms.length === 0 ? 
-                    translations[currentLanguage]['forms.no_forms'] : 
-                    translations[currentLanguage]['forms.no_filter_results'];
                 return;
             }
             
             noForms.style.display = 'none';
             
+            showLoading(translations[currentLanguage]['forms.loading_counts']);
+            
             try {
-                // Create rows for all forms
-                for (const form of forms) {
-                    const row = document.createElement('tr');
+                // Get form counts for all forms
+                const formNames = forms.map(form => form.formName);
+                const allCounts = await getAllFormCounts(formNames);
+                
+                // Render all forms
+                forms.forEach(form => {
+                    const counts = allCounts[form.formName] || { agentsCount: 0, walletsCount: 0 };
                     
-                    // Get form status
                     const isActive = form.enabled === true || form.enabled === 'true';
                     const isMaintenance = form.serviceMode === true || form.serviceMode === 'true';
                     
@@ -1763,13 +1689,15 @@
                         translations[currentLanguage]['status.maintenance'] : 
                         translations[currentLanguage]['status.normal'];
                     
+                    const row = document.createElement('tr');
+                    
                     row.innerHTML = `
                         <td><strong>${form.formName || ''}</strong></td>
                         <td class="api-url">${form.formAPI || ''}</td>
                         <td><span class="status ${statusClass}">${statusText}</span></td>
                         <td><span class="status ${serviceClass}">${serviceText}</span></td>
-                        <td>0</td>
-                        <td>0</td>
+                        <td>${counts.walletsCount || 0}</td>
+                        <td>${counts.agentsCount || 0}</td>
                         <td>
                             ${currentPermissions?.canManageAdmins ? `
                                 <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}">
@@ -1788,70 +1716,60 @@
                     `;
                     
                     tbody.appendChild(row);
-                }
+                });
                 
             } catch (error) {
-                console.error('Error rendering table:', error);
-                const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="7" style="color: var(--warning); text-align: center;">Ошибка отображения данных</td>`;
-                tbody.appendChild(row);
+                console.error('Error rendering forms table:', error);
+                // Fallback: render forms without counts
+                forms.forEach(form => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${form.formName || ''}</strong></td>
+                        <td class="api-url">${form.formAPI || ''}</td>
+                        <td colspan="4" style="color: var(--warning);">Ошибка загрузки данных</td>
+                        <td>
+                            ${currentPermissions?.canManageAdmins ? `
+                                <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}">
+                                    <i class="fas fa-users"></i>
+                                </button>
+                            ` : ''}
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } finally {
+                hideLoading();
             }
         }
 
-        // Filter input handler
-        function handleSearchInput() {
-            const searchInput = document.getElementById('searchInput');
-            currentSearch = searchInput.value;
-            
-            // Clear previous timeout
-            if (filterTimeout) {
-                clearTimeout(filterTimeout);
+        // Get form counts
+        async function getAllFormCounts(formNames) {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const callbackName = 'allCounts_' + Date.now();
+                
+                return new Promise((resolve, reject) => {
+                    window[callbackName] = function(response) {
+                        delete window[callbackName];
+                        if (response.success) {
+                            resolve(response.counts || {});
+                        } else {
+                            resolve({}); // Return empty object instead of rejecting
+                        }
+                    };
+                    
+                    const script = document.createElement('script');
+                    script.src = `${API_URL}?action=get_all_form_counts&token=${encodeURIComponent(token)}&form_names=${encodeURIComponent(JSON.stringify(formNames))}&callback=${callbackName}`;
+                    script.onerror = () => {
+                        delete window[callbackName];
+                        resolve({}); // Return empty object on error
+                    };
+                    document.head.appendChild(script);
+                });
+            } catch (error) {
+                console.error('Error getting all counts:', error);
+                return {};
             }
-            
-            // Show loading for filtering
-            showLoading(
-                translations[currentLanguage]['loading.filtering'],
-                translations[currentLanguage]['loading.please_wait']
-            );
-            
-            // Apply filter after delay
-            filterTimeout = setTimeout(() => {
-                applyFilters();
-                hideLoading();
-            }, 300);
-        }
-
-        // Status filter handler
-        function handleStatusFilter() {
-            const statusFilter = document.getElementById('statusFilter');
-            currentStatus = statusFilter.value;
-            
-            // Show loading for filtering
-            showLoading(
-                translations[currentLanguage]['loading.filtering'],
-                translations[currentLanguage]['loading.please_wait']
-            );
-            
-            // Apply filter immediately
-            setTimeout(() => {
-                applyFilters();
-                hideLoading();
-            }, 100);
-        }
-
-        // Clear all filters
-        function clearFilters() {
-            const searchInput = document.getElementById('searchInput');
-            const statusFilter = document.getElementById('statusFilter');
-            
-            searchInput.value = '';
-            statusFilter.value = 'all';
-            
-            currentSearch = '';
-            currentStatus = 'all';
-            
-            applyFilters();
-            showToast(translations[currentLanguage]['toast.filter_cleared'], 'success');
         }
 
         // Open agents management modal
@@ -1862,6 +1780,7 @@
             // Set modal title
             document.getElementById('modalFormName').textContent = 
                 `${translations[currentLanguage]['forms.manage_agents']}: ${formName}`;
+            document.getElementById('modalFormApi').textContent = '';
             
             try {
                 // Load form assignments
@@ -1873,8 +1792,10 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Save current assigned agents
+                    // Clear selected agents
                     selectedAgents.clear();
+                    
+                    // Add current assigned agents
                     result.assignments.forEach(agent => {
                         if (agent.isActive) {
                             selectedAgents.add(agent.agentId);
@@ -1929,14 +1850,16 @@
             const grid = document.getElementById('assignedAgentsGrid');
             grid.innerHTML = '';
             
-            if (assignments.length === 0) {
+            const activeAssignments = assignments.filter(a => a.isActive);
+            
+            if (activeAssignments.length === 0) {
                 grid.innerHTML = `<div class="empty-state">
                     <p>${translations[currentLanguage]['forms.no_assigned_agents']}</p>
                 </div>`;
                 return;
             }
             
-            assignments.forEach(agent => {
+            activeAssignments.forEach(agent => {
                 const card = document.createElement('div');
                 card.className = 'agent-card';
                 
@@ -1963,16 +1886,16 @@
             const grid = document.getElementById('availableAgentsGrid');
             grid.innerHTML = '';
             
-            if (!agents || agents.length === 0) {
+            const availableAgents = agents.filter(agent => !selectedAgents.has(agent.username));
+            
+            if (availableAgents.length === 0) {
                 grid.innerHTML = `<div class="empty-state">
                     <p>${translations[currentLanguage]['forms.no_available_agents']}</p>
                 </div>`;
                 return;
             }
             
-            agents.forEach(agent => {
-                const isAssigned = selectedAgents.has(agent.username);
-                
+            availableAgents.forEach(agent => {
                 const card = document.createElement('div');
                 card.className = 'agent-card';
                 
@@ -1983,11 +1906,9 @@
                     </div>
                     <div class="agent-email">${agent.email || ''}</div>
                     <div class="agent-actions">
-                        <button class="agent-btn ${isAssigned ? 'remove' : 'assign'}" 
-                                onclick="${isAssigned ? `removeAgentFromForm('${agent.username}')` : `assignAgentToForm('${agent.username}')`}" 
-                                title="${isAssigned ? translations[currentLanguage]['forms.remove_agent'] : translations[currentLanguage]['forms.assign_agent']}">
-                            <i class="fas ${isAssigned ? 'fa-user-minus' : 'fa-user-plus'}"></i> 
-                            ${isAssigned ? translations[currentLanguage]['forms.remove_agent'] : translations[currentLanguage]['forms.assign_agent']}
+                        <button class="agent-btn assign" onclick="assignAgentToForm('${agent.username}')" 
+                                title="${translations[currentLanguage]['forms.assign_agent']}">
+                            <i class="fas fa-user-plus"></i> ${translations[currentLanguage]['forms.assign_agent']}
                         </button>
                     </div>
                 `;
@@ -2002,7 +1923,7 @@
                 selectedAgents.add(agentId);
                 updateSelectedCount();
                 
-                // Re-render agents grid
+                // Update UI
                 await openAgentsModal(currentFormName, currentFormApi);
                 
                 showToast(`${translations[currentLanguage]['forms.assign_agent']}: ${agentId}`, 'success');
@@ -2019,7 +1940,7 @@
                 selectedAgents.delete(agentId);
                 updateSelectedCount();
                 
-                // Re-render agents grid
+                // Update UI
                 await openAgentsModal(currentFormName, currentFormApi);
                 
                 showToast(`${translations[currentLanguage]['forms.remove_agent']}: ${agentId}`, 'success');
@@ -2036,65 +1957,53 @@
                 const token = localStorage.getItem('admin_token');
                 const agents = Array.from(selectedAgents);
                 
-                showLoading(
-                    translations[currentLanguage]['forms.saving_changes'],
-                    translations[currentLanguage]['loading.please_wait']
-                );
+                // Show loading state
+                const saveBtn = document.querySelector('.btn-primary[onclick="saveAgentAssignments()"]');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]['forms.saving_changes']}`;
+                saveBtn.disabled = true;
                 
-                // Create unique callback name
-                const callbackName = 'saveCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2);
+                const callbackName = 'saveCallback_' + Date.now();
                 
-                const url = `${API_URL}?action=bulk_assign_agents&token=${encodeURIComponent(token)}` +
-                            `&form_name=${encodeURIComponent(currentFormName)}` +
-                            `&form_api=${encodeURIComponent(currentFormApi)}` +
-                            `&agents=${encodeURIComponent(JSON.stringify(agents))}` +
-                            `&callback=${callbackName}`;
-                
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     window[callbackName] = function(response) {
                         delete window[callbackName];
-                        hideLoading();
+                        
+                        // Restore button state
+                        saveBtn.innerHTML = originalText;
+                        saveBtn.disabled = false;
                         
                         if (response && response.success) {
                             showToast(`${translations[currentLanguage]['toast.assign_success']} (${response.successCount || agents.length})`, 'success');
                             closeAgentsModal();
                             loadForms();
-                            resolve(response);
                         } else {
                             const errorMsg = response ? response.error : 'Unknown error';
                             showToast(`${translations[currentLanguage]['toast.assign_error']}: ${errorMsg}`, 'error');
-                            reject(new Error(errorMsg));
                         }
+                        resolve(response);
                     };
                     
                     const script = document.createElement('script');
-                    script.src = url;
+                    script.src = `${API_URL}?action=bulk_assign_agents&token=${encodeURIComponent(token)}` +
+                                `&form_name=${encodeURIComponent(currentFormName)}` +
+                                `&form_api=${encodeURIComponent(currentFormApi)}` +
+                                `&agents=${encodeURIComponent(JSON.stringify(agents))}` +
+                                `&callback=${callbackName}`;
                     
-                    script.onerror = function(error) {
+                    script.onerror = () => {
                         delete window[callbackName];
-                        hideLoading();
+                        saveBtn.innerHTML = originalText;
+                        saveBtn.disabled = false;
                         showToast(`${translations[currentLanguage]['toast.assign_error']}: Network error`, 'error');
-                        reject(new Error('Network error'));
+                        resolve(null);
                     };
                     
-                    const timeoutId = setTimeout(() => {
-                        if (window[callbackName]) {
-                            delete window[callbackName];
-                        }
-                        hideLoading();
-                        showToast(`${translations[currentLanguage]['toast.assign_error']}: Timeout`, 'error');
-                        reject(new Error('Timeout'));
-                    }, 15000);
-                    
-                    setTimeout(() => {
-                        document.head.appendChild(script);
-                    }, 100);
-                    
+                    document.head.appendChild(script);
                 });
                 
             } catch (error) {
-                console.error('Error in saveAgentAssignments:', error);
-                hideLoading();
+                console.error('Error saving assignments:', error);
                 showToast(`${translations[currentLanguage]['toast.assign_error']}: ${error.message}`, 'error');
             }
         }
@@ -2147,6 +2056,18 @@
             }
         }
 
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('nameFilter').value = '';
+            document.getElementById('statusFilter').value = 'all';
+            
+            nameFilter = '';
+            statusFilter = 'all';
+            
+            applyFilters();
+            showToast(translations[currentLanguage]['toast.filters_cleared'], 'success');
+        }
+
         // Refresh forms
         async function refreshForms() {
             const btn = document.getElementById('refreshBtn');
@@ -2156,10 +2077,7 @@
                 btn.disabled = true;
                 btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]['forms.refreshing']}`;
                 
-                await Promise.all([
-                    loadForms(),
-                    loadAgents()
-                ]);
+                await loadForms();
                 
                 showToast(translations[currentLanguage]['toast.success'], 'success');
                 
@@ -2176,7 +2094,7 @@
         async function logout() {
             try {
                 const token = localStorage.getItem('admin_token');
-                const response = await fetch(`${API_URL}?action=logout&token=${token}`);
+                await fetch(`${API_URL}?action=logout&token=${token}`);
                 
                 // Clear local storage
                 localStorage.removeItem('admin_token');
@@ -2215,17 +2133,27 @@
                 languageDropdown.classList.remove('show');
             });
             
-            // Filter event listeners
-            const searchInput = document.getElementById('searchInput');
-            const statusFilter = document.getElementById('statusFilter');
+            // Name filter input (real-time filtering)
+            const nameFilterInput = document.getElementById('nameFilter');
+            let nameFilterTimeout;
+            nameFilterInput.addEventListener('input', function() {
+                clearTimeout(nameFilterTimeout);
+                nameFilterTimeout = setTimeout(() => {
+                    nameFilter = this.value.trim();
+                    applyFilters();
+                }, 300); // 300ms debounce
+            });
             
-            if (searchInput) {
-                searchInput.addEventListener('input', handleSearchInput);
-            }
+            // Status filter change
+            const statusFilterSelect = document.getElementById('statusFilter');
+            statusFilterSelect.addEventListener('change', function() {
+                statusFilter = this.value;
+                applyFilters();
+            });
             
-            if (statusFilter) {
-                statusFilter.addEventListener('change', handleStatusFilter);
-            }
+            // Clear filters button
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            clearFiltersBtn.title = translations[currentLanguage]['forms.clear_filters_title'];
             
             // Load page data
             loadPageData();
