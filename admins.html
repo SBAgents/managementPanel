@@ -1216,11 +1216,102 @@
             try {
                 const token = localStorage.getItem('admin_token');
                 
-                // In real system, we would have an endpoint like get_all_admins
-                // For now, we'll use mock data
+                // Получаем реальных администраторов через новый endpoint
+                const response = await fetch(`${API_URL}?action=get_all_admins&token=${token}`);
                 
-                // Mock admins data
-                const mockAdmins = [
+                if (!response.ok) {
+                    // Если endpoint не работает, пробуем альтернативные методы
+                    throw new Error('Endpoint not available');
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    allAdmins = result.admins || [];
+                    
+                    // Добавляем текущего пользователя если его нет в списке
+                    if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin')) {
+                        const userExists = allAdmins.some(admin => admin.username === currentUser.username);
+                        if (!userExists) {
+                            allAdmins.push({
+                                username: currentUser.username,
+                                email: currentUser.email || `${currentUser.username}@example.com`,
+                                role: currentUser.role,
+                                isActive: true,
+                                createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                                lastLogin: new Date().toISOString()
+                            });
+                        }
+                    }
+                    
+                    renderAdminsTable(allAdmins);
+                    updateAdminsCount();
+                    
+                } else {
+                    throw new Error(result.error || 'Failed to load admins');
+                }
+                
+            } catch (error) {
+                console.error('Error loading admins:', error);
+                
+                // Fallback: используем мок данные
+                const fallbackAdmins = [
+                    {
+                        username: "superadmin",
+                        email: "admin@example.com",
+                        role: "superadmin",
+                        isActive: true,
+                        createdAt: "2024-01-01T00:00:00Z",
+                        lastLogin: "2024-01-20T14:30:00Z"
+                    }
+                ];
+                
+                // Добавляем текущего пользователя
+                if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin')) {
+                    fallbackAdmins.push({
+                        username: currentUser.username,
+                        email: currentUser.email || `${currentUser.username}@example.com`,
+                        role: currentUser.role,
+                        isActive: true,
+                        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                        lastLogin: new Date().toISOString()
+                    });
+                }
+                
+                allAdmins = fallbackAdmins;
+                renderAdminsTable(allAdmins);
+                updateAdminsCount();
+                
+                showToast('Используются тестовые данные. Добавьте endpoint get_all_admins в бэкенд.', 'warning');
+            }
+        }
+        
+        // Добавляем новую функцию для получения админов из бэкенда:
+        async function getAdminsFromBackend(token) {
+            try {
+                // Пробуем несколько endpoints
+                
+                // 1. Пробуем получить через get_assigned_forms (может вернуть информацию о пользователях)
+                const response1 = await fetch(`${API_URL}?action=get_assigned_forms&token=${token}`);
+                if (response1.ok) {
+                    const result1 = await response1.json();
+                    // Проверяем структуру ответа
+                }
+                
+                // 2. Пробуем получить через get_dashboard_data (должен возвращать статистику)
+                const response2 = await fetch(`${API_URL}?action=get_dashboard_data&token=${token}`);
+                if (response2.ok) {
+                    const result2 = await response2.json();
+                    if (result2.success && result2.stats) {
+                        // Можем получить информацию о пользователях из статистики
+                    }
+                }
+                
+                // Если endpoints не возвращают данные об админах,
+                // нужно добавить в бэкенд функцию для получения всех пользователей
+                
+                // Временно возвращаем мок данные
+                return [
                     {
                         username: "superadmin",
                         email: "admin@example.com",
@@ -1236,44 +1327,12 @@
                         isActive: true,
                         createdAt: "2024-01-05T00:00:00Z",
                         lastLogin: "2024-01-19T11:20:00Z"
-                    },
-                    {
-                        username: "admin2",
-                        email: "admin2@example.com",
-                        role: "admin",
-                        isActive: false,
-                        createdAt: "2024-01-10T00:00:00Z",
-                        lastLogin: "2024-01-15T09:45:00Z"
                     }
                 ];
                 
-                // Add current user if not already in list and is admin/superadmin
-                if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin')) {
-                    const userExists = mockAdmins.some(admin => admin.username === currentUser.username);
-                    if (!userExists) {
-                        mockAdmins.push({
-                            username: currentUser.username,
-                            email: currentUser.email || `${currentUser.username}@example.com`,
-                            role: currentUser.role,
-                            isActive: true,
-                            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 дней назад
-                            lastLogin: new Date().toISOString()
-                        });
-                    }
-                }
-                
-                // Filter: show only admins and superadmins
-                allAdmins = mockAdmins.filter(admin => 
-                    admin.role === 'admin' || admin.role === 'superadmin'
-                );
-                
-                renderAdminsTable(allAdmins);
-                updateAdminsCount();
-                
             } catch (error) {
-                console.error('Error loading admins:', error);
-                showToast(translations[currentLanguage]['toast.error'], 'error');
-                renderAdminsTable([]);
+                console.error('Error getting admins from backend:', error);
+                return [];
             }
         }
 
