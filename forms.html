@@ -1616,7 +1616,10 @@
                 selectedAgents.delete(agentId);
                 
                 // Обновляем UI немедленно
-                await openAgentsModal(currentFormName, currentFormApi);
+                /*await*/ openAgentsModal(currentFormName, currentFormApi);
+
+                //Визуальный фидбэк
+                console.log(`Agent ${agentId} marked for removal (pending save)`);
                 
                 showToast(`${translations[currentLanguage]['forms.remove_agent']}: ${agentId}`, 'success');
                 
