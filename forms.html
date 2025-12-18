@@ -1465,7 +1465,7 @@
             // Set modal title
             document.getElementById('modalFormName').textContent = 
                 `${translations[currentLanguage]['forms.manage_agents']}: ${formName}`;
-            document.getElementById('modalFormApi').textContent = formApi || '';
+            document.getElementById('modalFormApi').textContent = '';
             
             try {
                 // Load form assignments
@@ -1559,6 +1559,7 @@
         // Render available agents
         function renderAvailableAgents(agents) {
             const grid = document.getElementById('availableAgentsGrid');
+            const isAssigned = selectedAgents.has(agent.username);
             grid.innerHTML = '';
             
             if (agents.length === 0) {
