@@ -1466,6 +1466,7 @@
 
         // Open agents management modal
         async function openAgentsModal(formName, formApi) {
+            console.log('Open modal. Current selectedAgents:', Array.from(selectedAgents));
             currentFormName = formName;
             currentFormApi = formApi;
             selectedAgents = new Set(); // Сбрасываем выбранных агентов
@@ -1653,6 +1654,10 @@
 
         // Assign agent to form
         async function assignAgentToForm(agentId) {
+            console.log('Adding agent:', agentId, 'to selectedAgents');
+            console.log('selectedAgents BEFORE:', Array.from(selectedAgents));
+            selectedAgents.add(agentId);
+            console.log('selectedAgents AFTER:', Array.from(selectedAgents));
             try {
                 // Визуальный фидбэк: добавляем в выбранные и мгновенно обновляем UI
                 selectedAgents.add(agentId);
@@ -1708,6 +1713,9 @@
         
         // Сохранение изменений в модальном окне
         async function saveAgentAssignments() {
+            console.log('SAVING. selectedAgents:', Array.from(selectedAgents));
+            const agents = Array.from(selectedAgents);
+            console.log('Agents to save:', agents);
             try {
                 const token = localStorage.getItem('admin_token');
                 const agents = Array.from(selectedAgents);
