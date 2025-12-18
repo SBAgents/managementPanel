@@ -653,6 +653,31 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+
+        /* Password generator styles */
+        .password-strength {
+            margin-top: 5px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s, background 0.3s;
+        }
+        
+        .strength-bar.weak { background: #e74c3c; width: 33%; }
+        .strength-bar.medium { background: #f39c12; width: 66%; }
+        .strength-bar.strong { background: #2ecc71; width: 100%; }
+        
+        .password-hint {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -788,61 +813,78 @@
     </div>
     
     <!-- Create Admin Modal -->
-    <div class="modal-overlay" id="createModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 data-i18n="admins.create_admin">Создать администратора</h3>
-                <button class="modal-close" onclick="closeCreateModal()">&times;</button>
-            </div>
-            
-            <form id="createForm" onsubmit="createAdmin(event)">
-                <div class="form-group">
-                    <label for="adminUsername" data-i18n="admins.username">Имя пользователя</label>
-                    <input type="text" class="form-control" id="adminUsername" required 
-                           data-i18n-placeholder="admins.username_placeholder" 
-                           placeholder="Введите имя пользователя">
+        <div class="modal-overlay" id="createModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 data-i18n="admins.create_admin">Создать администратора</h3>
+                    <button class="modal-close" onclick="closeCreateModal()">&times;</button>
                 </div>
                 
-                <div class="form-group">
-                    <label for="adminPassword" data-i18n="admins.password">Пароль</label>
-                    <input type="password" class="form-control" id="adminPassword" required 
-                           data-i18n-placeholder="admins.password_placeholder" 
-                           placeholder="Введите пароль">
-                </div>
-                
-                <div class="form-group">
-                    <label for="adminEmail" data-i18n="admins.email">Email</label>
-                    <input type="email" class="form-control" id="adminEmail" 
-                           data-i18n-placeholder="admins.email_placeholder" 
-                           placeholder="Введите email (необязательно)">
-                </div>
-                
-                <div class="form-group">
-                    <label for="adminRole" data-i18n="admins.role">Роль</label>
-                    <select class="form-control" id="adminRole" required>
-                        <option value="admin" data-i18n="admins.role_admin">Администратор</option>
-                        <option value="superadmin" data-i18n="admins.role_superadmin">Супер-администратор</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="adminActive" checked>
-                        <label for="adminActive" data-i18n="admins.active">Активен</label>
+                <form id="createForm" onsubmit="createAdmin(event)">
+                    <div class="form-group">
+                        <label for="adminUsername" data-i18n="admins.username">Имя пользователя</label>
+                        <input type="text" class="form-control" id="adminUsername" required 
+                               data-i18n-placeholder="admins.username_placeholder" 
+                               placeholder="Введите имя пользователя">
                     </div>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeCreateModal()" data-i18n="admins.cancel">
-                        Отмена
-                    </button>
-                    <button type="submit" class="btn btn-primary" id="createAdminBtn" data-i18n="admins.create">
-                        Создать
-                    </button>
-                </div>
-            </form>
+                    
+                    <div class="form-group">
+                        <label for="adminPassword" data-i18n="admins.password">Пароль</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="password" class="form-control" id="adminPassword" required 
+                                   data-i18n-placeholder="admins.password_placeholder" 
+                                   placeholder="Введите пароль"
+                                   style="flex: 1;">
+                            <button type="button" class="btn btn-secondary" onclick="generatePassword()" 
+                                    style="white-space: nowrap;" data-i18n="admins.generate_password">
+                                <i class="fas fa-key"></i>
+                                <span>Сгенерировать</span>
+                            </button>
+                        </div>
+                        <div style="margin-top: 5px; font-size: 12px; opacity: 0.7;">
+                            <span id="generatedPassword" style="display: none;"></span>
+                            <button type="button" onclick="copyPassword()" id="copyPasswordBtn" 
+                                    style="display: none; margin-left: 10px; padding: 2px 8px; font-size: 11px;" 
+                                    class="btn-secondary" data-i18n="admins.copy_password">
+                                <i class="fas fa-copy"></i>
+                                <span>Копировать</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="adminEmail" data-i18n="admins.email">Email</label>
+                        <input type="email" class="form-control" id="adminEmail" 
+                               data-i18n-placeholder="admins.email_placeholder" 
+                               placeholder="Введите email (необязательно)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="adminRole" data-i18n="admins.role">Роль</label>
+                        <select class="form-control" id="adminRole" required>
+                            <option value="admin" data-i18n="admins.role_admin">Администратор</option>
+                            <option value="superadmin" data-i18n="admins.role_superadmin">Супер-администратор</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="adminActive" checked>
+                            <label for="adminActive" data-i18n="admins.active">Активен</label>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeCreateModal()" data-i18n="admins.cancel">
+                            Отмена
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="createAdminBtn" data-i18n="admins.create">
+                            Создать
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
     
     <!-- Toast Notification -->
     <div class="toast" id="toast">
@@ -908,6 +950,13 @@
                 "admins.cancel": "Отмена",
                 "admins.create": "Создать",
                 "admins.creating": "Создание...",
+                "admins.generate_password": "Сгенерировать",
+                "admins.copy_password": "Копировать",
+                "admins.copied": "Скопировано",
+                "admins.generated_password": "Сгенерированный пароль",
+                "admins.password_generated": "Пароль сгенерирован",
+                "admins.password_copied": "Пароль скопирован в буфер",
+                "admins.copy_error": "Ошибка при копировании"
                 
                 // Status
                 "status.active": "Активен",
@@ -968,6 +1017,13 @@
                 "admins.cancel": "Cancel",
                 "admins.create": "Create",
                 "admins.creating": "Creating...",
+                "admins.generate_password": "Generate",
+                "admins.copy_password": "Copy",
+                "admins.copied": "Copied",
+                "admins.generated_password": "Generated password",
+                "admins.password_generated": "Password generated",
+                "admins.password_copied": "Password copied to clipboard",
+                "admins.copy_error": "Error copying",
                 "status.active": "Active",
                 "status.inactive": "Inactive",
                 "role.superadmin": "Super Admin",
@@ -1020,6 +1076,13 @@
                 "admins.cancel": "Annuler",
                 "admins.create": "Créer",
                 "admins.creating": "Création...",
+                "admins.generate_password": "Générer",
+                "admins.copy_password": "Copier",
+                "admins.copied": "Copié",
+                "admins.generated_password": "Mot de passe généré",
+                "admins.password_generated": "Mot de passe généré",
+                "admins.password_copied": "Mot de passe copié dans le presse-papiers",
+                "admins.copy_error": "Erreur lors de la copie",
                 "status.active": "Actif",
                 "status.inactive": "Inactif",
                 "role.superadmin": "Super Admin",
@@ -1072,6 +1135,13 @@
                 "admins.cancel": "إلغاء",
                 "admins.create": "إنشاء",
                 "admins.creating": "جاري الإنشاء...",
+                "admins.generate_password": "توليد",
+                "admins.copy_password": "نسخ",
+                "admins.copied": "تم النسخ",
+                "admins.generated_password": "كلمة المرور المولدة",
+                "admins.password_generated": "تم توليد كلمة المرور",
+                "admins.password_copied": "تم نسخ كلمة المرور إلى الحافظة",
+                "admins.copy_error": "خطأ في النسخ"
                 "status.active": "نشط",
                 "status.inactive": "غير نشط",
                 "role.superadmin": "مشرف رئيسي",
@@ -1560,6 +1630,117 @@
             
             // Load page data
             loadPageData();
+        });
+
+        // Generate strong password
+        function generatePassword() {
+            const length = 12;
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+            let password = "";
+            
+            // Ensure at least one of each type
+            password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(Math.random() * 26));
+            password += "abcdefghijklmnopqrstuvwxyz".charAt(Math.floor(Math.random() * 26));
+            password += "0123456789".charAt(Math.floor(Math.random() * 10));
+            password += "!@#$%^&*()_+".charAt(Math.floor(Math.random() * 12));
+            
+            // Fill the rest
+            for (let i = 4; i < length; i++) {
+                password += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            
+            // Shuffle the password
+            password = password.split('').sort(() => Math.random() - 0.5).join('');
+            
+            // Set the password field
+            const passwordField = document.getElementById('adminPassword');
+            passwordField.type = 'text';
+            passwordField.value = password;
+            
+            // Show generated password
+            const generatedSpan = document.getElementById('generatedPassword');
+            const copyBtn = document.getElementById('copyPasswordBtn');
+            
+            generatedSpan.textContent = translations[currentLanguage]['admins.generated_password'] + ': ' + password;
+            generatedSpan.style.display = 'inline';
+            copyBtn.style.display = 'inline-block';
+            
+            // Update password strength
+            updatePasswordStrength(password);
+            
+            // Show success message
+            showToast(translations[currentLanguage]['admins.password_generated'], 'success');
+        }
+        
+        // Copy password to clipboard
+        function copyPassword() {
+            const passwordField = document.getElementById('adminPassword');
+            const password = passwordField.value;
+            
+            if (!password) return;
+            
+            navigator.clipboard.writeText(password).then(() => {
+                const copyBtn = document.getElementById('copyPasswordBtn');
+                const originalHTML = copyBtn.innerHTML;
+                
+                copyBtn.innerHTML = `<i class="fas fa-check"></i> ${translations[currentLanguage]['admins.copied']}`;
+                copyBtn.style.background = 'rgba(46, 204, 113, 0.2)';
+                copyBtn.style.borderColor = 'rgba(46, 204, 113, 0.5)';
+                copyBtn.style.color = '#2ecc71';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.style.background = '';
+                    copyBtn.style.borderColor = '';
+                    copyBtn.style.color = '';
+                }, 2000);
+                
+                showToast(translations[currentLanguage]['admins.password_copied'], 'success');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                showToast(translations[currentLanguage]['admins.copy_error'], 'error');
+            });
+        }
+        
+        // Update password strength indicator
+        function updatePasswordStrength(password) {
+            let strength = 0;
+            
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            const strengthBar = document.getElementById('passwordStrengthBar');
+            if (strengthBar) {
+                strengthBar.className = 'strength-bar ';
+                if (strength <= 2) {
+                    strengthBar.classList.add('weak');
+                } else if (strength <= 4) {
+                    strengthBar.classList.add('medium');
+                } else {
+                    strengthBar.classList.add('strong');
+                }
+            }
+        }
+        
+        // Listen for password input changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordField = document.getElementById('adminPassword');
+            if (passwordField) {
+                passwordField.addEventListener('input', function() {
+                    updatePasswordStrength(this.value);
+                    
+                    // Hide generated password display when user types manually
+                    if (this.value) {
+                        const generatedSpan = document.getElementById('generatedPassword');
+                        const copyBtn = document.getElementById('copyPasswordBtn');
+                        generatedSpan.style.display = 'none';
+                        copyBtn.style.display = 'none';
+                    }
+                });
+            }
         });
     </script>
 </body>
