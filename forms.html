@@ -1595,26 +1595,26 @@
                     
                     card.innerHTML = `
                         <div class="agent-header">
-                            <div class="agent-name">${agent.username || ''}</div>
-                            <span class="agent-role">${agent.role || ''}</span>
+                            <div class="agent-name">${agent.username}</div>
+                            <span class="agent-role">${agent.role}</span>
                         </div>
-                        <div class="agent-email">${agent.email || ''}</div>
+                        <div class="agent-email">${agent.email}</div>
                         <div class="agent-actions">
-                            <button class="agent-btn ${isAssigned ? 'remove' : 'assign'}" 
-                                    title="${isAssigned ? translations[currentLanguage]['forms.remove_agent'] : translations[currentLanguage]['forms.assign_agent']}">
+                            <button class="agent-btn ${isAssigned ? 'remove' : 'assign'}">
                                 <i class="fas ${isAssigned ? 'fa-user-minus' : 'fa-user-plus'}"></i> 
-                                ${isAssigned ? translations[currentLanguage]['forms.remove_agent'] : translations[currentLanguage]['forms.assign_agent']}
+                                ${isAssigned ? 'Remove' : 'Assign'}
                             </button>
                         </div>
                     `;
                     
-                    // 🔴 Добавьте обработчик ПОСЛЕ создания элемента
-                    const btn = card.querySelector('button');
-                    if (isAssigned) {
-                        btn.addEventListener('click', () => removeAgentFromForm(agent.username));
-                    } else {
-                        btn.addEventListener('click', () => assignAgentToForm(agent.username));
-                    }
+                    // Обработчик
+                    card.querySelector('button').addEventListener('click', () => {
+                        if (isAssigned) {
+                            removeAgentFromForm(agent.username);
+                        } else {
+                            assignAgentToForm(agent.username);
+                        }
+                    });
                     
                     grid.appendChild(card);
                 });
