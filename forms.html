@@ -1632,71 +1632,119 @@
                 const token = localStorage.getItem('admin_token');
                 const agents = Array.from(selectedAgents);
                 
+                // Показываем индикатор загрузки
+                const saveBtn = document.querySelector('.btn-primary[onclick="saveAgentAssignments()"]');
+                const originalText = saveBtn ? saveBtn.innerHTML : '';
+                if (saveBtn) {
+                    saveBtn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]['forms.saving_changes']}`;
+                    saveBtn.disabled = true;
+                }
+                
                 // Создаем уникальное имя для callback функции
                 const callbackName = 'saveCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2);
                 
                 // Создаем URL с callback параметром для JSONP
-                const url = `${API_URL}?action=bulk_assign_agents&token=${token}` +
+                const url = `${API_URL}?action=bulk_assign_agents&token=${encodeURIComponent(token)}` +
                             `&form_name=${encodeURIComponent(currentFormName)}` +
                             `&form_api=${encodeURIComponent(currentFormApi)}` +
                             `&agents=${encodeURIComponent(JSON.stringify(agents))}` +
                             `&callback=${callbackName}`;
                 
-                // Создаем промис для обработки JSONP
+                console.log('Saving assignments URL:', url);
+                
                 return new Promise((resolve, reject) => {
                     // Создаем глобальную callback функцию
                     window[callbackName] = function(response) {
-                        // Удаляем callback из глобальной области
-                        delete window[callbackName];
+                        console.log('Server response:', response);
                         
-                        // Удаляем script элемент
+                        // Восстанавливаем кнопку
+                        if (saveBtn) {
+                            saveBtn.innerHTML = originalText;
+                            saveBtn.disabled = false;
+                        }
+                        
+                        // Очистка
+                        delete window[callbackName];
                         if (script.parentNode) {
                             script.parentNode.removeChild(script);
                         }
+                        clearTimeout(timeoutId);
                         
-                        if (response.success) {
-                            showToast(`${translations[currentLanguage]['toast.assign_success']} (${response.successCount})`, 'success');
+                        if (response && response.success) {
+                            showToast(`${translations[currentLanguage]['toast.assign_success']} (${response.successCount || agents.length})`, 'success');
                             closeAgentsModal();
-                            
-                            // Reload forms table to update agent count
                             loadForms();
                             resolve(response);
                         } else {
-                            showToast(`${translations[currentLanguage]['toast.assign_error']}: ${response.error}`, 'error');
-                            reject(new Error(response.error));
+                            const errorMsg = response ? response.error : 'Unknown error';
+                            showToast(`${translations[currentLanguage]['toast.assign_error']}: ${errorMsg}`, 'error');
+                            reject(new Error(errorMsg));
                         }
                     };
                     
                     // Создаем и добавляем script элемент
                     const script = document.createElement('script');
                     script.src = url;
-                    script.onerror = function() {
+                    
+                    script.onerror = function(error) {
+                        console.error('Script load error:', error);
+                        
+                        // Восстанавливаем кнопку
+                        if (saveBtn) {
+                            saveBtn.innerHTML = originalText;
+                            saveBtn.disabled = false;
+                        }
+                        
+                        // Очистка
                         delete window[callbackName];
                         if (script.parentNode) {
                             script.parentNode.removeChild(script);
                         }
-                        showToast(translations[currentLanguage]['toast.assign_error'] + ': Network error', 'error');
+                        clearTimeout(timeoutId);
+                        
+                        showToast(`${translations[currentLanguage]['toast.assign_error']}: Network error`, 'error');
                         reject(new Error('Network error'));
                     };
                     
-                    // Добавляем таймаут на случай, если скрипт не загрузится
-                    setTimeout(() => {
+                    // Добавляем таймаут
+                    const timeoutId = setTimeout(() => {
+                        console.warn('Request timeout');
+                        
+                        if (saveBtn) {
+                            saveBtn.innerHTML = originalText;
+                            saveBtn.disabled = false;
+                        }
+                        
                         if (window[callbackName]) {
                             delete window[callbackName];
-                            if (script.parentNode) {
-                                script.parentNode.removeChild(script);
-                            }
-                            showToast(translations[currentLanguage]['toast.assign_error'] + ': Timeout', 'error');
-                            reject(new Error('Timeout'));
                         }
-                    }, 10000);
+                        if (script.parentNode) {
+                            script.parentNode.removeChild(script);
+                        }
+                        
+                        showToast(`${translations[currentLanguage]['toast.assign_error']}: Timeout`, 'error');
+                        reject(new Error('Timeout'));
+                    }, 15000); // Увеличиваем таймаут до 15 секунд
                     
-                    document.head.appendChild(script);
+                    // Отложенное добавление скрипта
+                    setTimeout(() => {
+                        document.head.appendChild(script);
+                        console.log('Script appended to head');
+                    }, 100);
+                    
                 });
                 
             } catch (error) {
-                console.error('Error saving assignments:', error);
-                showToast(translations[currentLanguage]['toast.assign_error'] + ': ' + error.message, 'error');
+                console.error('Error in saveAgentAssignments:', error);
+                
+                // Восстанавливаем кнопку при любой ошибке
+                const saveBtn = document.querySelector('.btn-primary[onclick="saveAgentAssignments()"]');
+                if (saveBtn) {
+                    saveBtn.innerHTML = translations[currentLanguage]['forms.save_changes'];
+                    saveBtn.disabled = false;
+                }
+                
+                showToast(`${translations[currentLanguage]['toast.assign_error']}: ${error.message}`, 'error');
             }
         }
 
