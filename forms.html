@@ -1626,28 +1626,73 @@
             }
         }
         
-        // Добавим функцию сохранения изменений
+        // Сохранение изменений в модальном окне
         async function saveAgentAssignments() {
             try {
                 const token = localStorage.getItem('admin_token');
                 const agents = Array.from(selectedAgents);
                 
-                const response = await fetch(`${API_URL}?action=bulk_assign_agents&token=${token}&form_name=${encodeURIComponent(currentFormName)}&form_api=${encodeURIComponent(currentFormApi)}&agents=${encodeURIComponent(JSON.stringify(agents))}`);
+                // Создаем уникальное имя для callback функции
+                const callbackName = 'saveCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2);
                 
-                if (!response.ok) throw new Error('Network error');
+                // Создаем URL с callback параметром для JSONP
+                const url = `${API_URL}?action=bulk_assign_agents&token=${token}` +
+                            `&form_name=${encodeURIComponent(currentFormName)}` +
+                            `&form_api=${encodeURIComponent(currentFormApi)}` +
+                            `&agents=${encodeURIComponent(JSON.stringify(agents))}` +
+                            `&callback=${callbackName}`;
                 
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast(`${translations[currentLanguage]['toast.assign_success']} (${result.successCount})`, 'success');
-                    closeAgentsModal();
+                // Создаем промис для обработки JSONP
+                return new Promise((resolve, reject) => {
+                    // Создаем глобальную callback функцию
+                    window[callbackName] = function(response) {
+                        // Удаляем callback из глобальной области
+                        delete window[callbackName];
+                        
+                        // Удаляем script элемент
+                        if (script.parentNode) {
+                            script.parentNode.removeChild(script);
+                        }
+                        
+                        if (response.success) {
+                            showToast(`${translations[currentLanguage]['toast.assign_success']} (${response.successCount})`, 'success');
+                            closeAgentsModal();
+                            
+                            // Reload forms table to update agent count
+                            loadForms();
+                            resolve(response);
+                        } else {
+                            showToast(`${translations[currentLanguage]['toast.assign_error']}: ${response.error}`, 'error');
+                            reject(new Error(response.error));
+                        }
+                    };
                     
-                    // Reload forms table to update agent count
-                    await loadForms();
+                    // Создаем и добавляем script элемент
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.onerror = function() {
+                        delete window[callbackName];
+                        if (script.parentNode) {
+                            script.parentNode.removeChild(script);
+                        }
+                        showToast(translations[currentLanguage]['toast.assign_error'] + ': Network error', 'error');
+                        reject(new Error('Network error'));
+                    };
                     
-                } else {
-                    throw new Error(result.error || 'Assignment failed');
-                }
+                    // Добавляем таймаут на случай, если скрипт не загрузится
+                    setTimeout(() => {
+                        if (window[callbackName]) {
+                            delete window[callbackName];
+                            if (script.parentNode) {
+                                script.parentNode.removeChild(script);
+                            }
+                            showToast(translations[currentLanguage]['toast.assign_error'] + ': Timeout', 'error');
+                            reject(new Error('Timeout'));
+                        }
+                    }, 10000);
+                    
+                    document.head.appendChild(script);
+                });
                 
             } catch (error) {
                 console.error('Error saving assignments:', error);
