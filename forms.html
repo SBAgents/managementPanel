@@ -1592,7 +1592,7 @@
                     const card = document.createElement('div');
                     card.className = 'agent-card';
                     
-                    card.innerHTML = `
+                    /*card.innerHTML = `
                         <div class="agent-header">
                             <div class="agent-name">${agent.username}</div>
                             <span class="agent-role">${agent.role}</span>
@@ -1604,7 +1604,7 @@
                                 ${isAssigned ? 'Remove' : 'Assign'}
                             </button>
                         </div>
-                    `;
+                    `;*/
                     
                     // Обработчик
                     card.querySelector('button').addEventListener('click', () => {
