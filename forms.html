@@ -1575,20 +1575,82 @@
         
         // Обновленный renderFormsTable
         async function renderFormsTable(forms) {
-            // ... код очистки таблицы ...
+    const tbody = document.getElementById('formsTableBody');
+    const noForms = document.getElementById('noForms');
+    
+    tbody.innerHTML = '';
+    
+    if (forms.length === 0) {
+        noForms.style.display = 'block';
+        return;
+    }
+    
+    noForms.style.display = 'none';
+    
+    try {
+        // 1. ОДИН запрос для всех форм
+        const allCounts = await getAllFormCounts(forms.map(f => f.formName));
+        console.log('Получены все счетчики:', allCounts);
+        
+        // 2. Создаем строки таблицы
+        forms.forEach(form => {
+            const counts = allCounts[form.formName] || { agentsCount: 0, walletsCount: 0 };
             
-            // 1. Собираем имена форм
-            const formNames = forms.map(f => f.formName);
+            const isActive = form.enabled === true || form.enabled === 'true';
+            const isMaintenance = form.serviceMode === true || form.serviceMode === 'true';
             
-            // 2. ОДИН запрос на бэкенд
-            const allCounts = await getAllFormCounts(formNames);
+            const statusClass = isActive ? 'active' : 'inactive';
+            const statusText = isActive ? 
+                translations[currentLanguage]['status.active'] : 
+                translations[currentLanguage]['status.inactive'];
             
-            // 3. Создаем строки (уже без промисов)
-            forms.forEach(form => {
-                const counts = allCounts[form.formName] || { agentsCount: 0, walletsCount: 0 };
-                // ... создание строки ...
-            });
-        }
+            const serviceClass = isMaintenance ? 'maintenance' : 'active';
+            const serviceText = isMaintenance ? 
+                translations[currentLanguage]['status.maintenance'] : 
+                translations[currentLanguage]['status.normal'];
+            
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+                <td><strong>${form.formName || ''}</strong></td>
+                <td class="api-url">${form.formAPI || ''}</td>
+                <td><span class="status ${statusClass}">${statusText}</span></td>
+                <td><span class="status ${serviceClass}">${serviceText}</span></td>
+                <td>${counts.walletsCount || 0}</td>
+                <td>${counts.agentsCount || 0}</td>
+                <td>
+                    ${currentPermissions?.canManageAdmins ? `
+                        <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}">
+                            <i class="fas fa-users"></i>
+                        </button>
+                    ` : ''}
+                    ${currentPermissions?.canToggleServiceMode ? `
+                        <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
+                            <i class="fas fa-power-off"></i>
+                        </button>
+                        <button class="action-btn toggle" onclick="toggleServiceMode('${form.formName}', ${!isMaintenance})" title="${translations[currentLanguage]['forms.toggle_service']}">
+                            <i class="fas fa-tools"></i>
+                        </button>
+                    ` : ''}
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+        
+    } catch (error) {
+        console.error('Ошибка рендеринга таблицы:', error);
+        // Fallback: показываем формы без счетчиков
+        forms.forEach(form => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${form.formName}</strong></td>
+                <td colspan="6" style="color: var(--warning);">Ошибка загрузки данных</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+}
         // Добавим функцию получения счетчиков
         /*async function getFormCounts(formName) {
             try {
