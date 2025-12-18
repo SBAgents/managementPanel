@@ -125,6 +125,51 @@
         .logout-btn:hover {
             background: rgba(231, 76, 60, 0.3);
         }
+
+        .logout-btn.exit-animation {
+            animation: pulse 0.5s ease-in-out;
+            background: rgba(46, 204, 113, 0.2) !important;
+            border-color: rgba(46, 204, 113, 0.5) !important;
+            color: #2ecc71 !important;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        /* Анимация загрузки для всех кнопок */
+        .btn.loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Улучшаем анимацию hover для всех кнопок */
+        .btn, .action-btn, .agent-btn, .logout-btn {
+            transition: all 0.2s ease !important;
+        }
+
+        .btn:hover, .action-btn:hover, .agent-btn:hover, .logout-btn:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        .btn:active, .action-btn:active, .agent-btn:active, .logout-btn:active {
+            transform: translateY(0) !important;
+            transition: transform 0.1s !important;
+        }
         
         /* Language Selector */
         .language-selector {
