@@ -1404,13 +1404,24 @@
             const allCounts = await Promise.all(countPromises);
             
             // Теперь создаем строки таблицы
-            forms.forEach((form, index) => {
+            /*forms.forEach((form, index) => {
                 const counts = allCounts[index];
                 
                 const row = document.createElement('tr');
                 // ... остальной код создания строки
                 tbody.appendChild(row);
-            });
+            });*/
+
+                const rows = forms.map((form, index) => {
+                   const counts = allCounts[index];
+                        const row = document.createElement('tr');
+                        
+                        // ... заполнение innerHTML row ...
+                        
+                        return row;
+                    });
+                rows.forEach(row => tbody.appendChild(row));
+                
                 // Получаем счетчики для каждой формы
                 /*const counts = await getFormCounts(form.formName);
                 
