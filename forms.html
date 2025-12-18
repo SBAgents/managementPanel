@@ -730,6 +730,14 @@
         .api-url {
             display: none;
         }
+
+        .loader.small {
+            width: 12px;
+            height: 12px;
+            border-width: 2px;
+            display: inline-block;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -1646,35 +1654,55 @@
         // Assign agent to form
         async function assignAgentToForm(agentId) {
             try {
+                // Визуальный фидбэк: добавляем в выбранные и мгновенно обновляем UI
                 selectedAgents.add(agentId);
                 
-                // Обновляем UI немедленно
+                // Показываем loader на кнопке
+                const button = event.currentTarget;
+                const originalHTML = button.innerHTML;
+                button.innerHTML = `<div class="loader small"></div> Adding...`;
+                button.disabled = true;
+                
+                // Мгновенное обновление UI (агент перемещается в "назначенные")
                 await openAgentsModal(currentFormName, currentFormApi);
                 
-                showToast(`${translations[currentLanguage]['forms.assign_agent']}: ${agentId}`, 'success');
+                // Успешное сообщение
+                showToast(`Agent ${agentId} added to selection`, 'success');
                 
             } catch (error) {
                 console.error('Error assigning agent:', error);
-                showToast(translations[currentLanguage]['toast.assign_error'] + ': ' + error.message, 'error');
+                showToast('Error adding agent', 'error');
+                // Возвращаем кнопку в исходное состояние при ошибке
+                if (event.currentTarget) {
+                    event.currentTarget.innerHTML = originalHTML;
+                    event.currentTarget.disabled = false;
+                }
             }
         }
 
         // Remove agent from form
-        async function removeAgentFromForm(agentId) {
+       async function removeAgentFromForm(agentId) {
             try {
+                // Визуальный фидбэк: анимация удаления
+                const card = event.currentTarget.closest('.agent-card');
+                if (card) {
+                    card.style.opacity = '0.5';
+                    card.style.transform = 'translateX(-20px)';
+                    card.style.transition = 'all 0.3s ease';
+                }
+                
+                // Удаляем из выбранных
                 selectedAgents.delete(agentId);
                 
-                // Обновляем UI немедленно
-                /*await*/ openAgentsModal(currentFormName, currentFormApi);
-
-                //Визуальный фидбэк
-                console.log(`Agent ${agentId} marked for removal (pending save)`);
-                
-                showToast(`${translations[currentLanguage]['forms.remove_agent']}: ${agentId}`, 'success');
+                // Ждем анимацию, затем обновляем UI
+                setTimeout(async () => {
+                    await openAgentsModal(currentFormName, currentFormApi);
+                    showToast(`Agent ${agentId} removed from selection`, 'success');
+                }, 300);
                 
             } catch (error) {
                 console.error('Error removing agent:', error);
-                showToast(translations[currentLanguage]['toast.remove_error'] + ': ' + error.message, 'error');
+                showToast('Error removing agent', 'error');
             }
         }
         
