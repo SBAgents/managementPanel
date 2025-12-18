@@ -1559,8 +1559,10 @@
         // Render available agents
         function renderAvailableAgents(agents) {
             const grid = document.getElementById('availableAgentsGrid');
-            const isAssigned = selectedAgents.has(agent.username);
             grid.innerHTML = '';
+
+            agents.forEach(agentItem => {
+                const isAssigned = selectedAgents.has(agentItem.username);
             
             if (agents.length === 0) {
                 grid.innerHTML = `<div class="empty-state">
