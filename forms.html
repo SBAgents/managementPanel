@@ -855,6 +855,9 @@
         <div class="modal">
             <div class="modal-header">
                 <h3 id="modalFormName">Управление агентами</h3>
+                <div class="modal-subtitle" id="modalFormApi"></div>
+                    <div id="selectedAgentsCount" style="margin-bottom: 15px; font-weight: bold; color: var(--accent);">
+                    </div>
                 <button class="modal-close" onclick="closeAgentsModal()">&times;</button>
             </div>
             
@@ -873,8 +876,11 @@
             </div>
             
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeAgentsModal()" data-i18n="forms.close">
-                    Закрыть
+                <button type="button" class="btn btn-secondary" onclick="closeAgentsModal()" data-i18n="forms.cancel">
+                    Отмена
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveAgentAssignments()" data-i18n="forms.save_changes">
+                    Сохранить изменения
                 </button>
             </div>
         </div>
@@ -898,6 +904,7 @@
         let allAgents = [];
         let currentFormName = '';
         let currentFormApi = '';
+        let selectedAgents = new Set();
         
         // Translation dictionary
         const translations = {
@@ -947,6 +954,20 @@
                 "forms.assign_agent": "Назначить",
                 "forms.remove_agent": "Удалить",
                 "forms.close": "Закрыть",
+                "forms.cancel": "Отмена",
+                "forms.save_changes": "Сохранить изменения",
+                "forms.bulk_assign_success": "Назначения сохранены",
+                "forms.select_all": "Выбрать всех",
+                "forms.deselect_all": "Отменить выбор",
+                "forms.selected_count": "Выбрано: {count}",
+                "forms.assign_agents": "Назначить агентов",
+                "forms.agent_already_assigned": "Агент уже назначен",
+                "forms.agent_not_found": "Агент не найден",
+                "forms.no_permission": "Нет прав для этого действия",
+                "forms.loading_agents": "Загрузка агентов...",
+                "forms.saving_changes": "Сохранение изменений...",
+                "forms.update_success": "Обновлено успешно",
+                "forms.update_error": "Ошибка обновления",
                 
                 // Empty states
                 "forms.no_forms": "Формы не найдены",
@@ -1007,6 +1028,20 @@
                 "forms.assign_agent": "Assign",
                 "forms.remove_agent": "Remove",
                 "forms.close": "Close",
+                "forms.cancel": "Cancel",
+                "forms.save_changes": "Save Changes",
+                "forms.bulk_assign_success": "Assignments saved",
+                "forms.select_all": "Select All",
+                "forms.deselect_all": "Deselect All",
+                "forms.selected_count": "Selected: {count}",
+                "forms.assign_agents": "Assign Agents",
+                "forms.agent_already_assigned": "Agent already assigned",
+                "forms.agent_not_found": "Agent not found",
+                "forms.no_permission": "No permission for this action",
+                "forms.loading_agents": "Loading agents...",
+                "forms.saving_changes": "Saving changes...",
+                "forms.update_success": "Updated successfully",
+                "forms.update_error": "Update error",
                 "forms.no_forms": "No forms found",
                 "forms.no_forms_desc": "No forms available to display",
                 "forms.no_assigned_agents": "No assigned agents",
@@ -1061,6 +1096,20 @@
                 "forms.assign_agent": "Assigner",
                 "forms.remove_agent": "Retirer",
                 "forms.close": "Fermer",
+                "forms.cancel": "Annuler",
+                "forms.save_changes": "Enregistrer les modifications",
+                "forms.bulk_assign_success": "Affectations enregistrées",
+                "forms.select_all": "Tout sélectionner",
+                "forms.deselect_all": "Tout désélectionner",
+                "forms.selected_count": "Sélectionné : {count}",
+                "forms.assign_agents": "Affecter des agents",
+                "forms.agent_already_assigned": "Agent déjà affecté",
+                "forms.agent_not_found": "Agent non trouvé",
+                "forms.no_permission": "Pas de permission pour cette action",
+                "forms.loading_agents": "Chargement des agents...",
+                "forms.saving_changes": "Enregistrement des modifications...",
+                "forms.update_success": "Mis à jour avec succès",
+                "forms.update_error": "Erreur de mise à jour",
                 "forms.no_forms": "Aucun formulaire trouvé",
                 "forms.no_forms_desc": "Aucun formulaire disponible à afficher",
                 "forms.no_assigned_agents": "Aucun agent assigné",
@@ -1115,6 +1164,20 @@
                 "forms.assign_agent": "تعيين",
                 "forms.remove_agent": "إزالة",
                 "forms.close": "إغلاق",
+                "forms.cancel": "إلغاء",
+                "forms.save_changes": "حفظ التغييرات",
+                "forms.bulk_assign_success": "تم حفظ التخصيصات",
+                "forms.select_all": "تحديد الكل",
+                "forms.deselect_all": "إلغاء تحديد الكل",
+                "forms.selected_count": "محدد: {count}",
+                "forms.assign_agents": "تعيين الوكلاء",
+                "forms.agent_already_assigned": "الوكيل معين بالفعل",
+                "forms.agent_not_found": "الوكيل غير موجود",
+                "forms.no_permission": "لا يوجد إذن لهذا الإجراء",
+                "forms.loading_agents": "جاري تحميل الوكلاء...",
+                "forms.saving_changes": "جاري حفظ التغييرات...",
+                "forms.update_success": "تم التحديث بنجاح",
+                "forms.update_error": "خطأ في التحديث",
                 "forms.no_forms": "لم يتم العثور على نماذج",
                 "forms.no_forms_desc": "لا توجد نماذج متاحة للعرض",
                 "forms.no_assigned_agents": "لا يوجد وكلاء معينون",
@@ -1308,7 +1371,7 @@
         }
 
         // Render forms table
-        function renderFormsTable(forms) {
+        async function renderFormsTable(forms) {
             const tbody = document.getElementById('formsTableBody');
             const noForms = document.getElementById('noForms');
             
@@ -1321,7 +1384,10 @@
             
             noForms.style.display = 'none';
             
-            forms.forEach(form => {
+            for (const form of forms) {
+                // Получаем счетчики для каждой формы
+                const counts = await getFormCounts(form.formName);
+                
                 const row = document.createElement('tr');
                 
                 // Get form status
@@ -1338,20 +1404,14 @@
                     translations[currentLanguage]['status.maintenance'] : 
                     translations[currentLanguage]['status.normal'];
                 
-                // Count wallets for this form (would need to load from form API)
-                const walletCount = 0; // This would need to be loaded separately
-                
-                // Count agents for this form
-                const agentCount = 0; // This would need to be loaded from form assignments
-                
                 row.innerHTML = `
                     <td><strong>${form.formName || ''}</strong></td>
                     <!-- API URL скрыт -->
                     <td class="api-url">${form.formAPI || ''}</td>
                     <td><span class="status ${statusClass}">${statusText}</span></td>
                     <td><span class="status ${serviceClass}">${serviceText}</span></td>
-                    <td>${walletCount}</td>
-                    <td>${agentCount}</td>
+                    <td>${counts.walletsCount || 0}</td>
+                    <td>${counts.agentsCount || 0}</td>
                     <td>
                         ${currentPermissions.canManageAdmins ? `
                             <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}">
@@ -1370,13 +1430,37 @@
                 `;
                 
                 tbody.appendChild(row);
-            });
+            }
+        }
+        
+        // Добавим функцию получения счетчиков
+        async function getFormCounts(formName) {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}?action=get_form_counts&token=${token}&form_name=${encodeURIComponent(formName)}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    return {
+                        agentsCount: result.agentsCount,
+                        walletsCount: result.walletsCount
+                    };
+                }
+                return { agentsCount: 0, walletsCount: 0 };
+            } catch (error) {
+                console.error('Error getting form counts:', error);
+                return { agentsCount: 0, walletsCount: 0 };
+            }
         }
 
         // Open agents management modal
         async function openAgentsModal(formName, formApi) {
             currentFormName = formName;
             currentFormApi = formApi;
+            selectedAgents = new Set(); // Сбрасываем выбранных агентов
             
             // Set modal title
             document.getElementById('modalFormName').textContent = 
@@ -1393,6 +1477,21 @@
                 const result = await response.json();
                 
                 if (result.success) {
+                    // Сохраняем текущих назначенных агентов
+                    result.assignments.forEach(agent => {
+                        if (agent.isActive) {
+                            selectedAgents.add(agent.agentId);
+                        }
+                    });
+
+                    function updateSelectedCount() {
+                        const countElement = document.getElementById('selectedAgentsCount');
+                        if (countElement) {
+                            countElement.textContent = translations[currentLanguage]['forms.selected_count']
+                                .replace('{count}', selectedAgents.size);
+                        }
+                    }
+                    
                     // Render assigned agents
                     renderAssignedAgents(result.assignments || []);
                     
@@ -1470,7 +1569,7 @@
             }
             
             agents.forEach(agent => {
-                if (agent.isAssigned) return; // Skip already assigned agents
+                const isAssigned = selectedAgents.has(agent.username);
                 
                 const card = document.createElement('div');
                 card.className = 'agent-card';
@@ -1482,9 +1581,11 @@
                     </div>
                     <div class="agent-email">${agent.email || ''}</div>
                     <div class="agent-actions">
-                        <button class="agent-btn assign" onclick="assignAgentToForm('${agent.username}')" 
-                                title="${translations[currentLanguage]['forms.assign_agent']}">
-                            <i class="fas fa-user-plus"></i> ${translations[currentLanguage]['forms.assign_agent']}
+                        <button class="agent-btn ${isAssigned ? 'remove' : 'assign'}" 
+                                onclick="${isAssigned ? `removeAgentFromForm('${agent.username}')` : `assignAgentToForm('${agent.username}')`}" 
+                                title="${isAssigned ? translations[currentLanguage]['forms.remove_agent'] : translations[currentLanguage]['forms.assign_agent']}">
+                            <i class="fas ${isAssigned ? 'fa-user-minus' : 'fa-user-plus'}"></i> 
+                            ${isAssigned ? translations[currentLanguage]['forms.remove_agent'] : translations[currentLanguage]['forms.assign_agent']}
                         </button>
                     </div>
                 `;
@@ -1496,26 +1597,12 @@
         // Assign agent to form
         async function assignAgentToForm(agentId) {
             try {
-                const token = localStorage.getItem('admin_token');
+                selectedAgents.add(agentId);
                 
-                const response = await fetch(`${API_URL}?action=assign_agent_to_form&token=${token}&agent_id=${encodeURIComponent(agentId)}&form_name=${encodeURIComponent(currentFormName)}&form_api=${encodeURIComponent(currentFormApi)}&access_level=full`);
+                // Обновляем UI немедленно
+                await openAgentsModal(currentFormName, currentFormApi);
                 
-                if (!response.ok) throw new Error('Network error');
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast(translations[currentLanguage]['toast.assign_success'], 'success');
-                    
-                    // Reload modal data
-                    await openAgentsModal(currentFormName, currentFormApi);
-                    
-                    // Reload forms table to update agent count
-                    await loadForms();
-                    
-                } else {
-                    throw new Error(result.error || 'Assignment failed');
-                }
+                showToast(`${translations[currentLanguage]['forms.assign_agent']}: ${agentId}`, 'success');
                 
             } catch (error) {
                 console.error('Error assigning agent:', error);
@@ -1526,41 +1613,93 @@
         // Remove agent from form
         async function removeAgentFromForm(agentId) {
             try {
-                const token = localStorage.getItem('admin_token');
+                selectedAgents.delete(agentId);
                 
-                const response = await fetch(`${API_URL}?action=remove_agent_from_form&token=${token}&agent_id=${encodeURIComponent(agentId)}&form_name=${encodeURIComponent(currentFormName)}`);
+                // Обновляем UI немедленно
+                await openAgentsModal(currentFormName, currentFormApi);
                 
-                if (!response.ok) throw new Error('Network error');
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast(translations[currentLanguage]['toast.remove_success'], 'success');
-                    
-                    // Reload modal data
-                    await openAgentsModal(currentFormName, currentFormApi);
-                    
-                    // Reload forms table to update agent count
-                    await loadForms();
-                    
-                } else {
-                    throw new Error(result.error || 'Removal failed');
-                }
+                showToast(`${translations[currentLanguage]['forms.remove_agent']}: ${agentId}`, 'success');
                 
             } catch (error) {
                 console.error('Error removing agent:', error);
                 showToast(translations[currentLanguage]['toast.remove_error'] + ': ' + error.message, 'error');
             }
         }
+        
+        // Добавим функцию сохранения изменений
+        async function saveAgentAssignments() {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const agents = Array.from(selectedAgents);
+                
+                const response = await fetch(`${API_URL}?action=bulk_assign_agents&token=${token}&form_name=${encodeURIComponent(currentFormName)}&form_api=${encodeURIComponent(currentFormApi)}&agents=${encodeURIComponent(JSON.stringify(agents))}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(`${translations[currentLanguage]['toast.assign_success']} (${result.successCount})`, 'success');
+                    closeAgentsModal();
+                    
+                    // Reload forms table to update agent count
+                    await loadForms();
+                    
+                } else {
+                    throw new Error(result.error || 'Assignment failed');
+                }
+                
+            } catch (error) {
+                console.error('Error saving assignments:', error);
+                showToast(translations[currentLanguage]['toast.assign_error'] + ': ' + error.message, 'error');
+            }
+        }
 
         // Toggle form status (active/inactive)
         async function toggleFormStatus(formName, newStatus) {
-            // This would need to update the form settings in the database
-            // For now, we'll show a message
-            showToast(`${translations[currentLanguage]['toast.toggle_success']}: ${formName}`, 'success');
-            
-            // Reload forms
-            await loadForms();
+            try {
+                const token = localStorage.getItem('admin_token');
+                
+                const response = await fetch(`${API_URL}?action=toggle_form_status&token=${token}&form_name=${encodeURIComponent(formName)}&enabled=${newStatus}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(`${translations[currentLanguage]['toast.toggle_success']}: ${formName}`, 'success');
+                    await loadForms();
+                } else {
+                    throw new Error(result.error || 'Toggle failed');
+                }
+                
+            } catch (error) {
+                console.error('Error toggling form status:', error);
+                showToast(translations[currentLanguage]['toast.toggle_error'] + ': ' + error.message, 'error');
+            }
+        }
+        
+        async function toggleServiceMode(formName, newStatus) {
+            try {
+                const token = localStorage.getItem('admin_token');
+                
+                const response = await fetch(`${API_URL}?action=toggle_service_mode&token=${token}&form_name=${encodeURIComponent(formName)}&service_mode=${newStatus}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(`${translations[currentLanguage]['status.maintenance']} ${newStatus ? translations[currentLanguage]['status.enabled'] : translations[currentLanguage]['status.disabled']}: ${formName}`, 'success');
+                    await loadForms();
+                } else {
+                    throw new Error(result.error || 'Toggle failed');
+                }
+                
+            } catch (error) {
+                console.error('Error toggling service mode:', error);
+                showToast(translations[currentLanguage]['toast.toggle_error'] + ': ' + error.message, 'error');
+            }
         }
 
         // Toggle service mode
