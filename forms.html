@@ -1392,6 +1392,81 @@
             
             noForms.style.display = 'none';
             
+            // 1. Создаем промисы для ВСЕХ форм ОДИН РАЗ
+            const countPromises = forms.map(form => 
+                getFormCounts(form.formName).catch(error => {
+                    console.error(`Error getting counts for ${form.formName}:`, error);
+                    return { agentsCount: 0, walletsCount: 0 };
+                })
+            );
+            
+            // 2. Ожидаем выполнения всех промисов
+            const allCounts = await Promise.all(countPromises);
+            
+            // 3. Создаем строки для ВСЕХ форм
+            const rows = forms.map((form, index) => {
+                const counts = allCounts[index];
+                
+                // Get form status
+                const isActive = form.enabled === true || form.enabled === 'true';
+                const isMaintenance = form.serviceMode === true || form.serviceMode === 'true';
+                
+                const statusClass = isActive ? 'active' : 'inactive';
+                const statusText = isActive ? 
+                    translations[currentLanguage]['status.active'] : 
+                    translations[currentLanguage]['status.inactive'];
+                
+                const serviceClass = isMaintenance ? 'maintenance' : 'active';
+                const serviceText = isMaintenance ? 
+                    translations[currentLanguage]['status.maintenance'] : 
+                    translations[currentLanguage]['status.normal'];
+                
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td><strong>${form.formName || ''}</strong></td>
+                    <td class="api-url">${form.formAPI || ''}</td>
+                    <td><span class="status ${statusClass}">${statusText}</span></td>
+                    <td><span class="status ${serviceClass}">${serviceText}</span></td>
+                    <td>${counts.walletsCount || 0}</td>
+                    <td>${counts.agentsCount || 0}</td>
+                    <td>
+                        ${currentPermissions?.canManageAdmins ? `
+                            <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}">
+                                <i class="fas fa-users"></i>
+                            </button>
+                        ` : ''}
+                        ${currentPermissions?.canToggleServiceMode ? `
+                            <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
+                                <i class="fas fa-power-off"></i>
+                            </button>
+                            <button class="action-btn toggle" onclick="toggleServiceMode('${form.formName}', ${!isMaintenance})" title="${translations[currentLanguage]['forms.toggle_service']}">
+                                <i class="fas fa-tools"></i>
+                            </button>
+                        ` : ''}
+                    </td>
+                `;
+                
+                return row;
+            });
+            
+            // 4. Добавляем все строки в таблицу
+            rows.forEach(row => tbody.appendChild(row));
+        }
+        //================== НАЧАЛО КОММЕНТА =================
+       /* async function renderFormsTable(forms) {
+            const tbody = document.getElementById('formsTableBody');
+            const noForms = document.getElementById('noForms');
+            
+            tbody.innerHTML = '';
+            
+            if (forms.length === 0) {
+                noForms.style.display = 'block';
+                return;
+            }
+            
+            noForms.style.display = 'none';
+            
             for (const form of forms) {
                 const countPromises = forms.map(form => 
                 getFormCounts(form.formName).catch(error => {
@@ -1412,7 +1487,7 @@
                 tbody.appendChild(row);
             });*/
 
-                const rows = forms.map((form, index) => {
+                /*const rows = forms.map((form, index) => {
                    const counts = allCounts[index];
                         const row = document.createElement('tr');
                         
@@ -1420,7 +1495,7 @@
                         
                         return row;
                     });
-                rows.forEach(row => tbody.appendChild(row));
+                rows.forEach(row => tbody.appendChild(row));*/
                 
                 // Получаем счетчики для каждой формы
                 /*const counts = await getFormCounts(form.formName);
@@ -1428,7 +1503,7 @@
                 const row = document.createElement('tr');*/
                 
                 // Get form status
-                const isActive = form.enabled === true || form.enabled === 'true';
+                /*const isActive = form.enabled === true || form.enabled === 'true';
                 const isMaintenance = form.serviceMode === true || form.serviceMode === 'true';
                 
                 const statusClass = isActive ? 'active' : 'inactive';
@@ -1468,8 +1543,8 @@
                 
                 tbody.appendChild(row);
             }
-        }
-        
+        }*/
+        //====================КОНЕЦ КОММЕНТА====================
         // Добавим функцию получения счетчиков
         async function getFormCounts(formName) {
             try {
