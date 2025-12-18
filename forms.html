@@ -1588,6 +1588,38 @@
             }
 
                 agents.forEach(agent => {
+                    const isAssigned = selectedAgents.has(agent.username);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'agent-card';
+                    
+                    card.innerHTML = `
+                        <div class="agent-header">
+                            <div class="agent-name">${agent.username || ''}</div>
+                            <span class="agent-role">${agent.role || ''}</span>
+                        </div>
+                        <div class="agent-email">${agent.email || ''}</div>
+                        <div class="agent-actions">
+                            <button class="agent-btn ${isAssigned ? 'remove' : 'assign'}" 
+                                    title="${isAssigned ? translations[currentLanguage]['forms.remove_agent'] : translations[currentLanguage]['forms.assign_agent']}">
+                                <i class="fas ${isAssigned ? 'fa-user-minus' : 'fa-user-plus'}"></i> 
+                                ${isAssigned ? translations[currentLanguage]['forms.remove_agent'] : translations[currentLanguage]['forms.assign_agent']}
+                            </button>
+                        </div>
+                    `;
+                    
+                    // 🔴 Добавьте обработчик ПОСЛЕ создания элемента
+                    const btn = card.querySelector('button');
+                    if (isAssigned) {
+                        btn.addEventListener('click', () => removeAgentFromForm(agent.username));
+                    } else {
+                        btn.addEventListener('click', () => assignAgentToForm(agent.username));
+                    }
+                    
+                    grid.appendChild(card);
+                });
+
+               /* agents.forEach(agent => {
                 const isAssigned = selectedAgents.has(agent.username);
                 
                 const card = document.createElement('div');
@@ -1611,7 +1643,7 @@
                 
                 grid.appendChild(card);
             });
-        }
+        }*/
 
         // Assign agent to form
         async function assignAgentToForm(agentId) {
