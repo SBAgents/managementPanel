@@ -365,12 +365,14 @@
             border-radius: 8px;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s;
+            transition: all 0.3s ease-out;
+            pointer-events: none;
         }
         
         .table-loading.show {
             opacity: 1;
             visibility: visible;
+            pointer-events: all;
         }
         
         .table-loading .loader {
@@ -389,11 +391,21 @@
             text-align: center;
             max-width: 300px;
             line-height: 1.5;
+            margin: 0;
+            padding: 0;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        }
+        
+        table.loaded {
+            opacity: 1;
+            transform: translateY(0);
         }
         
         thead {
@@ -1088,6 +1100,8 @@
         let nameFilter = '';
         let statusFilter = 'all';
         let isFilterVisible = false;
+        let isLoading = false;
+        let hideLoadingTimeout = null;
         
         // Translation dictionary
         const translations = {
@@ -1487,10 +1501,17 @@
             }, 3000);
         }
 
-        // Show loading indicator
+        // Show loading indicator with smooth transition
         function showLoading(message) {
+            if (hideLoadingTimeout) {
+                clearTimeout(hideLoadingTimeout);
+                hideLoadingTimeout = null;
+            }
+            
+            isLoading = true;
             const loadingElement = document.getElementById('tableLoading');
             const messageElement = document.getElementById('loadingMessage');
+            const tableElement = document.getElementById('formsTable');
             
             if (message) {
                 messageElement.textContent = message;
@@ -1498,13 +1519,54 @@
                 messageElement.textContent = translations[currentLanguage]['forms.loading_data'];
             }
             
-            loadingElement.classList.add('show');
+            // Hide table content
+            tableElement.classList.remove('loaded');
+            
+            // Show loading with delay for smooth transition
+            setTimeout(() => {
+                loadingElement.classList.add('show');
+            }, 50);
         }
 
-        // Hide loading indicator
+        // Hide loading indicator with smooth transition
         function hideLoading() {
+            if (!isLoading) return;
+            
+            // Clear any pending hide timeout
+            if (hideLoadingTimeout) {
+                clearTimeout(hideLoadingTimeout);
+            }
+            
+            // Set minimum display time for loading (500ms minimum for good UX)
+            hideLoadingTimeout = setTimeout(() => {
+                const loadingElement = document.getElementById('tableLoading');
+                const tableElement = document.getElementById('formsTable');
+                
+                // Hide loading
+                loadingElement.classList.remove('show');
+                
+                // Show table with animation after loading is hidden
+                setTimeout(() => {
+                    tableElement.classList.add('loaded');
+                    isLoading = false;
+                    hideLoadingTimeout = null;
+                }, 300); // Wait for loading hide animation
+            }, 500); // Minimum loading time for good UX
+        }
+
+        // Force hide loading (for error cases)
+        function forceHideLoading() {
+            if (hideLoadingTimeout) {
+                clearTimeout(hideLoadingTimeout);
+                hideLoadingTimeout = null;
+            }
+            
             const loadingElement = document.getElementById('tableLoading');
+            const tableElement = document.getElementById('formsTable');
+            
             loadingElement.classList.remove('show');
+            tableElement.classList.add('loaded');
+            isLoading = false;
         }
 
         // Load page data
@@ -1545,6 +1607,7 @@
             } catch (error) {
                 console.error('Error loading page:', error);
                 showToast(translations[currentLanguage]['toast.error'], 'error');
+                forceHideLoading();
             }
         }
 
@@ -1586,8 +1649,6 @@
                 allForms = [];
                 filteredForms = [];
                 renderFormsTable([]);
-            } finally {
-                hideLoading();
             }
         }
 
@@ -1641,7 +1702,6 @@
                 // Render filtered forms
                 renderFormsTable(filteredForms);
                 updateFormsCount();
-                hideLoading();
             }, 300); // Small delay for smooth UX
         }
 
@@ -1660,6 +1720,7 @@
             
             if (forms.length === 0) {
                 noForms.style.display = 'block';
+                hideLoading();
                 return;
             }
             
@@ -1718,6 +1779,9 @@
                     tbody.appendChild(row);
                 });
                 
+                // All data loaded, hide loading
+                hideLoading();
+                
             } catch (error) {
                 console.error('Error rendering forms table:', error);
                 // Fallback: render forms without counts
@@ -1737,7 +1801,8 @@
                     `;
                     tbody.appendChild(row);
                 });
-            } finally {
+                
+                // Data loaded (even with errors), hide loading
                 hideLoading();
             }
         }
