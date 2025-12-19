@@ -222,6 +222,8 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            position: relative;
+            overflow: hidden;
         }
         
         .btn-primary {
@@ -446,19 +448,44 @@
             color: #e74c3c;
         }
         
-        .status.maintenance {
-            background: rgba(243, 156, 18, 0.2);
-            color: #f39c12;
-        }
-        
+        /* Action buttons with loading states */
         .action-btn {
-            padding: 6px 12px;
+            padding: 8px 12px;
             border-radius: 6px;
             border: none;
             cursor: pointer;
             font-size: 12px;
             transition: all 0.2s;
             margin-right: 5px;
+            position: relative;
+            overflow: hidden;
+            min-width: 40px;
+            min-height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-btn .btn-text {
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .action-btn.loading .btn-text {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        
+        .action-btn .btn-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .action-btn.loading .btn-loader {
+            opacity: 1;
         }
         
         .action-btn.manage {
@@ -467,7 +494,7 @@
             border: 1px solid rgba(52, 152, 219, 0.3);
         }
         
-        .action-btn.manage:hover {
+        .action-btn.manage:hover:not(.loading) {
             background: rgba(52, 152, 219, 0.3);
         }
         
@@ -477,8 +504,13 @@
             border: 1px solid rgba(243, 156, 18, 0.3);
         }
         
-        .action-btn.toggle:hover {
+        .action-btn.toggle:hover:not(.loading) {
             background: rgba(243, 156, 18, 0.3);
+        }
+        
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         /* Agent Management Modal */
@@ -605,6 +637,29 @@
             cursor: pointer;
             font-size: 11px;
             transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .agent-btn .btn-text {
+            transition: opacity 0.3s;
+        }
+        
+        .agent-btn.loading .btn-text {
+            opacity: 0;
+        }
+        
+        .agent-btn .btn-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .agent-btn.loading .btn-loader {
+            opacity: 1;
         }
         
         .agent-btn.assign {
@@ -613,7 +668,7 @@
             border: 1px solid rgba(46, 204, 113, 0.3);
         }
         
-        .agent-btn.assign:hover {
+        .agent-btn.assign:hover:not(.loading) {
             background: rgba(46, 204, 113, 0.3);
         }
         
@@ -623,7 +678,7 @@
             border: 1px solid rgba(231, 76, 60, 0.3);
         }
         
-        .agent-btn.remove:hover {
+        .agent-btn.remove:hover:not(.loading) {
             background: rgba(231, 76, 60, 0.3);
         }
         
@@ -693,6 +748,15 @@
             animation: spin 1s linear infinite;
             display: inline-block;
             margin-right: 10px;
+        }
+        
+        .btn-loader {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
         
         .loader.small {
@@ -983,7 +1047,6 @@
                         <option value="all" data-i18n="forms.filter_all">Все статусы</option>
                         <option value="active" data-i18n="status.active">Активна</option>
                         <option value="inactive" data-i18n="status.inactive">Неактивна</option>
-                        <option value="maintenance" data-i18n="status.maintenance">Обслуживание</option>
                     </select>
                 </div>
             </div>
@@ -1018,8 +1081,7 @@
                             <!-- API URL скрыт по ТЗ -->
                             <th class="api-url" data-i18n="forms.table_api">API URL</th>
                             <th data-i18n="forms.table_status">Статус</th>
-                            <th data-i18n="forms.table_service">Режим обслуживания</th>
-                            <th data-i18n="forms.table_wallets">Кошельки</th>
+                            <th data-i18n="forms.table_wallets">Активные кошельки</th>
                             <th data-i18n="forms.table_agents">Агенты</th>
                             <th data-i18n="forms.table_actions">Действия</th>
                         </tr>
@@ -1135,8 +1197,7 @@
                 "forms.table_name": "Название формы",
                 "forms.table_api": "API URL",
                 "forms.table_status": "Статус",
-                "forms.table_service": "Режим обслуживания",
-                "forms.table_wallets": "Кошельки",
+                "forms.table_wallets": "Активные кошельки",
                 "forms.table_agents": "Агенты",
                 "forms.table_actions": "Действия",
                 
@@ -1148,8 +1209,8 @@
                 // Status
                 "status.active": "Активна",
                 "status.inactive": "Неактивна",
-                "status.enabled": "Включён",
-                "status.disabled": "Выключен",
+                "status.enabled": "Включена",
+                "status.disabled": "Выключена",
                 "status.maintenance": "Обслуживание",
                 "status.normal": "Нормальный",
                 
@@ -1173,6 +1234,9 @@
                 "forms.saving_changes": "Сохранение изменений...",
                 "forms.update_success": "Обновлено успешно",
                 "forms.update_error": "Ошибка обновления",
+                "forms.updating": "Обновление...",
+                "forms.assigning": "Назначение...",
+                "forms.removing": "Удаление...",
                 
                 // Loading messages
                 "forms.loading_data": "Загрузка данных...",
@@ -1228,8 +1292,7 @@
                 "forms.table_name": "Form Name",
                 "forms.table_api": "API URL",
                 "forms.table_status": "Status",
-                "forms.table_service": "Maintenance Mode",
-                "forms.table_wallets": "Wallets",
+                "forms.table_wallets": "Active Wallets",
                 "forms.table_agents": "Agents",
                 "forms.table_actions": "Actions",
                 "forms.manage_agents": "Manage Agents",
@@ -1260,6 +1323,9 @@
                 "forms.saving_changes": "Saving changes...",
                 "forms.update_success": "Updated successfully",
                 "forms.update_error": "Update error",
+                "forms.updating": "Updating...",
+                "forms.assigning": "Assigning...",
+                "forms.removing": "Removing...",
                 "forms.loading_data": "Loading data...",
                 "forms.loading_forms": "Loading forms list...",
                 "forms.loading_counts": "Getting form information...",
@@ -1307,8 +1373,7 @@
                 "forms.table_name": "Nom du formulaire",
                 "forms.table_api": "URL API",
                 "forms.table_status": "Statut",
-                "forms.table_service": "Mode maintenance",
-                "forms.table_wallets": "Portefeuilles",
+                "forms.table_wallets": "Portefeuilles actifs",
                 "forms.table_agents": "Agents",
                 "forms.table_actions": "Actions",
                 "forms.manage_agents": "Gérer les agents",
@@ -1339,6 +1404,9 @@
                 "forms.saving_changes": "Enregistrement des modifications...",
                 "forms.update_success": "Mis à jour avec succès",
                 "forms.update_error": "Erreur de mise à jour",
+                "forms.updating": "Mise à jour...",
+                "forms.assigning": "Affectation...",
+                "forms.removing": "Suppression...",
                 "forms.loading_data": "Chargement des données...",
                 "forms.loading_forms": "Chargement de la liste des formulaires...",
                 "forms.loading_counts": "Obtention des informations sur les formulaires...",
@@ -1386,8 +1454,7 @@
                 "forms.table_name": "اسم النموذج",
                 "forms.table_api": "رابط API",
                 "forms.table_status": "الحالة",
-                "forms.table_service": "وضع الصيانة",
-                "forms.table_wallets": "المحافظ",
+                "forms.table_wallets": "المحافظ النشطة",
                 "forms.table_agents": "الوكلاء",
                 "forms.table_actions": "الإجراءات",
                 "forms.manage_agents": "إدارة الوكلاء",
@@ -1418,6 +1485,9 @@
                 "forms.saving_changes": "جاري حفظ التغييرات...",
                 "forms.update_success": "تم التحديث بنجاح",
                 "forms.update_error": "خطأ في التحديث",
+                "forms.updating": "جاري التحديث...",
+                "forms.assigning": "جاري التعيين...",
+                "forms.removing": "جاري الحذف...",
                 "forms.loading_data": "جاري تحميل البيانات...",
                 "forms.loading_forms": "جاري تحميل قائمة النماذج...",
                 "forms.loading_counts": "جاري الحصول على معلومات النماذج...",
@@ -1479,6 +1549,29 @@
                 if (dict[roleKey]) {
                     document.getElementById('userRole').textContent = dict[roleKey];
                 }
+            }
+        }
+
+        // Show loading state on button
+        function setButtonLoading(button, isLoading, loadingText) {
+            if (!button) return;
+            
+            if (isLoading) {
+                const text = button.querySelector('.btn-text');
+                const icon = button.querySelector('i');
+                
+                if (text) {
+                    text.innerHTML = `<div class="btn-loader"></div> ${loadingText}`;
+                } else if (icon) {
+                    button.innerHTML = `<div class="btn-loader" style="color: ${window.getComputedStyle(icon).color}"></div>`;
+                }
+                
+                button.classList.add('loading');
+                button.disabled = true;
+            } else {
+                // This will be restored by the calling function
+                button.classList.remove('loading');
+                button.disabled = false;
             }
         }
 
@@ -1689,11 +1782,9 @@
                     // Apply status filter
                     if (statusFilter !== 'all') {
                         const isActive = form.enabled === true || form.enabled === 'true';
-                        const isMaintenance = form.serviceMode === true || form.serviceMode === 'true';
                         
                         if (statusFilter === 'active' && !isActive) return false;
                         if (statusFilter === 'inactive' && isActive) return false;
-                        if (statusFilter === 'maintenance' && !isMaintenance) return false;
                     }
                     
                     return true;
@@ -1735,20 +1826,14 @@
                 
                 // Render all forms
                 forms.forEach(form => {
-                    const counts = allCounts[form.formName] || { agentsCount: 0, walletsCount: 0 };
+                    const counts = allCounts[form.formName] || { agentsCount: 0, activeWalletsCount: 0 };
                     
                     const isActive = form.enabled === true || form.enabled === 'true';
-                    const isMaintenance = form.serviceMode === true || form.serviceMode === 'true';
                     
                     const statusClass = isActive ? 'active' : 'inactive';
                     const statusText = isActive ? 
                         translations[currentLanguage]['status.active'] : 
                         translations[currentLanguage]['status.inactive'];
-                    
-                    const serviceClass = isMaintenance ? 'maintenance' : 'active';
-                    const serviceText = isMaintenance ? 
-                        translations[currentLanguage]['status.maintenance'] : 
-                        translations[currentLanguage]['status.normal'];
                     
                     const row = document.createElement('tr');
                     
@@ -1756,8 +1841,7 @@
                         <td><strong>${form.formName || ''}</strong></td>
                         <td class="api-url">${form.formAPI || ''}</td>
                         <td><span class="status ${statusClass}">${statusText}</span></td>
-                        <td><span class="status ${serviceClass}">${serviceText}</span></td>
-                        <td>${counts.walletsCount || 0}</td>
+                        <td>${counts.activeWalletsCount || 0}</td>
                         <td>${counts.agentsCount || 0}</td>
                         <td>
                             ${currentPermissions?.canManageAdmins ? `
@@ -1768,9 +1852,6 @@
                             ${currentPermissions?.canToggleServiceMode ? `
                                 <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
                                     <i class="fas fa-power-off"></i>
-                                </button>
-                                <button class="action-btn toggle" onclick="toggleServiceMode('${form.formName}', ${!isMaintenance})" title="${translations[currentLanguage]['forms.toggle_service']}">
-                                    <i class="fas fa-tools"></i>
                                 </button>
                             ` : ''}
                         </td>
@@ -1790,7 +1871,7 @@
                     row.innerHTML = `
                         <td><strong>${form.formName || ''}</strong></td>
                         <td class="api-url">${form.formAPI || ''}</td>
-                        <td colspan="4" style="color: var(--warning);">Ошибка загрузки данных</td>
+                        <td colspan="3" style="color: var(--warning);">Ошибка загрузки данных</td>
                         <td>
                             ${currentPermissions?.canManageAdmins ? `
                                 <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}">
@@ -1807,7 +1888,7 @@
             }
         }
 
-        // Get form counts
+        // Get form counts with active wallets
         async function getAllFormCounts(formNames) {
             try {
                 const token = localStorage.getItem('admin_token');
@@ -1937,7 +2018,10 @@
                     <div class="agent-actions">
                         <button class="agent-btn remove" onclick="removeAgentFromForm('${agent.agentId}')" 
                                 title="${translations[currentLanguage]['forms.remove_agent']}">
-                            <i class="fas fa-user-minus"></i> ${translations[currentLanguage]['forms.remove_agent']}
+                            <span class="btn-text">
+                                <i class="fas fa-user-minus"></i> ${translations[currentLanguage]['forms.remove_agent']}
+                            </span>
+                            <div class="btn-loader" style="display: none;"></div>
                         </button>
                     </div>
                 `;
@@ -1973,7 +2057,10 @@
                     <div class="agent-actions">
                         <button class="agent-btn assign" onclick="assignAgentToForm('${agent.username}')" 
                                 title="${translations[currentLanguage]['forms.assign_agent']}">
-                            <i class="fas fa-user-plus"></i> ${translations[currentLanguage]['forms.assign_agent']}
+                            <span class="btn-text">
+                                <i class="fas fa-user-plus"></i> ${translations[currentLanguage]['forms.assign_agent']}
+                            </span>
+                            <div class="btn-loader" style="display: none;"></div>
                         </button>
                     </div>
                 `;
@@ -1984,6 +2071,11 @@
 
         // Assign agent to form
         async function assignAgentToForm(agentId) {
+            const button = event.target.closest('.agent-btn');
+            if (button) {
+                setButtonLoading(button, true, translations[currentLanguage]['forms.assigning']);
+            }
+            
             try {
                 selectedAgents.add(agentId);
                 updateSelectedCount();
@@ -1996,11 +2088,20 @@
             } catch (error) {
                 console.error('Error assigning agent:', error);
                 showToast(translations[currentLanguage]['toast.assign_error'] + ': ' + error.message, 'error');
+            } finally {
+                if (button) {
+                    setButtonLoading(button, false);
+                }
             }
         }
 
         // Remove agent from form
         async function removeAgentFromForm(agentId) {
+            const button = event.target.closest('.agent-btn');
+            if (button) {
+                setButtonLoading(button, true, translations[currentLanguage]['forms.removing']);
+            }
+            
             try {
                 selectedAgents.delete(agentId);
                 updateSelectedCount();
@@ -2013,6 +2114,10 @@
             } catch (error) {
                 console.error('Error removing agent:', error);
                 showToast(translations[currentLanguage]['toast.remove_error'] + ': ' + error.message, 'error');
+            } finally {
+                if (button) {
+                    setButtonLoading(button, false);
+                }
             }
         }
 
@@ -2075,7 +2180,15 @@
 
         // Toggle form status
         async function toggleFormStatus(formName, newStatus) {
+            const button = event.target.closest('.action-btn');
+            const originalIcon = button.innerHTML;
+            
             try {
+                // Show loading state on button
+                button.classList.add('loading');
+                button.innerHTML = `<div class="btn-loader" style="color: ${window.getComputedStyle(button).color}"></div>`;
+                button.disabled = true;
+                
                 const token = localStorage.getItem('admin_token');
                 
                 const response = await fetch(`${API_URL}?action=toggle_form_status&token=${token}&form_name=${encodeURIComponent(formName)}&enabled=${newStatus}`);
@@ -2094,30 +2207,11 @@
             } catch (error) {
                 console.error('Error toggling form status:', error);
                 showToast(translations[currentLanguage]['toast.toggle_error'] + ': ' + error.message, 'error');
-            }
-        }
-
-        // Toggle service mode
-        async function toggleServiceMode(formName, newStatus) {
-            try {
-                const token = localStorage.getItem('admin_token');
-                
-                const response = await fetch(`${API_URL}?action=toggle_service_mode&token=${token}&form_name=${encodeURIComponent(formName)}&service_mode=${newStatus}`);
-                
-                if (!response.ok) throw new Error('Network error');
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast(`${translations[currentLanguage]['status.maintenance']} ${newStatus ? translations[currentLanguage]['status.enabled'] : translations[currentLanguage]['status.disabled']}: ${formName}`, 'success');
-                    await loadForms();
-                } else {
-                    throw new Error(result.error || 'Toggle failed');
-                }
-                
-            } catch (error) {
-                console.error('Error toggling service mode:', error);
-                showToast(translations[currentLanguage]['toast.toggle_error'] + ': ' + error.message, 'error');
+            } finally {
+                // Restore button state
+                button.classList.remove('loading');
+                button.innerHTML = originalIcon;
+                button.disabled = false;
             }
         }
 
