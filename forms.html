@@ -2105,7 +2105,9 @@
             const grid = document.getElementById('assignedAgentsGrid');
             grid.innerHTML = '';
             
-            const activeAssignments = assignments.filter(a => a.isActive);
+            const activeAssignments = assignments.filter(a => a.isActive === true || a.isActive === 'TRUE');
+            
+            console.log('Rendering assigned agents:', activeAssignments.length, 'active assignments');
             
             if (activeAssignments.length === 0) {
                 grid.innerHTML = `<div class="empty-state">
@@ -2118,6 +2120,9 @@
                 const card = document.createElement('div');
                 card.className = 'agent-card';
                 
+                // Экранируем кавычки в agentId для JavaScript
+                const safeAgentId = (agent.agentId || '').replace(/'/g, "\\'");
+                
                 card.innerHTML = `
                     <div class="agent-header">
                         <div class="agent-name">${agent.agentId || ''}</div>
@@ -2125,7 +2130,7 @@
                     </div>
                     <div class="agent-email">${agent.email || ''}</div>
                     <div class="agent-actions">
-                        <button class="agent-btn remove" onclick="removeAgentFromForm('${agent.agentId}')" 
+                        <button class="agent-btn remove" onclick="removeAgentFromForm('${safeAgentId}')" 
                                 title="${translations[currentLanguage]['forms.remove_agent']}">
                             <i class="fas fa-user-minus"></i> ${translations[currentLanguage]['forms.remove_agent']}
                         </button>
@@ -2231,7 +2236,10 @@
 
         // Remove agent from form с анимацией загрузки
         async function removeAgentFromForm(agentId) {
+            console.log('removeAgentFromForm called for agent:', agentId, 'form:', currentFormName);
+            
             const buttons = document.querySelectorAll(`.agent-btn.remove[onclick*="${agentId}"]`);
+            console.log('Found buttons to update:', buttons.length);
             
             // Показываем анимацию загрузки
             buttons.forEach(btn => {
@@ -2245,16 +2253,30 @@
                     throw new Error('No authentication token');
                 }
                 
-                // Удаляем агента через бэкенд API (без form_api)
+                console.log('Sending remove request with params:', {
+                    agent_id: agentId,
+                    form_name: currentFormName,
+                    token: token.substring(0, 10) + '...'
+                });
+                
+                // Удаляем агента через бэкенд API
                 const response = await fetch(
-                    `${API_URL}?action=remove_agent_from_form&token=${token}` +
+                    `${API_URL}?action=remove_agent_from_form` +
+                    `&token=${encodeURIComponent(token)}` +
                     `&agent_id=${encodeURIComponent(agentId)}` +
                     `&form_name=${encodeURIComponent(currentFormName)}`
                 );
                 
-                if (!response.ok) throw new Error('Network error');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Network error response:', errorText);
+                    throw new Error(`Network error: ${response.status} ${response.statusText}`);
+                }
                 
                 const result = await response.json();
+                console.log('Remove API result:', result);
                 
                 if (result.success) {
                     // Удаляем агента из selectedAgents
@@ -2286,13 +2308,27 @@
         async function reloadModalAgents() {
             try {
                 const token = localStorage.getItem('admin_token');
-                if (!token) return;
+                if (!token) {
+                    console.error('No token in reloadModalAgents');
+                    return;
+                }
                 
-                const response = await fetch(`${API_URL}?action=get_form_assignments&token=${token}&form_name=${encodeURIComponent(currentFormName)}`);
+                console.log('Reloading agents for form:', currentFormName);
                 
-                if (!response.ok) throw new Error('Network error');
+                const response = await fetch(
+                    `${API_URL}?action=get_form_assignments` +
+                    `&token=${encodeURIComponent(token)}` +
+                    `&form_name=${encodeURIComponent(currentFormName)}`
+                );
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Network error in reloadModalAgents:', errorText);
+                    throw new Error('Network error');
+                }
                 
                 const result = await response.json();
+                console.log('Reload result:', result);
                 
                 if (result.success) {
                     // Обновляем selectedAgents
@@ -2303,6 +2339,7 @@
                                 selectedAgents.add(agent.agentId);
                             }
                         });
+                        console.log('Selected agents after reload:', Array.from(selectedAgents));
                     }
                     
                     updateSelectedCount();
@@ -2311,11 +2348,14 @@
                     let filteredAvailableAgents = [];
                     if (result.availableAgents && Array.isArray(result.availableAgents)) {
                         filteredAvailableAgents = filterAvailableAgents(result.availableAgents);
+                        console.log('Filtered available agents:', filteredAvailableAgents.length);
                     }
                     
                     // Re-render agents
                     renderAssignedAgents(result.assignments || []);
                     renderAvailableAgents(filteredAvailableAgents);
+                } else {
+                    console.error('API error in reloadModalAgents:', result.error);
                 }
             } catch (error) {
                 console.error('Error reloading modal agents:', error);
