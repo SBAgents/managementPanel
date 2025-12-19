@@ -2547,9 +2547,10 @@
 
         async function toggleFormStatus(formName, formApi, newStatus) {
             console.log('toggleFormStatus called:', { formName, formApi, newStatus });
+            console.log('ALL PARAMS:', arguments.length, 'formName:', formName, 'formApi:', formApi, 'newStatus:', newStatus);
             
             // Находим все кнопки переключения статуса для этой формы
-            const buttons = document.querySelectorAll(`.action-btn.toggle[onclick*="toggleFormStatus('${formName.replace(/'/g, "\\'")}'"]`);
+            const buttons = document.querySelectorAll(`.action-btn.toggle[onclick*="toggleFormStatus('${formName.replace(/'/g, "\\'")}',"]`);
             
             // Показываем анимацию загрузки на всех кнопках
             buttons.forEach(btn => {
