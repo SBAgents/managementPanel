@@ -450,6 +450,58 @@
             background: rgba(243, 156, 18, 0.2);
             color: #f39c12;
         }
+
+         /* Анимация нажатия для кнопки Manage Agents */
+        .action-btn.manage:active {
+            transform: scale(0.95);
+            transition: transform 0.1s ease;
+        }
+    
+        /* Эффект успешного нажатия */
+        .action-btn.manage.success {
+            background: rgba(46, 204, 113, 0.3) !important;
+            border-color: rgba(46, 204, 113, 0.5) !important;
+            color: #2ecc71 !important;
+            transform: scale(0.95);
+        }
+    
+        .action-btn.manage.success i {
+            color: #2ecc71 !important;
+        }
+    
+        /* Эффект ошибки */
+        .action-btn.manage.error {
+            background: rgba(231, 76, 60, 0.3) !important;
+            border-color: rgba(231, 76, 60, 0.5) !important;
+            color: #e74c3c !important;
+            transform: scale(0.95);
+        }
+    
+        .action-btn.manage.error i {
+            color: #e74c3c !important;
+        }
+    
+        /* Анимация загрузки для кнопки Manage Agents */
+        .action-btn.manage.loading {
+            color: transparent !important;
+            position: relative;
+            pointer-events: none;
+        }
+    
+        .action-btn.manage.loading::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid var(--accent);
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+
         
         .action-btn {
             padding: 6px 12px;
@@ -1730,6 +1782,70 @@
             }
         }
 
+        function showManageAgentsFeedback(formName, formApi, button) {
+            // Сохраняем оригинальные стили
+            const originalBg = button.style.backgroundColor;
+            const originalBorder = button.style.borderColor;
+            const originalColor = button.style.color;
+            const originalHtml = button.innerHTML;
+            const originalTransform = button.style.transform;
+            
+            // Визуальный фидбэк нажатия
+            button.classList.add('loading');
+            button.disabled = true;
+            
+            // Создаем промис для асинхронного открытия модального окна
+            return new Promise((resolve) => {
+                // Запускаем открытие модального окна
+                openAgentsModal(formName, formApi).then(() => {
+                    // Успешное открытие - зеленый фидбэк
+                    setTimeout(() => {
+                        button.classList.remove('loading');
+                        button.classList.add('success');
+                        
+                        // Возвращаем к исходному состоянию через 500ms
+                        setTimeout(() => {
+                            button.classList.remove('success');
+                            button.disabled = false;
+                            
+                            // Восстанавливаем оригинальные стили
+                            button.style.backgroundColor = originalBg;
+                            button.style.borderColor = originalBorder;
+                            button.style.color = originalColor;
+                            button.style.transform = originalTransform;
+                            button.innerHTML = originalHtml;
+                            
+                            resolve(true);
+                        }, 500);
+                    }, 100);
+                }).catch((error) => {
+                    // Ошибка при открытии - красный фидбэк
+                    setTimeout(() => {
+                        button.classList.remove('loading');
+                        button.classList.add('error');
+                        
+                        // Показываем иконку ошибки
+                        button.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+                        
+                        // Возвращаем к исходному состоянию через 800ms
+                        setTimeout(() => {
+                            button.classList.remove('error');
+                            button.disabled = false;
+                            
+                            // Восстанавливаем оригинальные стили
+                            button.style.backgroundColor = originalBg;
+                            button.style.borderColor = originalBorder;
+                            button.style.color = originalColor;
+                            button.style.transform = originalTransform;
+                            button.innerHTML = originalHtml;
+                            
+                            resolve(false);
+                        }, 800);
+                    }, 100);
+                });
+            });
+        }
+
         // Apply filters
         function applyFilters() {
             showLoading(translations[currentLanguage]['forms.filtering_forms']);
@@ -1806,13 +1922,13 @@
                     
                     row.innerHTML = `
                         <td><strong>${form.formName || ''}</strong></td>
-                        <td class="api-url">${form.formAPI || ''}</td>
+                        <td class="api-url">${form.formApi || ''}</td>
                         <td><span class="status ${statusClass}">${statusText}</span></td>
                         <td>${counts.activeWalletsCount || 0}</td>
                         <td>${counts.agentsCount || 0}</td>
                         <td>
                             ${currentPermissions?.canManageAdmins ? `
-                                <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}">
+                                <button class="action-btn manage" onclick="showManageAgentsFeedback('${form.formName}', '${form.formApi || ''}', this)" title="${translations[currentLanguage]['forms.manage_agents']}">
                                     <i class="fas fa-users"></i>
                                 </button>
                             ` : ''}
@@ -1841,7 +1957,7 @@
                         <td colspan="3" style="color: var(--warning);">Ошибка загрузки данных</td>
                         <td>
                             ${currentPermissions?.canManageAdmins ? `
-                                <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}">
+                                <button class="action-btn manage" onclick="showManageAgentsFeedback('${form.formName}', '${form.formApi || ''}', this)" title="${translations[currentLanguage]['forms.manage_agents']}">
                                     <i class="fas fa-users"></i>
                                 </button>
                             ` : ''}
@@ -1887,61 +2003,60 @@
 
         // Open agents management modal
         async function openAgentsModal(formName, formApi) {
-            currentFormName = formName;
-            currentFormApi = formApi;
-            
-            // Set modal title
-            document.getElementById('modalFormName').textContent = 
-                `${translations[currentLanguage]['forms.manage_agents']}: ${formName}`;
-            document.getElementById('modalFormApi').textContent = '';
-            
-            try {
-                // Load form assignments
-                const token = localStorage.getItem('admin_token');
-                const response = await fetch(`${API_URL}?action=get_form_assignments&token=${token}&form_name=${encodeURIComponent(formName)}`);
-                
-                if (!response.ok) throw new Error('Network error');
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    // Clear selected agents
-                    selectedAgents.clear();
+            return new Promise(async (resolve, reject) => {
+                try {
+                    currentFormName = formName;
+                    currentFormApi = formApi;
                     
-                    // Add current assigned agents
-                    result.assignments.forEach(agent => {
-                        if (agent.isActive) {
-                            selectedAgents.add(agent.agentId);
-                        }
-                    });
+                    // Set modal title
+                    document.getElementById('modalFormName').textContent = 
+                        `${translations[currentLanguage]['forms.manage_agents']}: ${formName}`;
+                    document.getElementById('modalFormApi').textContent = '';
                     
-                    // Update selected count
-                    updateSelectedCount();
+                    // Load form assignments
+                    const token = localStorage.getItem('admin_token');
+                    const response = await fetch(`${API_URL}?action=get_form_assignments&token=${token}&form_name=${encodeURIComponent(formName)}`);
                     
-                    // Filter available agents - исключаем уже назначенных на другие формы
-                    const filteredAvailableAgents = filterAvailableAgents(result.availableAgents || []);
+                    if (!response.ok) throw new Error('Network error');
                     
-                    // Render assigned agents
-                    renderAssignedAgents(result.assignments || []);
+                    const result = await response.json();
                     
-                    // Render filtered available agents
-                    renderAvailableAgents(filteredAvailableAgents);
+                    if (result.success) {
+                        // Clear selected agents
+                        selectedAgents.clear();
+                        
+                        // Add current assigned agents
+                        result.assignments.forEach(agent => {
+                            if (agent.isActive) {
+                                selectedAgents.add(agent.agentId);
+                            }
+                        });
+                        
+                        // Update selected count
+                        updateSelectedCount();
+                        
+                        // Filter available agents - исключаем уже назначенных на другие формы
+                        const filteredAvailableAgents = filterAvailableAgents(result.availableAgents || []);
+                        
+                        // Render assigned agents
+                        renderAssignedAgents(result.assignments || []);
+                        
+                        // Render filtered available agents
+                        renderAvailableAgents(filteredAvailableAgents);
+                        
+                        // Show modal
+                        document.getElementById('agentsModal').classList.add('show');
+                        resolve(true);
+                        
+                    } else {
+                        throw new Error(result.error || 'Failed to load assignments');
+                    }
                     
-                } else {
-                    showToast(result.error || translations[currentLanguage]['toast.error'], 'error');
-                    renderAssignedAgents([]);
-                    renderAvailableAgents([]);
+                } catch (error) {
+                    console.error('Error loading form assignments:', error);
+                    reject(error);
                 }
-                
-            } catch (error) {
-                console.error('Error loading form assignments:', error);
-                showToast(translations[currentLanguage]['toast.error'], 'error');
-                renderAssignedAgents([]);
-                renderAvailableAgents([]);
-            }
-            
-            // Show modal
-            document.getElementById('agentsModal').classList.add('show');
+            });
         }
 
         // Filter available agents - исключаем агентов, уже назначенных на другие формы
