@@ -1783,66 +1783,52 @@
         }
 
         function showManageAgentsFeedback(formName, formApi, button) {
-            // Сохраняем оригинальные стили
-            const originalBg = button.style.backgroundColor;
-            const originalBorder = button.style.borderColor;
-            const originalColor = button.style.color;
-            const originalHtml = button.innerHTML;
-            const originalTransform = button.style.transform;
-            
             // Визуальный фидбэк нажатия
             button.classList.add('loading');
             button.disabled = true;
             
-            // Создаем промис для асинхронного открытия модального окна
-            return new Promise((resolve) => {
-                // Запускаем открытие модального окна
-                openAgentsModal(formName, formApi).then(() => {
+            // Сразу открываем модальное окно
+            const modalOpened = openAgentsModal(formName, formApi);
+            
+            // Когда модальное окно открыто, убираем анимацию
+            modalOpened.then((success) => {
+                if (success) {
                     // Успешное открытие - зеленый фидбэк
                     setTimeout(() => {
                         button.classList.remove('loading');
                         button.classList.add('success');
                         
-                        // Возвращаем к исходному состоянию через 500ms
+                        // Возвращаем к исходному состоянию через 300ms
                         setTimeout(() => {
                             button.classList.remove('success');
                             button.disabled = false;
-                            
-                            // Восстанавливаем оригинальные стили
-                            button.style.backgroundColor = originalBg;
-                            button.style.borderColor = originalBorder;
-                            button.style.color = originalColor;
-                            button.style.transform = originalTransform;
-                            button.innerHTML = originalHtml;
-                            
-                            resolve(true);
-                        }, 500);
+                        }, 300);
                     }, 100);
-                }).catch((error) => {
+                } else {
                     // Ошибка при открытии - красный фидбэк
                     setTimeout(() => {
                         button.classList.remove('loading');
                         button.classList.add('error');
                         
-                        // Показываем иконку ошибки
+                        // Показываем иконку ошибки временно
+                        const originalHtml = button.innerHTML;
                         button.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
                         
-                        // Возвращаем к исходному состоянию через 800ms
+                        // Возвращаем к исходному состоянию через 500ms
                         setTimeout(() => {
                             button.classList.remove('error');
-                            button.disabled = false;
-                            
-                            // Восстанавливаем оригинальные стили
-                            button.style.backgroundColor = originalBg;
-                            button.style.borderColor = originalBorder;
-                            button.style.color = originalColor;
-                            button.style.transform = originalTransform;
                             button.innerHTML = originalHtml;
-                            
-                            resolve(false);
-                        }, 800);
+                            button.disabled = false;
+                        }, 500);
                     }, 100);
-                });
+                }
+            }).catch((error) => {
+                console.error('Error opening modal:', error);
+                // В случае ошибки все равно восстанавливаем кнопку
+                setTimeout(() => {
+                    button.classList.remove('loading');
+                    button.disabled = false;
+                }, 300);
             });
         }
 
@@ -1928,12 +1914,12 @@
                         <td>${counts.agentsCount || 0}</td>
                         <td>
                             ${currentPermissions?.canManageAdmins ? `
-                                <button class="action-btn manage" onclick="showManageAgentsFeedback('${form.formName}', '${form.formApi || ''}', this)" title="${translations[currentLanguage]['forms.manage_agents']}">
+                                <button class="action-btn manage" onclick="showManageAgentsFeedback('${form.formName.replace(/'/g, "\\'")}', '${(form.formApi || '').replace(/'/g, "\\'")}', this)" title="${translations[currentLanguage]['forms.manage_agents']}">
                                     <i class="fas fa-users"></i>
                                 </button>
                             ` : ''}
                             ${currentPermissions?.canToggleServiceMode ? `
-                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
+                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName.replace(/'/g, "\\'")}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
                                     <i class="fas fa-power-off"></i>
                                 </button>
                             ` : ''}
@@ -1957,7 +1943,7 @@
                         <td colspan="3" style="color: var(--warning);">Ошибка загрузки данных</td>
                         <td>
                             ${currentPermissions?.canManageAdmins ? `
-                                <button class="action-btn manage" onclick="showManageAgentsFeedback('${form.formName}', '${form.formApi || ''}', this)" title="${translations[currentLanguage]['forms.manage_agents']}">
+                                <button class="action-btn manage" onclick="showManageAgentsFeedback('${form.formName.replace(/'/g, "\\'")}', '${(form.formApi || '').replace(/'/g, "\\'")}', this)" title="${translations[currentLanguage]['forms.manage_agents']}">
                                     <i class="fas fa-users"></i>
                                 </button>
                             ` : ''}
@@ -2011,13 +1997,20 @@
                     // Set modal title
                     document.getElementById('modalFormName').textContent = 
                         `${translations[currentLanguage]['forms.manage_agents']}: ${formName}`;
-                    document.getElementById('modalFormApi').textContent = '';
+                    document.getElementById('modalFormApi').textContent = formApi || '';
                     
                     // Load form assignments
                     const token = localStorage.getItem('admin_token');
+                    if (!token) {
+                        reject(new Error('No authentication token'));
+                        return;
+                    }
+                    
                     const response = await fetch(`${API_URL}?action=get_form_assignments&token=${token}&form_name=${encodeURIComponent(formName)}`);
                     
-                    if (!response.ok) throw new Error('Network error');
+                    if (!response.ok) {
+                        throw new Error('Network error');
+                    }
                     
                     const result = await response.json();
                     
@@ -2026,17 +2019,22 @@
                         selectedAgents.clear();
                         
                         // Add current assigned agents
-                        result.assignments.forEach(agent => {
-                            if (agent.isActive) {
-                                selectedAgents.add(agent.agentId);
-                            }
-                        });
+                        if (result.assignments && Array.isArray(result.assignments)) {
+                            result.assignments.forEach(agent => {
+                                if (agent.isActive) {
+                                    selectedAgents.add(agent.agentId);
+                                }
+                            });
+                        }
                         
                         // Update selected count
                         updateSelectedCount();
                         
                         // Filter available agents - исключаем уже назначенных на другие формы
-                        const filteredAvailableAgents = filterAvailableAgents(result.availableAgents || []);
+                        let filteredAvailableAgents = [];
+                        if (result.availableAgents && Array.isArray(result.availableAgents)) {
+                            filteredAvailableAgents = filterAvailableAgents(result.availableAgents);
+                        }
                         
                         // Render assigned agents
                         renderAssignedAgents(result.assignments || []);
@@ -2185,20 +2183,40 @@
             });
             
             try {
-                selectedAgents.add(agentId);
-                updateSelectedCount();
+                const token = localStorage.getItem('admin_token');
+                if (!token) {
+                    throw new Error('No authentication token');
+                }
                 
-                // Имитируем задержку для анимации (минимум 500ms для UX)
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // Добавляем агента через бэкенд API
+                const response = await fetch(
+                    `${API_URL}?action=assign_agent_to_form&token=${token}` +
+                    `&agent_id=${encodeURIComponent(agentId)}` +
+                    `&form_name=${encodeURIComponent(currentFormName)}` +
+                    `&form_api=${encodeURIComponent(currentFormApi)}`
+                );
                 
-                // Update UI
-                await openAgentsModal(currentFormName, currentFormApi);
+                if (!response.ok) throw new Error('Network error');
                 
-                showToast(`${translations[currentLanguage]['forms.assign_agent']}: ${agentId}`, 'success');
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Добавляем агента в selectedAgents
+                    selectedAgents.add(agentId);
+                    updateSelectedCount();
+                    
+                    // Обновляем UI модального окна
+                    await reloadModalAgents();
+                    
+                    showToast(`${translations[currentLanguage]['toast.assign_success']}: ${agentId}`, 'success');
+                    
+                } else {
+                    throw new Error(result.error || 'Assignment failed');
+                }
                 
             } catch (error) {
                 console.error('Error assigning agent:', error);
-                showToast(translations[currentLanguage]['toast.assign_error'] + ': ' + error.message, 'error');
+                showToast(`${translations[currentLanguage]['toast.assign_error']}: ${error.message}`, 'error');
                 
                 // Убираем анимацию загрузки при ошибке
                 buttons.forEach(btn => {
@@ -2219,26 +2237,85 @@
             });
             
             try {
-                selectedAgents.delete(agentId);
-                updateSelectedCount();
+                const token = localStorage.getItem('admin_token');
+                if (!token) {
+                    throw new Error('No authentication token');
+                }
                 
-                // Имитируем задержку для анимации (минимум 500ms для UX)
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // Удаляем агента через бэкенд API
+                const response = await fetch(
+                    `${API_URL}?action=remove_agent_from_form&token=${token}` +
+                    `&agent_id=${encodeURIComponent(agentId)}` +
+                    `&form_name=${encodeURIComponent(currentFormName)}`
+                );
                 
-                // Update UI
-                await openAgentsModal(currentFormName, currentFormApi);
+                if (!response.ok) throw new Error('Network error');
                 
-                showToast(`${translations[currentLanguage]['forms.remove_agent']}: ${agentId}`, 'success');
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Удаляем агента из selectedAgents
+                    selectedAgents.delete(agentId);
+                    updateSelectedCount();
+                    
+                    // Обновляем UI модального окна
+                    await reloadModalAgents();
+                    
+                    showToast(`${translations[currentLanguage]['toast.remove_success']}: ${agentId}`, 'success');
+                    
+                } else {
+                    throw new Error(result.error || 'Removal failed');
+                }
                 
             } catch (error) {
                 console.error('Error removing agent:', error);
-                showToast(translations[currentLanguage]['toast.remove_error'] + ': ' + error.message, 'error');
+                showToast(`${translations[currentLanguage]['toast.remove_error']}: ${error.message}`, 'error');
                 
                 // Убираем анимацию загрузки при ошибке
                 buttons.forEach(btn => {
                     btn.classList.remove('loading');
                     btn.disabled = false;
                 });
+            }
+        }
+        
+        // Новая функция для перезагрузки агентов в модальном окне
+        async function reloadModalAgents() {
+            try {
+                const token = localStorage.getItem('admin_token');
+                if (!token) return;
+                
+                const response = await fetch(`${API_URL}?action=get_form_assignments&token=${token}&form_name=${encodeURIComponent(currentFormName)}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Обновляем selectedAgents
+                    selectedAgents.clear();
+                    if (result.assignments && Array.isArray(result.assignments)) {
+                        result.assignments.forEach(agent => {
+                            if (agent.isActive) {
+                                selectedAgents.add(agent.agentId);
+                            }
+                        });
+                    }
+                    
+                    updateSelectedCount();
+                    
+                    // Filter available agents - исключаем уже назначенных на другие формы
+                    let filteredAvailableAgents = [];
+                    if (result.availableAgents && Array.isArray(result.availableAgents)) {
+                        filteredAvailableAgents = filterAvailableAgents(result.availableAgents);
+                    }
+                    
+                    // Re-render agents
+                    renderAssignedAgents(result.assignments || []);
+                    renderAvailableAgents(filteredAvailableAgents);
+                }
+            } catch (error) {
+                console.error('Error reloading modal agents:', error);
             }
         }
 
