@@ -233,8 +233,26 @@
             background: var(--accent-hover);
             transform: translateY(-2px);
         }
+
+        .btn-save-cahnges {
+            display: none;
+            background: var(--accent);
+            color: #2c3e50;
+        }
+        
+        .btn-save-cahnges:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
         
         .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-closeModal {
+            dispay: none;
             background: rgba(255, 255, 255, 0.1);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -1164,10 +1182,10 @@
             </div>
             
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeAgentsModal()" data-i18n="forms.cancel">
+                <button type="button" class="btn btn-closeModal" onclick="closeAgentsModal()" data-i18n="forms.cancel">
                     Отмена
                 </button>
-                <button type="button" class="btn btn-primary" onclick="saveAgentAssignments()" data-i18n="forms.save_changes">
+                <button type="button" class="btn btn-save-cahnges" onclick="saveAgentAssignments()" data-i18n="forms.save_changes">
                     Сохранить изменения
                 </button>
             </div>
@@ -2089,6 +2107,8 @@
             currentFormName = '';
             currentFormApi = '';
             selectedAgents.clear();
+
+            refreshForms(); //Обновляем инфо по формам после закрытия модального окна.
         }
 
         // Update selected agents count
