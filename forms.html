@@ -2507,7 +2507,7 @@
         }
 
         // Toggle form status с анимацией загрузки
-        async function toggleFormStatus(formName, newStatus) {
+        /*async function toggleFormStatus(formName, newStatus) {
             // Находим все кнопки переключения статуса для этой формы
             const buttons = document.querySelectorAll(`.action-btn.toggle[onclick*="${formName}"]`);
             
@@ -2542,6 +2542,54 @@
                     btn.classList.remove('loading');
                     btn.disabled = false;
                 });
+            }
+        }*/
+
+        async function toggleFormStatus(formName, newStatus) {
+            // Сохраняем состояние
+            const originalButtons = document.querySelectorAll(`.action-btn.toggle[onclick*="${formName}"]`);
+            
+            // Анимация
+            originalButtons.forEach(btn => {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            });
+            
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}?action=toggle_form_status&token=${token}&form_name=${encodeURIComponent(formName)}&enabled=${newStatus}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(`${translations[currentLanguage]['toast.toggle_success']}: ${formName}`, 'success');
+                    await loadForms();
+                } else {
+                    throw new Error(result.error || 'Toggle failed');
+                }
+                
+            } catch (error) {
+                console.error('Error toggling form status:', error);
+                showToast(translations[currentLanguage]['toast.toggle_error'] + ': ' + error.message, 'error');
+                
+                // При ошибке восстанавливаем оригинальные кнопки
+                originalButtons.forEach(btn => {
+                    if (btn.parentNode) {
+                        btn.classList.remove('loading');
+                        btn.disabled = false;
+                    }
+                });
+            } finally {
+                // Гарантируем, что ВСЕ кнопки восстановлены
+                setTimeout(() => {
+                    const allButtons = document.querySelectorAll('.action-btn.toggle');
+                    allButtons.forEach(btn => {
+                        btn.classList.remove('loading');
+                        btn.disabled = false;
+                    });
+                }, 300);
             }
         }
 
