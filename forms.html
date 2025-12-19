@@ -2105,9 +2105,23 @@
             const grid = document.getElementById('assignedAgentsGrid');
             grid.innerHTML = '';
             
-            const activeAssignments = assignments.filter(a => a.isActive === true || a.isActive === 'TRUE');
+            console.log('renderAssignedAgents called with:', assignments);
             
-            console.log('Rendering assigned agents:', activeAssignments.length, 'active assignments');
+            // ПРАВИЛЬНО ФИЛЬТРУЕМ АКТИВНЫХ АГЕНТОВ
+            const activeAssignments = assignments.filter(a => {
+                const isActive = a.isActive;
+                // Проверяем разные форматы значения isActive
+                const isActiveBool = isActive === true || 
+                                   isActive === 'TRUE' || 
+                                   isActive === 'true' || 
+                                   isActive === 1 || 
+                                   isActive === '1';
+                
+                console.log(`Agent ${a.agentId}: isActive=${isActive}, isActiveBool=${isActiveBool}`);
+                return isActiveBool;
+            });
+            
+            console.log('Active assignments after filter:', activeAssignments.length);
             
             if (activeAssignments.length === 0) {
                 grid.innerHTML = `<div class="empty-state">
@@ -2121,14 +2135,14 @@
                 card.className = 'agent-card';
                 
                 // Экранируем кавычки в agentId для JavaScript
-                const safeAgentId = (agent.agentId || '').replace(/'/g, "\\'");
+                const safeAgentId = (agent.agentId || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
                 
                 card.innerHTML = `
                     <div class="agent-header">
                         <div class="agent-name">${agent.agentId || ''}</div>
                         <span class="agent-role">${agent.accessLevel || ''}</span>
                     </div>
-                    <div class="agent-email">${agent.email || ''}</div>
+                    ${agent.email ? `<div class="agent-email">${agent.email || ''}</div>` : ''}
                     <div class="agent-actions">
                         <button class="agent-btn remove" onclick="removeAgentFromForm('${safeAgentId}')" 
                                 title="${translations[currentLanguage]['forms.remove_agent']}">
@@ -2139,6 +2153,64 @@
                 
                 grid.appendChild(card);
             });
+        }
+
+        // Функция для полного обновления модального окна
+        async function forceRefreshModal() {
+            try {
+                const token = localStorage.getItem('admin_token');
+                if (!token) return;
+                
+                // Получаем свежие данные с сервера
+                const response = await fetch(
+                    `${API_URL}?action=get_form_assignments` +
+                    `&token=${encodeURIComponent(token)}` +
+                    `&form_name=${encodeURIComponent(currentFormName)}` +
+                    `&_t=${Date.now()}` // Добавляем timestamp для избежания кэширования
+                );
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Полностью перезагружаем данные
+                    selectedAgents.clear();
+                    
+                    if (result.assignments && Array.isArray(result.assignments)) {
+                        result.assignments.forEach(agent => {
+                            // Проверяем isActive правильно
+                            const isActive = agent.isActive;
+                            const isActiveBool = isActive === true || 
+                                               isActive === 'TRUE' || 
+                                               isActive === 'true' || 
+                                               isActive === 1 || 
+                                               isActive === '1';
+                            
+                            if (isActiveBool) {
+                                selectedAgents.add(agent.agentId);
+                            }
+                        });
+                    }
+                    
+                    updateSelectedCount();
+                    
+                    // Обновляем UI
+                    renderAssignedAgents(result.assignments || []);
+                    
+                    // Filter available agents
+                    let filteredAvailableAgents = [];
+                    if (result.availableAgents && Array.isArray(result.availableAgents)) {
+                        filteredAvailableAgents = filterAvailableAgents(result.availableAgents);
+                    }
+                    
+                    renderAvailableAgents(filteredAvailableAgents);
+                    
+                    console.log('Modal force refreshed');
+                }
+            } catch (error) {
+                console.error('Error in forceRefreshModal:', error);
+            }
         }
 
         // Render available agents
@@ -2306,6 +2378,7 @@
         
         // Новая функция для перезагрузки агентов в модальном окне
         async function reloadModalAgents() {
+            await forceRefreshModal();
             try {
                 const token = localStorage.getItem('admin_token');
                 if (!token) {
