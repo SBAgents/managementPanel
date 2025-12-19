@@ -459,6 +459,12 @@
             font-size: 12px;
             transition: all 0.2s;
             margin-right: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px;
+            position: relative;
+            overflow: hidden;
         }
         
         .action-btn.manage {
@@ -479,6 +485,25 @@
         
         .action-btn.toggle:hover {
             background: rgba(243, 156, 18, 0.3);
+        }
+        
+        .action-btn.loading {
+            color: transparent !important;
+            position: relative;
+        }
+        
+        .action-btn.loading::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid var(--accent);
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
         }
         
         /* Agent Management Modal */
@@ -605,6 +630,12 @@
             cursor: pointer;
             font-size: 11px;
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            min-width: 70px;
         }
         
         .agent-btn.assign {
@@ -625,6 +656,24 @@
         
         .agent-btn.remove:hover {
             background: rgba(231, 76, 60, 0.3);
+        }
+        
+        .agent-btn.loading {
+            color: transparent !important;
+        }
+        
+        .agent-btn.loading::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid var(--accent);
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            animation: spin 1s linear infinite;
         }
         
         .agent-btn:disabled {
@@ -886,74 +935,6 @@
         .api-url {
             display: none;
         }
-        
-        /* Стили для кнопок с анимацией загрузки */
-        .action-btn.loading {
-            position: relative;
-            color: transparent !important;
-        }
-        
-        .action-btn.loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top: 2px solid #D0E41E;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        
-        .agent-btn.loading {
-            position: relative;
-            color: transparent !important;
-        }
-        
-        .agent-btn.loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top: 2px solid #2ecc71;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        
-        .btn.loading {
-            position: relative;
-            color: transparent !important;
-        }
-        
-        .btn.loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top: 2px solid #D0E41E;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        /* Удалены стили для статуса обслуживания */
-        .status.maintenance {
-            display: none;
-        }
-        
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
     </style>
 </head>
 <body>
@@ -1085,8 +1066,8 @@
                             <!-- API URL скрыт по ТЗ -->
                             <th class="api-url" data-i18n="forms.table_api">API URL</th>
                             <th data-i18n="forms.table_status">Статус</th>
-                            <th data-i18n="forms.table_wallets">Активных кошельков</th>
-                            <th data-i18n="forms.table_agents">Агентов</th>
+                            <th data-i18n="forms.table_wallets">Кошельки</th>
+                            <th data-i18n="forms.table_agents">Агенты</th>
                             <th data-i18n="forms.table_actions">Действия</th>
                         </tr>
                     </thead>
@@ -1134,7 +1115,7 @@
                 <button type="button" class="btn btn-secondary" onclick="closeAgentsModal()" data-i18n="forms.cancel">
                     Отмена
                 </button>
-                <button type="button" class="btn btn-primary" id="saveAgentsBtn" onclick="saveAgentAssignments()" data-i18n="forms.save_changes">
+                <button type="button" class="btn btn-primary" onclick="saveAgentAssignments()" data-i18n="forms.save_changes">
                     Сохранить изменения
                 </button>
             </div>
@@ -1158,10 +1139,10 @@
         let allForms = [];
         let filteredForms = [];
         let allAgents = [];
+        let allFormAssignments = {}; // Для хранения назначений агентов по формам
         let currentFormName = '';
         let currentFormApi = '';
         let selectedAgents = new Set();
-        let allFormWalletsCount = {};
         
         // Filter state
         let nameFilter = '';
@@ -1170,7 +1151,7 @@
         let isLoading = false;
         let hideLoadingTimeout = null;
         
-        // Translation dictionary (updated)
+        // Translation dictionary
         const translations = {
             ru: {
                 // Navigation
@@ -1202,8 +1183,8 @@
                 "forms.table_name": "Название формы",
                 "forms.table_api": "API URL",
                 "forms.table_status": "Статус",
-                "forms.table_wallets": "Активных кошельков",
-                "forms.table_agents": "Агентов",
+                "forms.table_wallets": "Кошельки",
+                "forms.table_agents": "Агенты",
                 "forms.table_actions": "Действия",
                 
                 // Actions
@@ -1213,6 +1194,8 @@
                 // Status
                 "status.active": "Активна",
                 "status.inactive": "Неактивна",
+                "status.enabled": "Включён",
+                "status.disabled": "Выключен",
                 
                 // Modal
                 "forms.assigned_agents": "Назначенные агенты",
@@ -1289,13 +1272,15 @@
                 "forms.table_name": "Form Name",
                 "forms.table_api": "API URL",
                 "forms.table_status": "Status",
-                "forms.table_wallets": "Active Wallets",
+                "forms.table_wallets": "Wallets",
                 "forms.table_agents": "Agents",
                 "forms.table_actions": "Actions",
                 "forms.manage_agents": "Manage Agents",
                 "forms.toggle_status": "Toggle Status",
                 "status.active": "Active",
                 "status.inactive": "Inactive",
+                "status.enabled": "Enabled",
+                "status.disabled": "Disabled",
                 "forms.assigned_agents": "Assigned Agents",
                 "forms.available_agents": "Available Agents",
                 "forms.assign_agent": "Assign",
@@ -1338,6 +1323,156 @@
                 "role.admin": "Administrator",
                 "role.manager": "Manager",
                 "role.viewer": "Viewer"
+            },
+            fr: {
+                "nav.dashboard": "Tableau de bord",
+                "nav.wallets": "Portefeuilles",
+                "nav.forms": "Formulaires",
+                "nav.agents": "Agents",
+                "nav.admins": "Administrateurs",
+                "nav.logout": "Déconnexion",
+                "forms.title": "Formulaires",
+                "forms.subtitle": "Gestion des formulaires",
+                "forms.welcome": "Gestion des formulaires",
+                "forms.refresh": "Rafraîchir",
+                "forms.refreshing": "Rafraîchissement...",
+                "forms.list": "Liste des formulaires",
+                "forms.forms_found": "formulaires trouvés",
+                "forms.filter_name": "Filtrer par nom",
+                "forms.filter_name_placeholder": "Entrez le nom du formulaire...",
+                "forms.filter_status": "Filtrer par statut",
+                "forms.filter_all": "Tous les statuts",
+                "forms.clear_filters": "Effacer les filtres",
+                "forms.clear_filters_title": "Effacer tous les filtres",
+                "forms.table_name": "Nom du formulaire",
+                "forms.table_api": "URL API",
+                "forms.table_status": "Statut",
+                "forms.table_wallets": "Portefeuilles",
+                "forms.table_agents": "Agents",
+                "forms.table_actions": "Actions",
+                "forms.manage_agents": "Gérer les agents",
+                "forms.toggle_status": "Changer le statut",
+                "status.active": "Actif",
+                "status.inactive": "Inactif",
+                "status.enabled": "Activé",
+                "status.disabled": "Désactivé",
+                "forms.assigned_agents": "Agents assignés",
+                "forms.available_agents": "Agents disponibles",
+                "forms.assign_agent": "Assigner",
+                "forms.remove_agent": "Retirer",
+                "forms.close": "Fermer",
+                "forms.cancel": "Annuler",
+                "forms.save_changes": "Enregistrer les modifications",
+                "forms.bulk_assign_success": "Affectations enregistrées",
+                "forms.select_all": "Tout sélectionner",
+                "forms.deselect_all": "Tout désélectionner",
+                "forms.selected_count": "Sélectionné : {count}",
+                "forms.assign_agents": "Affecter des agents",
+                "forms.agent_already_assigned": "Agent déjà affecté",
+                "forms.agent_not_found": "Agent non trouvé",
+                "forms.no_permission": "Pas de permission pour cette action",
+                "forms.loading_agents": "Chargement des agents...",
+                "forms.saving_changes": "Enregistrement des modifications...",
+                "forms.update_success": "Mis à jour avec succès",
+                "forms.update_error": "Erreur de mise à jour",
+                "forms.loading_data": "Chargement des données...",
+                "forms.loading_forms": "Chargement de la liste des formulaires...",
+                "forms.loading_counts": "Obtention des informations sur les formulaires...",
+                "forms.filtering_forms": "Application des filtres...",
+                "forms.no_forms": "Aucun formulaire trouvé",
+                "forms.no_forms_desc": "Aucun formulaire disponible à afficher",
+                "forms.no_assigned_agents": "Aucun agent assigné",
+                "forms.no_available_agents": "Aucun agent disponible",
+                "toast.success": "Données mises à jour avec succès",
+                "toast.error": "Erreur de chargement des données",
+                "toast.assign_success": "Agent assigné avec succès",
+                "toast.assign_error": "Erreur d'assignation d'agent",
+                "toast.remove_success": "Agent retiré avec succès",
+                "toast.remove_error": "Erreur de retrait d'agent",
+                "toast.toggle_success": "Statut du formulaire changé",
+                "toast.toggle_error": "Erreur de changement de statut",
+                "toast.logout_success": "Déconnexion réussie",
+                "toast.logout_error": "Erreur de déconnexion",
+                "toast.filters_cleared": "Filtres effacés",
+                "role.superadmin": "Super Admin",
+                "role.admin": "Administrateur",
+                "role.manager": "Manager",
+                "role.viewer": "Observateur"
+            },
+            ar: {
+                "nav.dashboard": "لوحة التحكم",
+                "nav.wallets": "المحافظ",
+                "nav.forms": "النماذج",
+                "nav.agents": "الوكلاء",
+                "nav.admins": "المشرفين",
+                "nav.logout": "تسجيل الخروج",
+                "forms.title": "النماذج",
+                "forms.subtitle": "إدارة النماذج",
+                "forms.welcome": "إدارة النماذج",
+                "forms.refresh": "تحديث",
+                "forms.refreshing": "جاري التحديث...",
+                "forms.list": "قائمة النماذج",
+                "forms.forms_found": "نموذج وجد",
+                "forms.filter_name": "تصفية حسب الاسم",
+                "forms.filter_name_placeholder": "أدخل اسم النموذج...",
+                "forms.filter_status": "تصفية حسب الحالة",
+                "forms.filter_all": "جميع الحالات",
+                "forms.clear_filters": "مسح الفلاتر",
+                "forms.clear_filters_title": "مسح جميع الفلاتر",
+                "forms.table_name": "اسم النموذج",
+                "forms.table_api": "رابط API",
+                "forms.table_status": "الحالة",
+                "forms.table_wallets": "المحافظ",
+                "forms.table_agents": "الوكلاء",
+                "forms.table_actions": "الإجراءات",
+                "forms.manage_agents": "إدارة الوكلاء",
+                "forms.toggle_status": "تغيير الحالة",
+                "status.active": "نشط",
+                "status.inactive": "غير نشط",
+                "status.enabled": "مفعل",
+                "status.disabled": "معطل",
+                "forms.assigned_agents": "الوكلاء المعينون",
+                "forms.available_agents": "الوكلاء المتاحون",
+                "forms.assign_agent": "تعيين",
+                "forms.remove_agent": "إزالة",
+                "forms.close": "إغلاق",
+                "forms.cancel": "إلغاء",
+                "forms.save_changes": "حفظ التغييرات",
+                "forms.bulk_assign_success": "تم حفظ التخصيصات",
+                "forms.select_all": "تحديد الكل",
+                "forms.deselect_all": "إلغاء تحديد الكل",
+                "forms.selected_count": "محدد: {count}",
+                "forms.assign_agents": "تعيين الوكلاء",
+                "forms.agent_already_assigned": "الوكيل معين بالفعل",
+                "forms.agent_not_found": "الوكيل غير موجود",
+                "forms.no_permission": "لا يوجد إذن لهذا الإجراء",
+                "forms.loading_agents": "جاري تحميل الوكلاء...",
+                "forms.saving_changes": "جاري حفظ التغييرات...",
+                "forms.update_success": "تم التحديث بنجاح",
+                "forms.update_error": "خطأ في التحديث",
+                "forms.loading_data": "جاري تحميل البيانات...",
+                "forms.loading_forms": "جاري تحميل قائمة النماذج...",
+                "forms.loading_counts": "جاري الحصول على معلومات النماذج...",
+                "forms.filtering_forms": "جاري تطبيق الفلاتر...",
+                "forms.no_forms": "لم يتم العثور على نماذج",
+                "forms.no_forms_desc": "لا توجد نماذج متاحة للعرض",
+                "forms.no_assigned_agents": "لا يوجد وكلاء معينون",
+                "forms.no_available_agents": "لا يوجد وكلاء متاحون",
+                "toast.success": "تم تحديث البيانات بنجاح",
+                "toast.error": "خطأ في تحميل البيانات",
+                "toast.assign_success": "تم تعيين الوكيل بنجاح",
+                "toast.assign_error": "خطأ في تعيين الوكيل",
+                "toast.remove_success": "تم إزالة الوكيل بنجاح",
+                "toast.remove_error": "خطأ في إزالة الوكيل",
+                "toast.toggle_success": "تم تغيير حالة النموذج",
+                "toast.toggle_error": "خطأ في تغيير الحالة",
+                "toast.logout_success": "تم تسجيل الخروج بنجاح",
+                "toast.logout_error": "خطأ في تسجيل الخروج",
+                "toast.filters_cleared": "تم مسح الفلاتر",
+                "role.superadmin": "مشرف رئيسي",
+                "role.admin": "مشرف",
+                "role.manager": "مدير",
+                "role.viewer": "مشاهد"
             }
         };
 
@@ -1498,6 +1633,9 @@
                 const savedLang = localStorage.getItem('dashboard_language') || localStorage.getItem('preferred_language') || 'ru';
                 applyTranslation(savedLang);
                 
+                // Load all form assignments first (для фильтрации агентов)
+                await loadAllFormAssignments();
+                
                 // Load forms
                 await loadForms();
                 
@@ -1505,6 +1643,27 @@
                 console.error('Error loading page:', error);
                 showToast(translations[currentLanguage]['toast.error'], 'error');
                 forceHideLoading();
+            }
+        }
+
+        // Load all form assignments
+        async function loadAllFormAssignments() {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}?action=get_all_form_assignments&token=${token}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    allFormAssignments = result.assignments || {};
+                } else {
+                    allFormAssignments = {};
+                }
+            } catch (error) {
+                console.error('Error loading form assignments:', error);
+                allFormAssignments = {};
             }
         }
 
@@ -1531,9 +1690,6 @@
                         );
                     }
                     
-                    // Load wallet counts for all forms
-                    await loadFormWalletsCounts(allForms);
-                    
                     // Apply current filters
                     applyFilters();
                     
@@ -1549,46 +1705,6 @@
                 allForms = [];
                 filteredForms = [];
                 renderFormsTable([]);
-            }
-        }
-
-        // Load wallet counts for forms
-        async function loadFormWalletsCounts(forms) {
-            try {
-                const token = localStorage.getItem('admin_token');
-                const formNames = forms.map(form => form.formName);
-                
-                if (formNames.length === 0) {
-                    allFormWalletsCount = {};
-                    return;
-                }
-                
-                const callbackName = 'walletsCount_' + Date.now();
-                
-                return new Promise((resolve) => {
-                    window[callbackName] = function(response) {
-                        delete window[callbackName];
-                        if (response && response.success) {
-                            allFormWalletsCount = response.counts || {};
-                        } else {
-                            allFormWalletsCount = {};
-                        }
-                        resolve();
-                    };
-                    
-                    const script = document.createElement('script');
-                    script.src = `${API_URL}?action=get_form_wallets_count&token=${encodeURIComponent(token)}&form_names=${encodeURIComponent(JSON.stringify(formNames))}&callback=${callbackName}`;
-                    script.onerror = () => {
-                        delete window[callbackName];
-                        allFormWalletsCount = {};
-                        resolve();
-                    };
-                    document.head.appendChild(script);
-                });
-                
-            } catch (error) {
-                console.error('Error loading wallet counts:', error);
-                allFormWalletsCount = {};
             }
         }
 
@@ -1667,14 +1783,17 @@
             showLoading(translations[currentLanguage]['forms.loading_counts']);
             
             try {
-                // Get form agents counts
+                // Get form counts for all forms (агенты и кошельки)
                 const formNames = forms.map(form => form.formName);
                 const allCounts = await getAllFormCounts(formNames);
                 
                 // Render all forms
                 forms.forEach(form => {
-                    const agentsCount = allCounts[form.formName] || 0;
-                    const walletsCount = allFormWalletsCount[form.formName] || 0;
+                    const counts = allCounts[form.formName] || { 
+                        agentsCount: 0, 
+                        walletsCount: 0,
+                        activeWalletsCount: 0 
+                    };
                     
                     const isActive = form.enabled === true || form.enabled === 'true';
                     
@@ -1689,16 +1808,16 @@
                         <td><strong>${form.formName || ''}</strong></td>
                         <td class="api-url">${form.formAPI || ''}</td>
                         <td><span class="status ${statusClass}">${statusText}</span></td>
-                        <td>${walletsCount}</td>
-                        <td>${agentsCount}</td>
+                        <td>${counts.activeWalletsCount || 0}</td>
+                        <td>${counts.agentsCount || 0}</td>
                         <td>
                             ${currentPermissions?.canManageAdmins ? `
-                                <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}" id="manageBtn_${form.formName}">
+                                <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}">
                                     <i class="fas fa-users"></i>
                                 </button>
                             ` : ''}
                             ${currentPermissions?.canToggleServiceMode ? `
-                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}" id="toggleBtn_${form.formName}">
+                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
                                     <i class="fas fa-power-off"></i>
                                 </button>
                             ` : ''}
@@ -1736,13 +1855,13 @@
             }
         }
 
-        // Get form agents counts
+        // Get form counts (агенты, кошельки, активные кошельки)
         async function getAllFormCounts(formNames) {
             try {
                 const token = localStorage.getItem('admin_token');
                 const callbackName = 'allCounts_' + Date.now();
                 
-                return new Promise((resolve) => {
+                return new Promise((resolve, reject) => {
                     window[callbackName] = function(response) {
                         delete window[callbackName];
                         if (response.success) {
@@ -1799,19 +1918,14 @@
                     // Update selected count
                     updateSelectedCount();
                     
-                    // Get all agents assigned to other forms
-                    const allAssignedAgents = await getAllAssignedAgents(formName);
-                    
-                    // Filter available agents to exclude those assigned to other forms
-                    const availableAgents = (result.availableAgents || []).filter(agent => 
-                        !allAssignedAgents.has(agent.username)
-                    );
+                    // Filter available agents - исключаем уже назначенных на другие формы
+                    const filteredAvailableAgents = filterAvailableAgents(result.availableAgents || []);
                     
                     // Render assigned agents
                     renderAssignedAgents(result.assignments || []);
                     
-                    // Render available agents (filtered)
-                    renderAvailableAgents(availableAgents);
+                    // Render filtered available agents
+                    renderAvailableAgents(filteredAvailableAgents);
                     
                 } else {
                     showToast(result.error || translations[currentLanguage]['toast.error'], 'error');
@@ -1830,24 +1944,30 @@
             document.getElementById('agentsModal').classList.add('show');
         }
 
-        // Get all agents assigned to other forms
-        async function getAllAssignedAgents(excludeFormName) {
-            try {
-                const token = localStorage.getItem('admin_token');
-                const response = await fetch(`${API_URL}?action=get_all_assigned_agents&token=${token}&exclude_form=${encodeURIComponent(excludeFormName)}`);
-                
-                if (!response.ok) throw new Error('Network error');
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    return new Set(result.agents || []);
-                }
-                return new Set();
-            } catch (error) {
-                console.error('Error getting all assigned agents:', error);
-                return new Set();
+        // Filter available agents - исключаем агентов, уже назначенных на другие формы
+        function filterAvailableAgents(agents) {
+            if (!allFormAssignments || Object.keys(allFormAssignments).length === 0) {
+                return agents;
             }
+            
+            // Получаем всех агентов, уже назначенных на другие формы
+            const agentsAssignedToOtherForms = new Set();
+            Object.keys(allFormAssignments).forEach(form => {
+                if (form !== currentFormName) {
+                    const assignments = allFormAssignments[form] || [];
+                    assignments.forEach(assignment => {
+                        if (assignment.isActive) {
+                            agentsAssignedToOtherForms.add(assignment.agentId);
+                        }
+                    });
+                }
+            });
+            
+            // Фильтруем агентов
+            return agents.filter(agent => {
+                // Исключаем агентов, уже назначенных на другие формы
+                return !agentsAssignedToOtherForms.has(agent.username);
+            });
         }
 
         // Close agents modal
@@ -1893,7 +2013,7 @@
                     <div class="agent-email">${agent.email || ''}</div>
                     <div class="agent-actions">
                         <button class="agent-btn remove" onclick="removeAgentFromForm('${agent.agentId}')" 
-                                title="${translations[currentLanguage]['forms.remove_agent']}" id="removeBtn_${agent.agentId}">
+                                title="${translations[currentLanguage]['forms.remove_agent']}">
                             <i class="fas fa-user-minus"></i> ${translations[currentLanguage]['forms.remove_agent']}
                         </button>
                     </div>
@@ -1929,7 +2049,7 @@
                     <div class="agent-email">${agent.email || ''}</div>
                     <div class="agent-actions">
                         <button class="agent-btn assign" onclick="assignAgentToForm('${agent.username}')" 
-                                title="${translations[currentLanguage]['forms.assign_agent']}" id="assignBtn_${agent.username}">
+                                title="${translations[currentLanguage]['forms.assign_agent']}">
                             <i class="fas fa-user-plus"></i> ${translations[currentLanguage]['forms.assign_agent']}
                         </button>
                     </div>
@@ -1939,20 +2059,22 @@
             });
         }
 
-        // Assign agent to form
+        // Assign agent to form с анимацией загрузки
         async function assignAgentToForm(agentId) {
-            const button = document.getElementById(`assignBtn_${agentId}`);
-            if (!button) return;
+            const buttons = document.querySelectorAll(`.agent-btn.assign[onclick*="${agentId}"]`);
             
-            const originalHTML = button.innerHTML;
+            // Показываем анимацию загрузки на всех кнопках с этим агентом
+            buttons.forEach(btn => {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            });
             
             try {
-                // Show loading animation on button
-                button.classList.add('loading');
-                button.disabled = true;
-                
                 selectedAgents.add(agentId);
                 updateSelectedCount();
+                
+                // Имитируем задержку для анимации (минимум 500ms для UX)
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
                 // Update UI
                 await openAgentsModal(currentFormName, currentFormApi);
@@ -1962,28 +2084,31 @@
             } catch (error) {
                 console.error('Error assigning agent:', error);
                 showToast(translations[currentLanguage]['toast.assign_error'] + ': ' + error.message, 'error');
-            } finally {
-                // Restore button state
-                button.classList.remove('loading');
-                button.disabled = false;
-                button.innerHTML = originalHTML;
+                
+                // Убираем анимацию загрузки при ошибке
+                buttons.forEach(btn => {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                });
             }
         }
 
-        // Remove agent from form
+        // Remove agent from form с анимацией загрузки
         async function removeAgentFromForm(agentId) {
-            const button = document.getElementById(`removeBtn_${agentId}`);
-            if (!button) return;
+            const buttons = document.querySelectorAll(`.agent-btn.remove[onclick*="${agentId}"]`);
             
-            const originalHTML = button.innerHTML;
+            // Показываем анимацию загрузки на всех кнопках с этим агентом
+            buttons.forEach(btn => {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            });
             
             try {
-                // Show loading animation on button
-                button.classList.add('loading');
-                button.disabled = true;
-                
                 selectedAgents.delete(agentId);
                 updateSelectedCount();
+                
+                // Имитируем задержку для анимации (минимум 500ms для UX)
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
                 // Update UI
                 await openAgentsModal(currentFormName, currentFormApi);
@@ -1993,24 +2118,24 @@
             } catch (error) {
                 console.error('Error removing agent:', error);
                 showToast(translations[currentLanguage]['toast.remove_error'] + ': ' + error.message, 'error');
-            } finally {
-                // Restore button state
-                button.classList.remove('loading');
-                button.disabled = false;
-                button.innerHTML = originalHTML;
+                
+                // Убираем анимацию загрузки при ошибке
+                buttons.forEach(btn => {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                });
             }
         }
 
-        // Save agent assignments
+        // Save agent assignments с анимацией загрузки
         async function saveAgentAssignments() {
-            const saveBtn = document.getElementById('saveAgentsBtn');
-            const originalHTML = saveBtn.innerHTML;
+            const saveBtn = document.querySelector('.btn-primary[onclick="saveAgentAssignments()"]');
+            
+            // Показываем анимацию загрузки на кнопке сохранения
+            saveBtn.classList.add('loading');
+            saveBtn.disabled = true;
             
             try {
-                // Show loading animation on button
-                saveBtn.classList.add('loading');
-                saveBtn.disabled = true;
-                
                 const token = localStorage.getItem('admin_token');
                 const agents = Array.from(selectedAgents);
                 
@@ -2020,15 +2145,16 @@
                     window[callbackName] = function(response) {
                         delete window[callbackName];
                         
-                        // Restore button state
+                        // Убираем анимацию загрузки
                         saveBtn.classList.remove('loading');
                         saveBtn.disabled = false;
-                        saveBtn.innerHTML = originalHTML;
                         
                         if (response && response.success) {
                             showToast(`${translations[currentLanguage]['toast.assign_success']} (${response.successCount || agents.length})`, 'success');
                             closeAgentsModal();
                             loadForms();
+                            // Обновляем данные о назначениях
+                            loadAllFormAssignments();
                         } else {
                             const errorMsg = response ? response.error : 'Unknown error';
                             showToast(`${translations[currentLanguage]['toast.assign_error']}: ${errorMsg}`, 'error');
@@ -2047,7 +2173,6 @@
                         delete window[callbackName];
                         saveBtn.classList.remove('loading');
                         saveBtn.disabled = false;
-                        saveBtn.innerHTML = originalHTML;
                         showToast(`${translations[currentLanguage]['toast.assign_error']}: Network error`, 'error');
                         resolve(null);
                     };
@@ -2058,26 +2183,23 @@
             } catch (error) {
                 console.error('Error saving assignments:', error);
                 showToast(`${translations[currentLanguage]['toast.assign_error']}: ${error.message}`, 'error');
-                
-                // Restore button state
                 saveBtn.classList.remove('loading');
                 saveBtn.disabled = false;
-                saveBtn.innerHTML = originalHTML;
             }
         }
 
-        // Toggle form status
+        // Toggle form status с анимацией загрузки
         async function toggleFormStatus(formName, newStatus) {
-            const button = document.getElementById(`toggleBtn_${formName}`);
-            if (!button) return;
+            // Находим все кнопки переключения статуса для этой формы
+            const buttons = document.querySelectorAll(`.action-btn.toggle[onclick*="${formName}"]`);
             
-            const originalHTML = button.innerHTML;
+            // Показываем анимацию загрузки на всех кнопках
+            buttons.forEach(btn => {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            });
             
             try {
-                // Show loading animation on button
-                button.classList.add('loading');
-                button.disabled = true;
-                
                 const token = localStorage.getItem('admin_token');
                 
                 const response = await fetch(`${API_URL}?action=toggle_form_status&token=${token}&form_name=${encodeURIComponent(formName)}&enabled=${newStatus}`);
@@ -2096,11 +2218,12 @@
             } catch (error) {
                 console.error('Error toggling form status:', error);
                 showToast(translations[currentLanguage]['toast.toggle_error'] + ': ' + error.message, 'error');
-            } finally {
-                // Restore button state
-                button.classList.remove('loading');
-                button.disabled = false;
-                button.innerHTML = originalHTML;
+                
+                // Убираем анимацию загрузки при ошибке
+                buttons.forEach(btn => {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                });
             }
         }
 
@@ -2116,28 +2239,24 @@
             showToast(translations[currentLanguage]['toast.filters_cleared'], 'success');
         }
 
-        // Refresh forms
+        // Refresh forms с анимацией загрузки
         async function refreshForms() {
             const btn = document.getElementById('refreshBtn');
-            const originalHTML = btn.innerHTML;
+            
+            // Показываем анимацию загрузки
+            btn.classList.add('loading');
+            btn.disabled = true;
             
             try {
-                // Show loading animation
-                btn.classList.add('loading');
-                btn.disabled = true;
-                
                 await loadForms();
-                
                 showToast(translations[currentLanguage]['toast.success'], 'success');
-                
             } catch (error) {
                 console.error('Error refreshing:', error);
                 showToast(translations[currentLanguage]['toast.error'], 'error');
             } finally {
-                // Restore button state
+                // Убираем анимацию загрузки
                 btn.classList.remove('loading');
                 btn.disabled = false;
-                btn.innerHTML = originalHTML;
             }
         }
 
