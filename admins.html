@@ -759,6 +759,23 @@
                 Вернуться в дашборд
             </button>
         </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="empty-state" style="display: none;">
+            <div class="loader" style="width: 40px; height: 40px; margin: 0 auto 20px;"></div>
+            <h4 data-i18n="admins.loading">Загрузка данных...</h4>
+            <p data-i18n="admins.loading_desc">Пожалуйста, подождите</p>
+        </div>
+        
+        <!-- Error State -->
+        <div id="errorState" class="empty-state" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h4 data-i18n="admins.error">Ошибка загрузки</h4>
+            <p id="errorMessage">Не удалось загрузить данные</p>
+            <button class="btn btn-primary" onclick="retryLoadAdmins()" style="margin-top: 10px;" data-i18n="admins.retry">
+                Попробовать снова
+            </button>
+        </div>
         
         <!-- Admins Content (only for admins) -->
         <div id="adminsContent" style="display: none;">
@@ -864,6 +881,7 @@
                         <select class="form-control" id="adminRole" required>
                             <option value="admin" data-i18n="admins.role_admin">Администратор</option>
                             <option value="superadmin" data-i18n="admins.role_superadmin">Супер-администратор</option>
+                            <option value="manager" data-i18n="role.manager">Менеджер</option>
                         </select>
                     </div>
                     
@@ -1207,6 +1225,47 @@
             }
         }
 
+        // Show loading state
+        function showLoadingState() {
+            const loadingState = document.getElementById('loadingState');
+            const adminsTable = document.getElementById('adminsTable');
+            const noAdmins = document.getElementById('noAdmins');
+            const errorState = document.getElementById('errorState');
+            
+            loadingState.style.display = 'block';
+            adminsTable.style.display = 'none';
+            noAdmins.style.display = 'none';
+            errorState.style.display = 'none';
+        }
+        
+        // Hide loading state
+        function hideLoadingState() {
+            document.getElementById('loadingState').style.display = 'none';
+        }
+        
+        // Show error state
+        function showErrorState(message) {
+            const loadingState = document.getElementById('loadingState');
+            const adminsTable = document.getElementById('adminsTable');
+            const noAdmins = document.getElementById('noAdmins');
+            const errorState = document.getElementById('errorState');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            loadingState.style.display = 'none';
+            adminsTable.style.display = 'none';
+            noAdmins.style.display = 'none';
+            errorState.style.display = 'block';
+            
+            if (errorMessage && message) {
+                errorMessage.textContent = message;
+            }
+        }
+        
+        // Retry loading admins
+        function retryLoadAdmins() {
+            loadAdmins();
+        }
+
         // Show toast notification
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
@@ -1271,10 +1330,16 @@
             const accessDenied = document.getElementById('accessDenied');
             const adminsContent = document.getElementById('adminsContent');
             
-            // Only admins and superadmins can access this page
-            if (currentPermissions.canManageAdmins) {
+            // Теперь менеджеры тоже видят эту страницу
+            if (currentPermissions.canManageAdmins || currentUser.role === 'manager') {
                 accessDenied.style.display = 'none';
                 adminsContent.style.display = 'block';
+                
+                // Но менеджеры не могут создавать админов
+                if (currentUser.role === 'manager') {
+                    const createBtn = document.getElementById('createBtn');
+                    if (createBtn) createBtn.style.display = 'none';
+                }
             } else {
                 accessDenied.style.display = 'block';
                 adminsContent.style.display = 'none';
@@ -1284,14 +1349,20 @@
         // Load admins from API
         async function loadAdmins() {
             try {
+                // Показываем состояние загрузки
+                showLoadingState();
+                
                 const token = localStorage.getItem('admin_token');
                 
-                // Получаем реальных администраторов через новый endpoint
+                // Скрываем таблицу при загрузке
+                document.getElementById('adminsTable').style.display = 'none';
+                document.getElementById('noAdmins').style.display = 'none';
+                document.getElementById('errorState').style.display = 'none';
+                
                 const response = await fetch(`${API_URL}?action=get_all_admins&token=${token}`);
                 
                 if (!response.ok) {
-                    // Если endpoint не работает, пробуем альтернативные методы
-                    throw new Error('Endpoint not available');
+                    throw new Error('Network response was not ok');
                 }
                 
                 const result = await response.json();
@@ -1300,7 +1371,7 @@
                     allAdmins = result.admins || [];
                     
                     // Добавляем текущего пользователя если его нет в списке
-                    if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin')) {
+                    if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin' || currentUser.role === 'manager')) {
                         const userExists = allAdmins.some(admin => admin.username === currentUser.username);
                         if (!userExists) {
                             allAdmins.push({
@@ -1314,6 +1385,9 @@
                         }
                     }
                     
+                    hideLoadingState();
+                    document.getElementById('adminsTable').style.display = 'table';
+                    
                     renderAdminsTable(allAdmins);
                     updateAdminsCount();
                     
@@ -1323,36 +1397,8 @@
                 
             } catch (error) {
                 console.error('Error loading admins:', error);
-                
-                // Fallback: используем мок данные
-                const fallbackAdmins = [
-                    {
-                        username: "superadmin",
-                        email: "admin@example.com",
-                        role: "superadmin",
-                        isActive: true,
-                        createdAt: "2024-01-01T00:00:00Z",
-                        lastLogin: "2024-01-20T14:30:00Z"
-                    }
-                ];
-                
-                // Добавляем текущего пользователя
-                if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin')) {
-                    fallbackAdmins.push({
-                        username: currentUser.username,
-                        email: currentUser.email || `${currentUser.username}@example.com`,
-                        role: currentUser.role,
-                        isActive: true,
-                        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                        lastLogin: new Date().toISOString()
-                    });
-                }
-                
-                allAdmins = fallbackAdmins;
-                renderAdminsTable(allAdmins);
-                updateAdminsCount();
-                
-                showToast('Используются тестовые данные. Добавьте endpoint get_all_admins в бэкенд.', 'warning');
+                hideLoadingState();
+                showErrorState(translations[currentLanguage]['toast.error'] + ': ' + error.message);
             }
         }
         
@@ -1416,15 +1462,21 @@
         function renderAdminsTable(admins) {
             const tbody = document.getElementById('adminsTableBody');
             const noAdmins = document.getElementById('noAdmins');
+            const errorState = document.getElementById('errorState');
             
             tbody.innerHTML = '';
             
+            // Скрываем состояния ошибки при рендере
+            errorState.style.display = 'none';
+            
             if (admins.length === 0) {
                 noAdmins.style.display = 'block';
+                document.getElementById('adminsTable').style.display = 'none';
                 return;
             }
             
             noAdmins.style.display = 'none';
+            document.getElementById('adminsTable').style.display = 'table';
             
             admins.forEach(admin => {
                 const row = document.createElement('tr');
@@ -1433,6 +1485,13 @@
                 const statusText = admin.isActive ? 
                     translations[currentLanguage]['status.active'] : 
                     translations[currentLanguage]['status.inactive'];
+                
+                // Получаем перевод роли или используем оригинальное значение
+                let roleText = admin.role;
+                const roleTranslationKey = `role.${admin.role}`;
+                if (translations[currentLanguage] && translations[currentLanguage][roleTranslationKey]) {
+                    roleText = translations[currentLanguage][roleTranslationKey];
+                }
                 
                 // Format dates
                 const created = admin.createdAt ? 
@@ -1444,7 +1503,7 @@
                 row.innerHTML = `
                     <td><strong>${admin.username}</strong></td>
                     <td>${admin.email || ''}</td>
-                    <td>${translations[currentLanguage][`role.${admin.role}`] || admin.role}</td>
+                    <td>${roleText}</td>
                     <td><span class="status ${statusClass}">${statusText}</span></td>
                     <td>${created}</td>
                     <td>${lastLogin}</td>
