@@ -2176,7 +2176,7 @@
         async function assignAgentToForm(agentId) {
             const buttons = document.querySelectorAll(`.agent-btn.assign[onclick*="${agentId}"]`);
             
-            // Показываем анимацию загрузки на всех кнопках с этим агентом
+            // Показываем анимацию загрузки
             buttons.forEach(btn => {
                 btn.classList.add('loading');
                 btn.disabled = true;
@@ -2188,12 +2188,15 @@
                     throw new Error('No authentication token');
                 }
                 
+                // Используем form_api из currentFormApi (который должен быть установлен)
+                const formApi = currentFormApi || '';
+                
                 // Добавляем агента через бэкенд API
                 const response = await fetch(
                     `${API_URL}?action=assign_agent_to_form&token=${token}` +
                     `&agent_id=${encodeURIComponent(agentId)}` +
                     `&form_name=${encodeURIComponent(currentFormName)}` +
-                    `&form_api=${encodeURIComponent(currentFormApi)}`
+                    `&form_api=${encodeURIComponent(formApi)}`
                 );
                 
                 if (!response.ok) throw new Error('Network error');
@@ -2230,7 +2233,7 @@
         async function removeAgentFromForm(agentId) {
             const buttons = document.querySelectorAll(`.agent-btn.remove[onclick*="${agentId}"]`);
             
-            // Показываем анимацию загрузки на всех кнопках с этим агентом
+            // Показываем анимацию загрузки
             buttons.forEach(btn => {
                 btn.classList.add('loading');
                 btn.disabled = true;
@@ -2242,7 +2245,7 @@
                     throw new Error('No authentication token');
                 }
                 
-                // Удаляем агента через бэкенд API
+                // Удаляем агента через бэкенд API (без form_api)
                 const response = await fetch(
                     `${API_URL}?action=remove_agent_from_form&token=${token}` +
                     `&agent_id=${encodeURIComponent(agentId)}` +
