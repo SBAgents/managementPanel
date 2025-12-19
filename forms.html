@@ -2545,51 +2545,81 @@
             }
         }*/
 
-        async function toggleFormStatus(formName, newStatus) {
-            // Сохраняем состояние
-            const originalButtons = document.querySelectorAll(`.action-btn.toggle[onclick*="${formName}"]`);
+        async function toggleFormStatus(formName, formApi, newStatus) {
+            console.log('toggleFormStatus called:', { formName, formApi, newStatus });
             
-            // Анимация
-            originalButtons.forEach(btn => {
+            // Находим все кнопки переключения статуса для этой формы
+            const buttons = document.querySelectorAll(`.action-btn.toggle[onclick*="toggleFormStatus('${formName.replace(/'/g, "\\'")}'"]`);
+            
+            // Показываем анимацию загрузки на всех кнопках
+            buttons.forEach(btn => {
                 btn.classList.add('loading');
                 btn.disabled = true;
             });
             
             try {
                 const token = localStorage.getItem('admin_token');
-                const response = await fetch(`${API_URL}?action=toggle_form_status&token=${token}&form_name=${encodeURIComponent(formName)}&enabled=${newStatus}`);
                 
-                if (!response.ok) throw new Error('Network error');
+                // 1. Сначала обновляем статус в нашей админке (базе данных)
+                const adminResponse = await fetch(
+                    `${API_URL}?action=toggle_form_status` +
+                    `&token=${token}` +
+                    `&form_name=${encodeURIComponent(formName)}` +
+                    `&enabled=${newStatus}`
+                );
                 
-                const result = await response.json();
+                if (!adminResponse.ok) throw new Error('Admin API error');
                 
-                if (result.success) {
-                    showToast(`${translations[currentLanguage]['toast.toggle_success']}: ${formName}`, 'success');
-                    await loadForms();
-                } else {
-                    throw new Error(result.error || 'Toggle failed');
+                const adminResult = await adminResponse.json();
+                
+                if (!adminResult.success) {
+                    throw new Error('Failed to update form status in admin panel: ' + adminResult.error);
                 }
+                
+                console.log('Admin panel updated successfully');
+                
+                // 2. Теперь обновляем саму форму через ее API (если formApi предоставлен)
+                if (formApi && formApi.trim() !== '') {
+                    try {
+                        console.log('Updating form via its API:', formApi);
+                        
+                        // Формируем URL для формы
+                        const formUpdateUrl = `${formApi}?action=update_form_status&enabled=${newStatus}`;
+                        console.log('Form API URL:', formUpdateUrl);
+                        
+                        // Отправляем запрос к форме
+                        const formResponse = await fetch(formUpdateUrl, {
+                            method: 'GET',
+                            mode: 'no-cors' // Если форма на другом домене
+                        });
+                        
+                        console.log('Form update attempted');
+                        
+                        // С no-cors мы не можем прочитать ответ, но запрос отправлен
+                        
+                    } catch (formError) {
+                        console.warn('Could not update form via API (may be CORS issue):', formError);
+                        // Продолжаем выполнение, даже если не удалось обновить форму
+                    }
+                } else {
+                    console.log('No form API provided, skipping form update');
+                }
+                
+                // 3. Показываем успешное сообщение
+                showToast(`${translations[currentLanguage]['toast.toggle_success']}: ${formName}`, 'success');
+                
+                // 4. Обновляем список форм в админке
+                await loadForms();
                 
             } catch (error) {
                 console.error('Error toggling form status:', error);
                 showToast(translations[currentLanguage]['toast.toggle_error'] + ': ' + error.message, 'error');
                 
-                // При ошибке восстанавливаем оригинальные кнопки
-                originalButtons.forEach(btn => {
-                    if (btn.parentNode) {
-                        btn.classList.remove('loading');
-                        btn.disabled = false;
-                    }
+                // Убираем анимацию загрузки при ошибке
+                buttons.forEach(btn => {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
                 });
-            } finally {
-                // Гарантируем, что ВСЕ кнопки восстановлены
-                setTimeout(() => {
-                    const allButtons = document.querySelectorAll('.action-btn.toggle');
-                    allButtons.forEach(btn => {
-                        btn.classList.remove('loading');
-                        btn.disabled = false;
-                    });
-                }, 300);
             }
         }
 
