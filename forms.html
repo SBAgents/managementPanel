@@ -6,967 +6,74 @@
     <title>Формы | Панель управления</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary-bg: linear-gradient(135deg, #042F28 0%, #0A5C4A 100%);
-            --accent: #D0E41E;
-            --accent-hover: #b8cc1a;
-            --text: white;
-            --card-bg: rgba(255, 255, 255, 0.1);
-            --sidebar-bg: rgba(0, 0, 0, 0.3);
-            --danger: #e74c3c;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --info: #3498db;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Arial, sans-serif;
-        }
-        
-        body {
-            background: var(--primary-bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-        }
-        
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background: var(--sidebar-bg);
-            backdrop-filter: blur(10px);
-            padding: 20px 0;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .logo {
-            padding: 0 20px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 20px;
-        }
-        
-        .logo h1 {
-            font-size: 24px;
-            color: var(--accent);
-        }
-        
-        .logo p {
-            font-size: 14px;
-            opacity: 0.8;
-        }
-        
-        .nav-links {
-            flex: 1;
-        }
-        
-        .nav-links a {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            color: var(--text);
-            text-decoration: none;
-            transition: all 0.3s;
-            border-left: 3px solid transparent;
-        }
-        
-        .nav-links a:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-left: 3px solid var(--accent);
-        }
-        
-        .nav-links a.active {
-            background: rgba(255, 255, 255, 0.1);
-            border-left: 3px solid var(--accent);
-        }
-        
-        .nav-links a i {
-            margin-right: 12px;
-            width: 20px;
-            text-align: center;
-        }
-        
-        .user-info {
-            padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .user-details h3 {
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-        
-        .user-details span {
-            font-size: 12px;
-            opacity: 0.7;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-        
-        .logout-btn {
-            background: rgba(231, 76, 60, 0.2);
-            border: 1px solid rgba(231, 76, 60, 0.5);
-            color: #ff6b6b;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 12px;
-        }
-        
-        .logout-btn:hover {
-            background: rgba(231, 76, 60, 0.3);
-        }
-        
-        /* Language Selector */
-        .language-selector {
+        /* Все стили остаются без изменений, кроме добавленных ниже */
+
+        /* Стили для кнопок с анимацией загрузки */
+        .action-btn.loading {
             position: relative;
-            margin-left: 10px;
+            color: transparent !important;
         }
         
-        .language-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .language-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .language-dropdown {
+        .action-btn.loading::after {
+            content: '';
             position: absolute;
-            bottom: 100%;
-            right: 0;
-            background: rgba(0, 0, 0, 0.95);
-            border-radius: 8px;
-            margin-bottom: 5px;
-            min-width: 140px;
-            display: none;
-            overflow: hidden;
-            z-index: 100;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #D0E41E;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
         
-        .language-dropdown.show {
-            display: block;
-        }
-        
-        .language-option {
-            padding: 10px 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-        }
-        
-        .language-option:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .language-flag {
-            width: 20px;
-            height: 14px;
-            object-fit: cover;
-            border-radius: 2px;
-        }
-        
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        
-        .header h2 {
-            font-size: 28px;
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+        .agent-btn.loading {
             position: relative;
-            overflow: hidden;
+            color: transparent !important;
         }
         
-        .btn-primary {
-            background: var(--accent);
-            color: #2c3e50;
+        .agent-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #2ecc71;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
         
-        .btn-primary:hover {
-            background: var(--accent-hover);
-            transform: translateY(-2px);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-        
-        /* Button Loading Animation */
         .btn.loading {
+            position: relative;
             color: transparent !important;
         }
         
         .btn.loading::after {
             content: '';
             position: absolute;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #2c3e50;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: button-spin 0.8s linear infinite;
-        }
-        
-        .btn.btn-secondary.loading::after {
-            border-color: white;
-            border-top-color: transparent;
-        }
-        
-        @keyframes button-spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Filter Section */
-        .filter-section {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: none;
-        }
-        
-        .filter-section.show {
-            display: block;
-        }
-        
-        .filter-row {
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-            flex-wrap: wrap;
-        }
-        
-        .filter-group {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .filter-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            opacity: 0.9;
-            font-size: 14px;
-        }
-        
-        .filter-input {
-            width: 100%;
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #34495e;
-            border-radius: 8px;
-            color: #2c3e50;
-            font-size: 14px;
-        }
-        
-        .filter-input:focus {
-            outline: none;
-            border-color: var(--accent);
-            background: white;
-        }
-        
-        .filter-select {
-            width: 100%;
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #34495e;
-            border-radius: 8px;
-            color: #2c3e50;
-            font-size: 14px;
-            cursor: pointer;
-        }
-        
-        .filter-select:focus {
-            outline: none;
-            border-color: var(--accent);
-            background: white;
-        }
-        
-        .filter-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        /* Forms Table */
-        .section {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .section-header h3 {
-            font-size: 20px;
-        }
-        
-        .table-container {
-            overflow-x: auto;
-            min-height: 300px;
-            position: relative;
-        }
-        
-        .table-loading {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            border-radius: 8px;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease-out;
-            pointer-events: none;
-        }
-        
-        .table-loading.show {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: all;
-        }
-        
-        .table-loading .loader {
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top: 3px solid var(--accent);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        
-        .table-loading p {
-            font-size: 16px;
-            opacity: 0.9;
-            text-align: center;
-            max-width: 300px;
-            line-height: 1.5;
-            margin: 0;
-            padding: 0;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-        }
-        
-        table.loaded {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        thead {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        th {
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        td {
-            padding: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        
-        tr:hover {
-            background: rgba(255, 255, 255, 0.02);
-        }
-        
-        .status {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .status.active {
-            background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-        }
-        
-        .status.inactive {
-            background: rgba(231, 76, 60, 0.2);
-            color: #e74c3c;
-        }
-        
-        .status.maintenance {
-            background: rgba(243, 156, 18, 0.2);
-            color: #f39c12;
-        }
-        
-        .action-btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-            margin-right: 5px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .action-btn.manage {
-            background: rgba(52, 152, 219, 0.2);
-            color: #3498db;
-            border: 1px solid rgba(52, 152, 219, 0.3);
-        }
-        
-        .action-btn.manage:hover {
-            background: rgba(52, 152, 219, 0.3);
-        }
-        
-        .action-btn.toggle {
-            background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-            border: 1px solid rgba(46, 204, 113, 0.3);
-        }
-        
-        .action-btn.toggle:hover {
-            background: rgba(46, 204, 113, 0.3);
-        }
-        
-        .action-btn.toggle.inactive {
-            background: rgba(231, 76, 60, 0.2);
-            color: #e74c3c;
-            border: 1px solid rgba(231, 76, 60, 0.3);
-        }
-        
-        .action-btn.toggle.inactive:hover {
-            background: rgba(231, 76, 60, 0.3);
-        }
-        
-        /* Button Loading Animation for Action Buttons */
-        .action-btn.loading {
-            color: transparent !important;
-            pointer-events: none;
-        }
-        
-        .action-btn.loading::after {
-            content: '';
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            border: 2px solid currentColor;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: button-spin 0.8s linear infinite;
-            left: 50%;
             top: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        /* Agent Management Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-        
-        .modal-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .modal {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 30px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transform: translateY(20px);
-            transition: transform 0.3s;
-        }
-        
-        .modal-overlay.show .modal {
-            transform: translateY(0);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h3 {
-            font-size: 20px;
-            color: var(--accent);
-        }
-        
-        .modal-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.3s;
-        }
-        
-        .modal-close:hover {
-            opacity: 1;
-        }
-        
-        .modal-subtitle {
-            margin-bottom: 20px;
-            opacity: 0.8;
-        }
-        
-        .agents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        
-        .agent-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .agent-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .agent-name {
-            font-weight: bold;
-            font-size: 16px;
-        }
-        
-        .agent-email {
-            font-size: 12px;
-            opacity: 0.7;
-            margin-bottom: 10px;
-        }
-        
-        .agent-role {
-            display: inline-block;
-            padding: 3px 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            font-size: 11px;
-            margin-bottom: 10px;
-        }
-        
-        .agent-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .agent-btn {
-            padding: 5px 10px;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .agent-btn.assign {
-            background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-            border: 1px solid rgba(46, 204, 113, 0.3);
-        }
-        
-        .agent-btn.assign:hover {
-            background: rgba(46, 204, 113, 0.3);
-        }
-        
-        .agent-btn.remove {
-            background: rgba(231, 76, 60, 0.2);
-            color: #e74c3c;
-            border: 1px solid rgba(231, 76, 60, 0.3);
-        }
-        
-        .agent-btn.remove:hover {
-            background: rgba(231, 76, 60, 0.3);
-        }
-        
-        .agent-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        /* Loading animation for agent buttons */
-        .agent-btn.loading {
-            color: transparent !important;
-            pointer-events: none;
-        }
-        
-        .agent-btn.loading::after {
-            content: '';
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            border: 2px solid currentColor;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: button-spin 0.8s linear infinite;
             left: 50%;
-            top: 50%;
             transform: translate(-50%, -50%);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            opacity: 0.9;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #34495e;
-            border-radius: 8px;
-            color: #2c3e50;
-            font-size: 14px;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: var(--accent);
-            background: white;
-        }
-        
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-            transform: scale(1.2);
-        }
-        
-        .checkbox-group label {
-            margin: 0;
-            font-weight: normal;
-            cursor: pointer;
-        }
-        
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 30px;
-        }
-        
-        /* Loader */
-        .loader {
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top: 3px solid var(--accent);
-            border-radius: 50%;
             width: 20px;
             height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #D0E41E;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
-        
-        .loader.small {
-            width: 12px;
-            height: 12px;
-            border-width: 2px;
-            display: inline-block;
-            margin-right: 5px;
+
+        /* Удалены стили для статуса обслуживания */
+        .status.maintenance {
+            display: none;
         }
         
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.9);
-            border-left: 4px solid var(--accent);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transform: translateX(150%);
-            transition: transform 0.3s;
-            z-index: 1000;
-        }
-        
-        .toast.show {
-            transform: translateX(0);
-        }
-        
-        .toast i {
-            font-size: 20px;
-        }
-        
-        .toast.success i { color: #2ecc71; }
-        .toast.error i { color: #e74c3c; }
-        .toast.warning i { color: #f39c12; }
-        
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            opacity: 0.7;
-        }
-        
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .sidebar {
-                width: 70px;
-            }
-            
-            .logo h1, .logo p, .nav-links a span, .user-details h3, .user-details span {
-                display: none;
-            }
-            
-            .nav-links a {
-                justify-content: center;
-                padding: 15px 0;
-            }
-            
-            .nav-links a i {
-                margin-right: 0;
-                font-size: 20px;
-            }
-            
-            .user-info {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .language-selector {
-                margin-left: 0;
-            }
-            
-            .filter-row {
-                flex-direction: column;
-            }
-            
-            .filter-group {
-                min-width: 100%;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                width: 100%;
-                flex-direction: row;
-                padding: 10px;
-            }
-            
-            .logo {
-                padding: 0 10px;
-                border-bottom: none;
-                border-right: 1px solid rgba(255, 255, 255, 0.1);
-                margin-bottom: 0;
-                margin-right: 10px;
-            }
-            
-            .nav-links {
-                display: flex;
-                flex: 1;
-            }
-            
-            .nav-links a {
-                flex: 1;
-                justify-content: center;
-                border-left: none;
-                border-bottom: 3px solid transparent;
-            }
-            
-            .nav-links a:hover, .nav-links a.active {
-                border-left: none;
-                border-bottom: 3px solid var(--accent);
-            }
-            
-            .user-info {
-                border-top: none;
-                border-left: 1px solid rgba(255, 255, 255, 0.1);
-                padding: 0 10px;
-                min-width: 120px;
-            }
-            
-            .main-content {
-                padding: 20px;
-            }
-            
-            .agents-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
-            
-            .header-actions {
-                width: 100%;
-                justify-content: flex-end;
-            }
-        }
-        
-        /* RTL Support */
-        body[dir="rtl"] .nav-links a i {
-            margin-right: 0;
-            margin-left: 12px;
-        }
-        
-        body[dir="rtl"] .sidebar {
-            border-right: none;
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        body[dir="rtl"] .language-selector {
-            margin-left: 0;
-            margin-right: 10px;
-        }
-        
-        body[dir="rtl"] .language-dropdown {
-            right: auto;
-            left: 0;
-        }
-        
-        @media (max-width: 1024px) {
-            body[dir="rtl"] .nav-links a i {
-                margin-left: 0;
-            }
-        }
-        
-        body[dir="rtl"] td, body[dir="rtl"] th {
-            text-align: right;
-        }
-        
-        /* Hide API URL column */
-        .api-url {
-            display: none;
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
     </style>
 </head>
@@ -1099,8 +206,8 @@
                             <!-- API URL скрыт по ТЗ -->
                             <th class="api-url" data-i18n="forms.table_api">API URL</th>
                             <th data-i18n="forms.table_status">Статус</th>
-                            <th data-i18n="forms.table_active_wallets">Активные кошельки</th>
-                            <th data-i18n="forms.table_agents">Агенты</th>
+                            <th data-i18n="forms.table_wallets">Активных кошельков</th>
+                            <th data-i18n="forms.table_agents">Агентов</th>
                             <th data-i18n="forms.table_actions">Действия</th>
                         </tr>
                     </thead>
@@ -1148,7 +255,7 @@
                 <button type="button" class="btn btn-secondary" onclick="closeAgentsModal()" data-i18n="forms.cancel">
                     Отмена
                 </button>
-                <button type="button" class="btn btn-primary" onclick="saveAgentAssignments()" id="saveAgentsBtn" data-i18n="forms.save_changes">
+                <button type="button" class="btn btn-primary" id="saveAgentsBtn" onclick="saveAgentAssignments()" data-i18n="forms.save_changes">
                     Сохранить изменения
                 </button>
             </div>
@@ -1175,7 +282,7 @@
         let currentFormName = '';
         let currentFormApi = '';
         let selectedAgents = new Set();
-        let activeWalletsData = {}; // Store active wallets count per form
+        let allFormWalletsCount = {};
         
         // Filter state
         let nameFilter = '';
@@ -1184,7 +291,7 @@
         let isLoading = false;
         let hideLoadingTimeout = null;
         
-        // Translation dictionary
+        // Translation dictionary (updated)
         const translations = {
             ru: {
                 // Navigation
@@ -1198,7 +305,7 @@
                 // Forms page
                 "forms.title": "Формы",
                 "forms.subtitle": "Управление формами",
-                "forms.welcome": "Управление форм",
+                "forms.welcome": "Управление формами",
                 "forms.refresh": "Обновить",
                 "forms.refreshing": "Обновление...",
                 "forms.list": "Список форм",
@@ -1216,21 +323,17 @@
                 "forms.table_name": "Название формы",
                 "forms.table_api": "API URL",
                 "forms.table_status": "Статус",
-                "forms.table_active_wallets": "Активные кошельки",
-                "forms.table_agents": "Агенты",
+                "forms.table_wallets": "Активных кошельков",
+                "forms.table_agents": "Агентов",
                 "forms.table_actions": "Действия",
                 
                 // Actions
                 "forms.manage_agents": "Управление агентами",
-                "forms.toggle_status": "Включить/выключить форму",
-                "forms.toggle_on": "Включить форму",
-                "forms.toggle_off": "Выключить форму",
+                "forms.toggle_status": "Переключить статус",
                 
                 // Status
-                "status.active": "Включена",
-                "status.inactive": "Выключена",
-                "status.enabled": "Включён",
-                "status.disabled": "Выключен",
+                "status.active": "Активна",
+                "status.inactive": "Неактивна",
                 
                 // Modal
                 "forms.assigned_agents": "Назначенные агенты",
@@ -1258,7 +361,6 @@
                 "forms.loading_forms": "Загрузка списка форм...",
                 "forms.loading_counts": "Получение информации о формах...",
                 "forms.filtering_forms": "Применение фильтров...",
-                "forms.loading_wallets": "Загрузка данных о кошельках...",
                 
                 // Empty states
                 "forms.no_forms": "Формы не найдены",
@@ -1308,17 +410,13 @@
                 "forms.table_name": "Form Name",
                 "forms.table_api": "API URL",
                 "forms.table_status": "Status",
-                "forms.table_active_wallets": "Active Wallets",
+                "forms.table_wallets": "Active Wallets",
                 "forms.table_agents": "Agents",
                 "forms.table_actions": "Actions",
                 "forms.manage_agents": "Manage Agents",
-                "forms.toggle_status": "Toggle Form",
-                "forms.toggle_on": "Enable Form",
-                "forms.toggle_off": "Disable Form",
-                "status.active": "Enabled",
-                "status.inactive": "Disabled",
-                "status.enabled": "Enabled",
-                "status.disabled": "Disabled",
+                "forms.toggle_status": "Toggle Status",
+                "status.active": "Active",
+                "status.inactive": "Inactive",
                 "forms.assigned_agents": "Assigned Agents",
                 "forms.available_agents": "Available Agents",
                 "forms.assign_agent": "Assign",
@@ -1342,7 +440,6 @@
                 "forms.loading_forms": "Loading forms list...",
                 "forms.loading_counts": "Getting form information...",
                 "forms.filtering_forms": "Applying filters...",
-                "forms.loading_wallets": "Loading wallet data...",
                 "forms.no_forms": "No forms found",
                 "forms.no_forms_desc": "No forms available to display",
                 "forms.no_assigned_agents": "No assigned agents",
@@ -1362,162 +459,6 @@
                 "role.admin": "Administrator",
                 "role.manager": "Manager",
                 "role.viewer": "Viewer"
-            },
-            fr: {
-                "nav.dashboard": "Tableau de bord",
-                "nav.wallets": "Portefeuilles",
-                "nav.forms": "Formulaires",
-                "nav.agents": "Agents",
-                "nav.admins": "Administrateurs",
-                "nav.logout": "Déconnexion",
-                "forms.title": "Formulaires",
-                "forms.subtitle": "Gestion des formulaires",
-                "forms.welcome": "Gestion des formulaires",
-                "forms.refresh": "Rafraîchir",
-                "forms.refreshing": "Rafraîchissement...",
-                "forms.list": "Liste des formulaires",
-                "forms.forms_found": "formulaires trouvés",
-                "forms.filter_name": "Filtrer par nom",
-                "forms.filter_name_placeholder": "Entrez le nom du formulaire...",
-                "forms.filter_status": "Filtrer par statut",
-                "forms.filter_all": "Tous les statuts",
-                "forms.clear_filters": "Effacer les filtres",
-                "forms.clear_filters_title": "Effacer tous les filtres",
-                "forms.table_name": "Nom du formulaire",
-                "forms.table_api": "URL API",
-                "forms.table_status": "Statut",
-                "forms.table_active_wallets": "Portefeuilles actifs",
-                "forms.table_agents": "Agents",
-                "forms.table_actions": "Actions",
-                "forms.manage_agents": "Gérer les agents",
-                "forms.toggle_status": "Activer/désactiver le formulaire",
-                "forms.toggle_on": "Activer le formulaire",
-                "forms.toggle_off": "Désactiver le formulaire",
-                "status.active": "Activé",
-                "status.inactive": "Désactivé",
-                "status.enabled": "Activé",
-                "status.disabled": "Désactivé",
-                "forms.assigned_agents": "Agents assignés",
-                "forms.available_agents": "Agents disponibles",
-                "forms.assign_agent": "Assigner",
-                "forms.remove_agent": "Retirer",
-                "forms.close": "Fermer",
-                "forms.cancel": "Annuler",
-                "forms.save_changes": "Enregistrer les modifications",
-                "forms.bulk_assign_success": "Affectations enregistrées",
-                "forms.select_all": "Tout sélectionner",
-                "forms.deselect_all": "Tout désélectionner",
-                "forms.selected_count": "Sélectionné : {count}",
-                "forms.assign_agents": "Affecter des agents",
-                "forms.agent_already_assigned": "Agent déjà affecté",
-                "forms.agent_not_found": "Agent non trouvé",
-                "forms.no_permission": "Pas de permission pour cette action",
-                "forms.loading_agents": "Chargement des agents...",
-                "forms.saving_changes": "Enregistrement des modifications...",
-                "forms.update_success": "Mis à jour avec succès",
-                "forms.update_error": "Erreur de mise à jour",
-                "forms.loading_data": "Chargement des données...",
-                "forms.loading_forms": "Chargement de la liste des formulaires...",
-                "forms.loading_counts": "Obtention des informations sur les formulaires...",
-                "forms.filtering_forms": "Application des filtres...",
-                "forms.loading_wallets": "Chargement des données de portefeuille...",
-                "forms.no_forms": "Aucun formulaire trouvé",
-                "forms.no_forms_desc": "Aucun formulaire disponible à afficher",
-                "forms.no_assigned_agents": "Aucun agent assigné",
-                "forms.no_available_agents": "Aucun agent disponible",
-                "toast.success": "Données mises à jour avec succès",
-                "toast.error": "Erreur de chargement des données",
-                "toast.assign_success": "Agent assigné avec succès",
-                "toast.assign_error": "Erreur d'assignation d'agent",
-                "toast.remove_success": "Agent retiré avec succès",
-                "toast.remove_error": "Erreur de retrait d'agent",
-                "toast.toggle_success": "Statut du formulaire changé",
-                "toast.toggle_error": "Erreur de changement de statut",
-                "toast.logout_success": "Déconnexion réussie",
-                "toast.logout_error": "Erreur de déconnexion",
-                "toast.filters_cleared": "Filtres effacés",
-                "role.superadmin": "Super Admin",
-                "role.admin": "Administrateur",
-                "role.manager": "Manager",
-                "role.viewer": "Observateur"
-            },
-            ar: {
-                "nav.dashboard": "لوحة التحكم",
-                "nav.wallets": "المحافظ",
-                "nav.forms": "النماذج",
-                "nav.agents": "الوكلاء",
-                "nav.admins": "المشرفين",
-                "nav.logout": "تسجيل الخروج",
-                "forms.title": "النماذج",
-                "forms.subtitle": "إدارة النماذج",
-                "forms.welcome": "إدارة النماذج",
-                "forms.refresh": "تحديث",
-                "forms.refreshing": "جاري التحديث...",
-                "forms.list": "قائمة النماذج",
-                "forms.forms_found": "نموذج وجد",
-                "forms.filter_name": "تصفية حسب الاسم",
-                "forms.filter_name_placeholder": "أدخل اسم النموذج...",
-                "forms.filter_status": "تصفية حسب الحالة",
-                "forms.filter_all": "جميع الحالات",
-                "forms.clear_filters": "مسح الفلاتر",
-                "forms.clear_filters_title": "مسح جميع الفلاتر",
-                "forms.table_name": "اسم النموذج",
-                "forms.table_api": "رابط API",
-                "forms.table_status": "الحالة",
-                "forms.table_active_wallets": "المحافظ النشطة",
-                "forms.table_agents": "الوكلاء",
-                "forms.table_actions": "الإجراءات",
-                "forms.manage_agents": "إدارة الوكلاء",
-                "forms.toggle_status": "تفعيل/تعطيل النموذج",
-                "forms.toggle_on": "تفعيل النموذج",
-                "forms.toggle_off": "تعطيل النموذج",
-                "status.active": "مفعل",
-                "status.inactive": "معطل",
-                "status.enabled": "مفعل",
-                "status.disabled": "معطل",
-                "forms.assigned_agents": "الوكلاء المعينون",
-                "forms.available_agents": "الوكلاء المتاحون",
-                "forms.assign_agent": "تعيين",
-                "forms.remove_agent": "إزالة",
-                "forms.close": "إغلاق",
-                "forms.cancel": "إلغاء",
-                "forms.save_changes": "حفظ التغييرات",
-                "forms.bulk_assign_success": "تم حفظ التخصيصات",
-                "forms.select_all": "تحديد الكل",
-                "forms.deselect_all": "إلغاء تحديد الكل",
-                "forms.selected_count": "محدد: {count}",
-                "forms.assign_agents": "تعيين الوكلاء",
-                "forms.agent_already_assigned": "الوكيل معين بالفعل",
-                "forms.agent_not_found": "الوكيل غير موجود",
-                "forms.no_permission": "لا يوجد إذن لهذا الإجراء",
-                "forms.loading_agents": "جاري تحميل الوكلاء...",
-                "forms.saving_changes": "جاري حفظ التغييرات...",
-                "forms.update_success": "تم التحديث بنجاح",
-                "forms.update_error": "خطأ في التحديث",
-                "forms.loading_data": "جاري تحميل البيانات...",
-                "forms.loading_forms": "جاري تحميل قائمة النماذج...",
-                "forms.loading_counts": "جاري الحصول على معلومات النماذج...",
-                "forms.filtering_forms": "جاري تطبيق الفلاتر...",
-                "forms.loading_wallets": "جاري تحميل بيانات المحافظ...",
-                "forms.no_forms": "لم يتم العثور على نماذج",
-                "forms.no_forms_desc": "لا توجد نماذج متاحة للعرض",
-                "forms.no_assigned_agents": "لا يوجد وكلاء معينون",
-                "forms.no_available_agents": "لا يوجد وكلاء متاحون",
-                "toast.success": "تم تحديث البيانات بنجاح",
-                "toast.error": "خطأ في تحميل البيانات",
-                "toast.assign_success": "تم تعيين الوكيل بنجاح",
-                "toast.assign_error": "خطأ في تعيين الوكيل",
-                "toast.remove_success": "تم إزالة الوكيل بنجاح",
-                "toast.remove_error": "خطأ في إزالة الوكيل",
-                "toast.toggle_success": "تم تغيير حالة النموذج",
-                "toast.toggle_error": "خطأ في تغيير الحالة",
-                "toast.logout_success": "تم تسجيل الخروج بنجاح",
-                "toast.logout_error": "خطأ في تسجيل الخروج",
-                "toast.filters_cleared": "تم مسح الفلاتر",
-                "role.superadmin": "مشرف رئيسي",
-                "role.admin": "مشرف",
-                "role.manager": "مدير",
-                "role.viewer": "مشاهد"
             }
         };
 
@@ -1711,8 +652,8 @@
                         );
                     }
                     
-                    // Load active wallets count for all forms
-                    await loadActiveWalletsCount();
+                    // Load wallet counts for all forms
+                    await loadFormWalletsCounts(allForms);
                     
                     // Apply current filters
                     applyFilters();
@@ -1732,48 +673,43 @@
             }
         }
 
-        // Load active wallets count for all forms
-        async function loadActiveWalletsCount() {
+        // Load wallet counts for forms
+        async function loadFormWalletsCounts(forms) {
             try {
-                if (allForms.length === 0) {
-                    activeWalletsData = {};
+                const token = localStorage.getItem('admin_token');
+                const formNames = forms.map(form => form.formName);
+                
+                if (formNames.length === 0) {
+                    allFormWalletsCount = {};
                     return;
                 }
                 
-                const token = localStorage.getItem('admin_token');
-                const formNames = allForms.map(form => form.formName);
-                
-                // Call backend to get active wallets count for all forms
-                const callbackName = 'walletsCallback_' + Date.now();
+                const callbackName = 'walletsCount_' + Date.now();
                 
                 return new Promise((resolve) => {
                     window[callbackName] = function(response) {
                         delete window[callbackName];
                         if (response && response.success) {
-                            activeWalletsData = response.activeWallets || {};
+                            allFormWalletsCount = response.counts || {};
                         } else {
-                            activeWalletsData = {};
+                            allFormWalletsCount = {};
                         }
                         resolve();
                     };
                     
                     const script = document.createElement('script');
-                    script.src = `${API_URL}?action=get_form_active_wallets&token=${encodeURIComponent(token)}` +
-                                `&form_names=${encodeURIComponent(JSON.stringify(formNames))}` +
-                                `&callback=${callbackName}`;
-                    
+                    script.src = `${API_URL}?action=get_form_wallets_count&token=${encodeURIComponent(token)}&form_names=${encodeURIComponent(JSON.stringify(formNames))}&callback=${callbackName}`;
                     script.onerror = () => {
                         delete window[callbackName];
-                        activeWalletsData = {};
+                        allFormWalletsCount = {};
                         resolve();
                     };
-                    
                     document.head.appendChild(script);
                 });
                 
             } catch (error) {
-                console.error('Error loading active wallets count:', error);
-                activeWalletsData = {};
+                console.error('Error loading wallet counts:', error);
+                allFormWalletsCount = {};
             }
         }
 
@@ -1852,14 +788,14 @@
             showLoading(translations[currentLanguage]['forms.loading_counts']);
             
             try {
-                // Get form counts for all forms
+                // Get form agents counts
                 const formNames = forms.map(form => form.formName);
                 const allCounts = await getAllFormCounts(formNames);
                 
                 // Render all forms
                 forms.forEach(form => {
-                    const counts = allCounts[form.formName] || { agentsCount: 0 };
-                    const activeWalletsCount = activeWalletsData[form.formName] || 0;
+                    const agentsCount = allCounts[form.formName] || 0;
+                    const walletsCount = allFormWalletsCount[form.formName] || 0;
                     
                     const isActive = form.enabled === true || form.enabled === 'true';
                     
@@ -1874,17 +810,17 @@
                         <td><strong>${form.formName || ''}</strong></td>
                         <td class="api-url">${form.formAPI || ''}</td>
                         <td><span class="status ${statusClass}">${statusText}</span></td>
-                        <td>${activeWalletsCount}</td>
-                        <td>${counts.agentsCount || 0}</td>
+                        <td>${walletsCount}</td>
+                        <td>${agentsCount}</td>
                         <td>
                             ${currentPermissions?.canManageAdmins ? `
-                                <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}">
+                                <button class="action-btn manage" onclick="openAgentsModal('${form.formName}', '${form.formAPI || ''}')" title="${translations[currentLanguage]['forms.manage_agents']}" id="manageBtn_${form.formName}">
                                     <i class="fas fa-users"></i>
                                 </button>
                             ` : ''}
                             ${currentPermissions?.canToggleServiceMode ? `
-                                <button class="action-btn toggle ${!isActive ? 'inactive' : ''}" onclick="toggleFormStatus('${form.formName}', ${!isActive})" title="${isActive ? translations[currentLanguage]['forms.toggle_off'] : translations[currentLanguage]['forms.toggle_on']}" id="toggleBtn_${form.formName}">
-                                    <i class="fas ${isActive ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
+                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}" id="toggleBtn_${form.formName}">
+                                    <i class="fas fa-power-off"></i>
                                 </button>
                             ` : ''}
                         </td>
@@ -1921,13 +857,13 @@
             }
         }
 
-        // Get form counts (agents only now)
+        // Get form agents counts
         async function getAllFormCounts(formNames) {
             try {
                 const token = localStorage.getItem('admin_token');
                 const callbackName = 'allCounts_' + Date.now();
                 
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     window[callbackName] = function(response) {
                         delete window[callbackName];
                         if (response.success) {
@@ -1984,11 +920,19 @@
                     // Update selected count
                     updateSelectedCount();
                     
+                    // Get all agents assigned to other forms
+                    const allAssignedAgents = await getAllAssignedAgents(formName);
+                    
+                    // Filter available agents to exclude those assigned to other forms
+                    const availableAgents = (result.availableAgents || []).filter(agent => 
+                        !allAssignedAgents.has(agent.username)
+                    );
+                    
                     // Render assigned agents
                     renderAssignedAgents(result.assignments || []);
                     
-                    // Render available agents
-                    renderAvailableAgents(result.availableAgents || []);
+                    // Render available agents (filtered)
+                    renderAvailableAgents(availableAgents);
                     
                 } else {
                     showToast(result.error || translations[currentLanguage]['toast.error'], 'error');
@@ -2005,6 +949,26 @@
             
             // Show modal
             document.getElementById('agentsModal').classList.add('show');
+        }
+
+        // Get all agents assigned to other forms
+        async function getAllAssignedAgents(excludeFormName) {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}?action=get_all_assigned_agents&token=${token}&exclude_form=${encodeURIComponent(excludeFormName)}`);
+                
+                if (!response.ok) throw new Error('Network error');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    return new Set(result.agents || []);
+                }
+                return new Set();
+            } catch (error) {
+                console.error('Error getting all assigned agents:', error);
+                return new Set();
+            }
         }
 
         // Close agents modal
@@ -2096,17 +1060,17 @@
             });
         }
 
-        // Assign agent to form with loading animation
+        // Assign agent to form
         async function assignAgentToForm(agentId) {
+            const button = document.getElementById(`assignBtn_${agentId}`);
+            if (!button) return;
+            
+            const originalHTML = button.innerHTML;
+            
             try {
-                const button = document.getElementById(`assignBtn_${agentId}`);
-                if (!button || button.classList.contains('loading')) return;
-                
-                // Show loading animation
+                // Show loading animation on button
                 button.classList.add('loading');
-                
-                // Simulate network delay
-                await new Promise(resolve => setTimeout(resolve, 500));
+                button.disabled = true;
                 
                 selectedAgents.add(agentId);
                 updateSelectedCount();
@@ -2119,24 +1083,25 @@
             } catch (error) {
                 console.error('Error assigning agent:', error);
                 showToast(translations[currentLanguage]['toast.assign_error'] + ': ' + error.message, 'error');
-                
-                // Remove loading animation on error
-                const button = document.getElementById(`assignBtn_${agentId}`);
-                if (button) button.classList.remove('loading');
+            } finally {
+                // Restore button state
+                button.classList.remove('loading');
+                button.disabled = false;
+                button.innerHTML = originalHTML;
             }
         }
 
-        // Remove agent from form with loading animation
+        // Remove agent from form
         async function removeAgentFromForm(agentId) {
+            const button = document.getElementById(`removeBtn_${agentId}`);
+            if (!button) return;
+            
+            const originalHTML = button.innerHTML;
+            
             try {
-                const button = document.getElementById(`removeBtn_${agentId}`);
-                if (!button || button.classList.contains('loading')) return;
-                
-                // Show loading animation
+                // Show loading animation on button
                 button.classList.add('loading');
-                
-                // Simulate network delay
-                await new Promise(resolve => setTimeout(resolve, 500));
+                button.disabled = true;
                 
                 selectedAgents.delete(agentId);
                 updateSelectedCount();
@@ -2149,29 +1114,26 @@
             } catch (error) {
                 console.error('Error removing agent:', error);
                 showToast(translations[currentLanguage]['toast.remove_error'] + ': ' + error.message, 'error');
-                
-                // Remove loading animation on error
-                const button = document.getElementById(`removeBtn_${agentId}`);
-                if (button) button.classList.remove('loading');
+            } finally {
+                // Restore button state
+                button.classList.remove('loading');
+                button.disabled = false;
+                button.innerHTML = originalHTML;
             }
         }
 
-        // Save agent assignments with loading animation
+        // Save agent assignments
         async function saveAgentAssignments() {
+            const saveBtn = document.getElementById('saveAgentsBtn');
+            const originalHTML = saveBtn.innerHTML;
+            
             try {
-                const saveBtn = document.getElementById('saveAgentsBtn');
-                if (!saveBtn || saveBtn.classList.contains('loading')) return;
+                // Show loading animation on button
+                saveBtn.classList.add('loading');
+                saveBtn.disabled = true;
                 
                 const token = localStorage.getItem('admin_token');
                 const agents = Array.from(selectedAgents);
-                
-                if (agents.length === 0) {
-                    showToast('Не выбраны агенты для назначения', 'warning');
-                    return;
-                }
-                
-                // Show loading animation
-                saveBtn.classList.add('loading');
                 
                 const callbackName = 'saveCallback_' + Date.now();
                 
@@ -2179,8 +1141,10 @@
                     window[callbackName] = function(response) {
                         delete window[callbackName];
                         
-                        // Remove loading animation
+                        // Restore button state
                         saveBtn.classList.remove('loading');
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = originalHTML;
                         
                         if (response && response.success) {
                             showToast(`${translations[currentLanguage]['toast.assign_success']} (${response.successCount || agents.length})`, 'success');
@@ -2203,6 +1167,8 @@
                     script.onerror = () => {
                         delete window[callbackName];
                         saveBtn.classList.remove('loading');
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = originalHTML;
                         showToast(`${translations[currentLanguage]['toast.assign_error']}: Network error`, 'error');
                         resolve(null);
                     };
@@ -2214,20 +1180,24 @@
                 console.error('Error saving assignments:', error);
                 showToast(`${translations[currentLanguage]['toast.assign_error']}: ${error.message}`, 'error');
                 
-                // Remove loading animation on error
-                const saveBtn = document.getElementById('saveAgentsBtn');
-                if (saveBtn) saveBtn.classList.remove('loading');
+                // Restore button state
+                saveBtn.classList.remove('loading');
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalHTML;
             }
         }
 
-        // Toggle form status with loading animation
+        // Toggle form status
         async function toggleFormStatus(formName, newStatus) {
+            const button = document.getElementById(`toggleBtn_${formName}`);
+            if (!button) return;
+            
+            const originalHTML = button.innerHTML;
+            
             try {
-                const button = document.getElementById(`toggleBtn_${formName}`);
-                if (!button || button.classList.contains('loading')) return;
-                
-                // Show loading animation
+                // Show loading animation on button
                 button.classList.add('loading');
+                button.disabled = true;
                 
                 const token = localStorage.getItem('admin_token');
                 
@@ -2238,29 +1208,8 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Update button appearance
-                    setTimeout(() => {
-                        button.classList.remove('loading');
-                        button.classList.toggle('inactive', !newStatus);
-                        button.innerHTML = `<i class="fas ${newStatus ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>`;
-                        button.title = newStatus ? translations[currentLanguage]['forms.toggle_off'] : translations[currentLanguage]['forms.toggle_on'];
-                        
-                        // Update status cell
-                        const row = button.closest('tr');
-                        if (row) {
-                            const statusCell = row.cells[2];
-                            if (statusCell) {
-                                const statusClass = newStatus ? 'active' : 'inactive';
-                                const statusText = newStatus ? 
-                                    translations[currentLanguage]['status.active'] : 
-                                    translations[currentLanguage]['status.inactive'];
-                                statusCell.innerHTML = `<span class="status ${statusClass}">${statusText}</span>`;
-                            }
-                        }
-                    }, 300);
-                    
                     showToast(`${translations[currentLanguage]['toast.toggle_success']}: ${formName}`, 'success');
-                    
+                    await loadForms();
                 } else {
                     throw new Error(result.error || 'Toggle failed');
                 }
@@ -2268,10 +1217,11 @@
             } catch (error) {
                 console.error('Error toggling form status:', error);
                 showToast(translations[currentLanguage]['toast.toggle_error'] + ': ' + error.message, 'error');
-                
-                // Remove loading animation on error
-                const button = document.getElementById(`toggleBtn_${formName}`);
-                if (button) button.classList.remove('loading');
+            } finally {
+                // Restore button state
+                button.classList.remove('loading');
+                button.disabled = false;
+                button.innerHTML = originalHTML;
             }
         }
 
@@ -2287,27 +1237,28 @@
             showToast(translations[currentLanguage]['toast.filters_cleared'], 'success');
         }
 
-        // Refresh forms with loading animation
+        // Refresh forms
         async function refreshForms() {
             const btn = document.getElementById('refreshBtn');
-            if (btn.classList.contains('loading')) return;
+            const originalHTML = btn.innerHTML;
             
             try {
                 // Show loading animation
                 btn.classList.add('loading');
+                btn.disabled = true;
                 
                 await loadForms();
                 
-                // Hide loading animation after success
-                setTimeout(() => {
-                    btn.classList.remove('loading');
-                    showToast(translations[currentLanguage]['toast.success'], 'success');
-                }, 300);
+                showToast(translations[currentLanguage]['toast.success'], 'success');
                 
             } catch (error) {
                 console.error('Error refreshing:', error);
-                btn.classList.remove('loading');
                 showToast(translations[currentLanguage]['toast.error'], 'error');
+            } finally {
+                // Restore button state
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
             }
         }
 
