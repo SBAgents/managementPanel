@@ -1668,38 +1668,209 @@
         }
 
         // Add new wallet
-        function addNewWallet(type, name, number, enabled) {
-              try {
-                const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('WALLETS');
-                if (!sheet) return { success: false, error: 'Таблица WALLETS не найдена' };
+        async function addNewWallet(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('addBtn');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.classList.add('loading');
+                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]?.['wallets.adding'] || 'Добавление...'}`;
                 
-                // Проверяем, не существует ли уже такой кошелек
-                const data = sheet.getDataRange().getValues();
-                for (let i = 1; i < data.length; i++) {
-                  if (data[i][0] === type && data[i][2] === number) {
-                    return { success: false, error: 'Кошелек уже существует' };
-                  }
+                const formSelect = document.getElementById('addFormSelect');
+                const selectedOption = formSelect.options[formSelect.selectedIndex];
+                const formName = formSelect.value;
+                const formApi = selectedOption.dataset.api;
+                const walletType = document.getElementById('addWalletType').value;
+                const walletName = document.getElementById('addWalletName').value || walletType;
+                const walletNumber = document.getElementById('addWalletNumber').value;
+                const walletEnabled = document.getElementById('addWalletEnabled').checked;
+                
+                console.log('=== ДАННЫЕ ДЛЯ ДОБАВЛЕНИЯ ===');
+                console.log('Форма:', formName);
+                console.log('API формы:', formApi);
+                console.log('Тип кошелька:', walletType);
+                console.log('Имя кошелька:', walletName);
+                console.log('Номер кошелька:', walletNumber);
+                console.log('Активен:', walletEnabled);
+                
+                if (!formName || !formApi) {
+                    throw new Error('Пожалуйста, выберите форму');
                 }
                 
-                // Добавляем новый кошелек
-                sheet.appendRow([
-                  type,
-                  name || type,
-                  number,
-                  enabled === 'true',
-                  '' // used column
-                ]);
+                if (!walletType || !walletNumber) {
+                    throw new Error('Пожалуйста, заполните тип и номер кошелька');
+                }
                 
-                return { 
-                  success: true, 
-                  message: 'Кошелек добавлен',
-                  wallet: { type, name, number, enabled }
-                };
+                // Создаем URL с параметрами
+                const params = new URLSearchParams();
+                params.append('action', 'add_wallet');
+                params.append('type', walletType);
+                params.append('name', walletName);
+                params.append('number', walletNumber);
+                params.append('enabled', walletEnabled.toString());
                 
-              } catch (error) {
-                return { success: false, error: error.toString() };
-              }
+                // Добавляем timestamp для предотвращения кэширования
+                params.append('_t', Date.now().toString());
+                
+                const addUrl = `${formApi}?${params.toString()}`;
+                console.log('Полный URL запроса:', addUrl);
+                
+                // Пробуем разные методы запроса
+                let response;
+                let result;
+                
+                try {
+                    console.log('Пробуем Method 1: прямой fetch...');
+                    response = await fetch(addUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        cache: 'no-cache'
+                    });
+                    
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
+                    const responseText = await response.text();
+                    console.log('Response text:', responseText);
+                    
+                    // Пробуем распарсить JSON
+                    try {
+                        result = JSON.parse(responseText);
+                        console.log('Parsed JSON result:', result);
+                    } catch (parseError) {
+                        console.warn('Не удалось распарсить JSON:', parseError);
+                        // Может быть, это JSONP?
+                        if (responseText.includes('(') && responseText.includes(')')) {
+                            const jsonpMatch = responseText.match(/\((.*)\)/);
+                            if (jsonpMatch && jsonpMatch[1]) {
+                                result = JSON.parse(jsonpMatch[1]);
+                                console.log('Parsed JSONP result:', result);
+                            }
+                        }
+                        throw new Error('Некорректный ответ от сервера');
+                    }
+                    
+                } catch (fetchError) {
+                    console.warn('Method 1 failed:', fetchError);
+                    
+                    // Пробуем Method 2: через /exec
+                    try {
+                        console.log('Пробуем Method 2: через /exec...');
+                        const execUrl = formApi.replace(/\/[^\/]*$/, '/exec') + '?' + params.toString();
+                        console.log('Exec URL:', execUrl);
+                        
+                        response = await fetch(execUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                            },
+                            cache: 'no-cache'
+                        });
+                        
+                        const responseText = await response.text();
+                        console.log('Exec response text:', responseText);
+                        
+                        result = JSON.parse(responseText);
+                        console.log('Exec parsed result:', result);
+                        
+                    } catch (execError) {
+                        console.warn('Method 2 failed:', execError);
+                        
+                        // Пробуем Method 3: через iframe (для обхода CORS)
+                        console.log('Пробуем Method 3: через callback...');
+                        
+                        // Создаем обещание для callback
+                        const callbackPromise = new Promise((resolve, reject) => {
+                            const callbackName = 'callback_' + Date.now();
+                            
+                            // Добавляем callback параметр
+                            params.append('callback', callbackName);
+                            
+                            // Создаем функцию callback
+                            window[callbackName] = function(data) {
+                                console.log('Callback received:', data);
+                                delete window[callbackName];
+                                resolve(data);
+                                
+                                // Удаляем скрипт
+                                if (script.parentNode) {
+                                    script.parentNode.removeChild(script);
+                                }
+                            };
+                            
+                            // Создаем script тег для JSONP
+                            const script = document.createElement('script');
+                            script.src = `${formApi}?${params.toString()}`;
+                            script.onerror = reject;
+                            document.head.appendChild(script);
+                            
+                            // Таймаут на случай если callback не сработает
+                            setTimeout(() => {
+                                if (window[callbackName]) {
+                                    delete window[callbackName];
+                                    reject(new Error('Timeout waiting for callback'));
+                                }
+                            }, 10000);
+                        });
+                        
+                        result = await callbackPromise;
+                        console.log('Callback result:', result);
+                    }
+                }
+                
+                // Проверяем результат
+                if (result && (result.success === true || result.status === 'success')) {
+                    console.log('✅ Кошелек успешно добавлен');
+                    
+                    // Очищаем кэш
+                    localStorage.removeItem(`wallets_${formName}`);
+                    localStorage.removeItem(`wallets_${formName}_timestamp`);
+                    
+                    // Показываем успешное сообщение
+                    showToast(
+                        result.message || translations[currentLanguage]?.['toast.add_success'] || 'Кошелёк успешно добавлен', 
+                        'success'
+                    );
+                    
+                    // Перезагружаем кошельки
+                    await loadWallets();
+                    
+                    // Закрываем модальное окно
+                    closeAddModal();
+                    
+                } else {
+                    // Показываем ошибку
+                    const errorMsg = result?.error || result?.message || 'Неизвестная ошибка при добавлении кошелька';
+                    console.error('Ошибка добавления кошелька:', errorMsg);
+                    throw new Error(errorMsg);
+                }
+                
+            } catch (error) {
+                console.error('❌ Ошибка в addNewWallet:', error);
+                
+                // Более подробное сообщение об ошибке
+                let errorMessage = error.message;
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMessage = 'Проблема с сетью. Проверьте подключение к интернету.';
+                } else if (error.message.includes('CORS')) {
+                    errorMessage = 'Проблема с CORS. Попробуйте обновить страницу.';
+                }
+                
+                showToast(
+                    (translations[currentLanguage]?.['toast.add_error'] || 'Ошибка добавления') + ': ' + errorMessage, 
+                    'error'
+                );
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                btn.innerHTML = originalText;
             }
+        }
 
         // Toggle wallet status
         async function toggleWalletStatus(walletId, newStatus, button) {
