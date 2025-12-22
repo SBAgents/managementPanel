@@ -1668,72 +1668,38 @@
         }
 
         // Add new wallet
-        async function addNewWallet(event) {
-            event.preventDefault();
-            
-            const btn = document.getElementById('addBtn');
-            const originalText = btn.innerHTML;
-            const originalState = btn.disabled;
-            
-            try {
-                btn.disabled = true;
-                btn.classList.add('loading');
-                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]?.['wallets.adding'] || 'Добавление...'}`;
+        function addNewWallet(type, name, number, enabled) {
+              try {
+                const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('WALLETS');
+                if (!sheet) return { success: false, error: 'Таблица WALLETS не найдена' };
                 
-                const formSelect = document.getElementById('addFormSelect');
-                const selectedOption = formSelect.options[formSelect.selectedIndex];
-                const formName = formSelect.value;
-                const formApi = selectedOption.dataset.api;
-                const walletType = document.getElementById('addWalletType').value;
-                const walletName = document.getElementById('addWalletName').value;
-                const walletNumber = document.getElementById('addWalletNumber').value;
-                const walletEnabled = document.getElementById('addWalletEnabled').checked;
-                
-                if (!formName || !formApi) {
-                    throw new Error('Please select a form');
+                // Проверяем, не существует ли уже такой кошелек
+                const data = sheet.getDataRange().getValues();
+                for (let i = 1; i < data.length; i++) {
+                  if (data[i][0] === type && data[i][2] === number) {
+                    return { success: false, error: 'Кошелек уже существует' };
+                  }
                 }
                 
-                if (!walletName || !walletNumber) {
-                    throw new Error('Please fill all required fields');
-                }
+                // Добавляем новый кошелек
+                sheet.appendRow([
+                  type,
+                  name || type,
+                  number,
+                  enabled === 'true',
+                  '' // used column
+                ]);
                 
-                // Send request to add wallet to form
-                const addData = {
-                    action: 'add_wallet',
-                    wallet_type: walletType,
-                    wallet_number: walletNumber,
-                    wallet_name: walletName,
-                    enabled: walletEnabled
+                return { 
+                  success: true, 
+                  message: 'Кошелек добавлен',
+                  wallet: { type, name, number, enabled }
                 };
                 
-                const addUrl = `${formApi}?${Object.keys(addData).map(key => `${key}=${encodeURIComponent(addData[key])}`).join('&')}`;
-                
-                await fetch(addUrl, {
-                    method: 'GET',
-                    mode: 'no-cors'
-                }).catch(err => {
-                    return fetch(`${formApi}/exec?${Object.keys(addData).map(key => `${key}=${encodeURIComponent(addData[key])}`).join('&')}`);
-                });
-                
-                // Clear cache for this form
-                localStorage.removeItem(`wallets_${formName}`);
-                localStorage.removeItem(`wallets_${formName}_timestamp`);
-                
-                // Reload wallets to see the new one
-                await loadWallets();
-                
-                showToast(translations[currentLanguage]?.['toast.add_success'] || 'Кошелёк добавлен', 'success');
-                closeAddModal();
-                
-            } catch (error) {
-                console.error('Error adding wallet:', error);
-                showToast((translations[currentLanguage]?.['toast.add_error'] || 'Ошибка добавления') + ': ' + error.message, 'error');
-            } finally {
-                btn.disabled = originalState;
-                btn.classList.remove('loading');
-                btn.innerHTML = originalText;
+              } catch (error) {
+                return { success: false, error: error.toString() };
+              }
             }
-        }
 
         // Toggle wallet status
         async function toggleWalletStatus(walletId, newStatus, button) {
