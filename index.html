@@ -489,7 +489,7 @@
                     localStorage.setItem('admin_permissions', JSON.stringify(result.permissions));
                     localStorage.setItem('current_language', currentLanguage);
                     
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'wallets.html';
                 } else {
                     showError(result.error || translations[currentLanguage].error_invalid);
                     btn.disabled = false;
