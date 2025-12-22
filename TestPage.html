@@ -21,6 +21,7 @@
             --success: #2ecc71;
             --warning: #f39c12;
             --info: #3498db;
+            --tutorial-overlay: rgba(0, 0, 0, 0.85);
         }
         
         * {
@@ -35,6 +36,7 @@
             color: var(--text);
             min-height: 100vh;
             display: flex;
+            position: relative;
         }
         
         /* Sidebar */
@@ -47,6 +49,7 @@
             flex-direction: column;
             border-right: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
+            z-index: 800;
         }
         
         .logo {
@@ -95,6 +98,7 @@
             text-decoration: none;
             transition: all 0.3s;
             border-left: 3px solid transparent;
+            position: relative;
         }
         
         .nav-links a:hover {
@@ -257,6 +261,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            position: relative;
         }
         
         .btn-primary {
@@ -462,7 +467,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Table Loader - FIXED POSITION */
+        /* Table Loader */
         .table-loader {
             position: absolute;
             top: 0;
@@ -642,6 +647,7 @@
         .toast.success i { color: #2ecc71; }
         .toast.error i { color: #e74c3c; }
         .toast.warning i { color: #f39c12; }
+        .toast.info i { color: #3498db; }
         
         /* Empty State */
         .empty-state {
@@ -674,6 +680,153 @@
         .mobile-logo h2 {
             font-size: 20px;
             color: var(--accent);
+        }
+        
+        /* Tutorial Overlay */
+        .tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--tutorial-overlay);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tutorial-overlay.active {
+            display: flex;
+        }
+        
+        .tutorial-highlight {
+            position: absolute;
+            border: 3px solid var(--accent);
+            border-radius: 12px;
+            box-shadow: 0 0 0 9999px var(--tutorial-overlay),
+                        0 0 30px rgba(208, 228, 30, 0.5),
+                        inset 0 0 30px rgba(208, 228, 30, 0.3);
+            z-index: 2001;
+            pointer-events: none;
+            transition: all 0.5s ease;
+        }
+        
+        .tutorial-popup {
+            position: absolute;
+            background: white;
+            color: #2c3e50;
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 2002;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .tutorial-popup h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .tutorial-popup p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .tutorial-popup .tutorial-progress {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 15px;
+        }
+        
+        .tutorial-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .tutorial-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .tutorial-btn-primary {
+            background: var(--accent);
+            color: #2c3e50;
+        }
+        
+        .tutorial-btn-primary:hover {
+            background: var(--accent-hover);
+        }
+        
+        .tutorial-btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .tutorial-btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        
+        .tutorial-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .tutorial-close-btn:hover {
+            color: #333;
+        }
+        
+        /* Help Button */
+        .help-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #2c3e50;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transition: all 0.3s;
+        }
+        
+        .help-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
         
         /* Responsive */
@@ -727,6 +880,11 @@
             .table-loader {
                 border-radius: 12px;
             }
+            
+            .tutorial-popup {
+                max-width: 90%;
+                margin: 0 20px;
+            }
         }
         
         @media (max-width: 768px) {
@@ -762,6 +920,10 @@
             .form-control {
                 padding: 10px;
             }
+            
+            .tutorial-popup {
+                padding: 20px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -784,6 +946,14 @@
             
             .table-loader {
                 border-radius: 12px;
+            }
+            
+            .tutorial-actions {
+                flex-direction: column;
+            }
+            
+            .tutorial-btn {
+                width: 100%;
             }
         }
         
@@ -885,6 +1055,10 @@
                     <i class="fas fa-plus"></i>
                     <span>Добавить кошелёк</span>
                 </button>
+                <button class="btn btn-secondary" onclick="testAllForms()" id="testFormsBtn" data-i18n="wallets.test_forms">
+                    <i class="fas fa-wifi"></i>
+                    <span>Тест форм</span>
+                </button>
             </div>
         </div>
         
@@ -930,7 +1104,7 @@
         
         <!-- Wallets Table Container -->
         <div class="table-section-container">
-            <!-- Table Loader - теперь внутри контейнера -->
+            <!-- Table Loader -->
             <div class="table-loader show" id="tableLoader">
                 <div class="table-spinner"></div>
                 <p data-i18n="wallets.loading">Загрузка кошельков...</p>
@@ -1049,6 +1223,13 @@
                 </div>
                 
                 <div class="form-group">
+                    <button type="button" class="btn btn-secondary" onclick="testCurrentForm()" style="margin-top: 10px;">
+                        <i class="fas fa-wifi"></i>
+                        <span data-i18n="wallets.test_connection">Проверить подключение</span>
+                    </button>
+                </div>
+                
+                <div class="form-group">
                     <label for="addWalletType" data-i18n="wallets.wallet_type">Тип кошелька</label>
                     <select class="form-control" id="addWalletType" required>
                         <option value="vodafone">Vodafone Cash</option>
@@ -1090,6 +1271,33 @@
         </div>
     </div>
     
+    <!-- Tutorial Overlay -->
+    <div class="tutorial-overlay" id="tutorialOverlay">
+        <div class="tutorial-highlight" id="tutorialHighlight"></div>
+        <div class="tutorial-popup" id="tutorialPopup">
+            <button class="tutorial-close-btn" onclick="skipTutorial()">&times;</button>
+            <h3 id="tutorialTitle">Добро пожаловать!</h3>
+            <div class="tutorial-progress" id="tutorialProgress">Шаг 1 из 8</div>
+            <p id="tutorialText">Начнем изучение панели управления кошельками.</p>
+            <div class="tutorial-actions">
+                <button class="tutorial-btn tutorial-btn-secondary" onclick="prevTutorialStep()" id="prevBtn" style="display: none;">
+                    <span data-i18n="tutorial.prev">Назад</span>
+                </button>
+                <button class="tutorial-btn tutorial-btn-primary" onclick="nextTutorialStep()" id="nextBtn">
+                    <span data-i18n="tutorial.next">Далее</span>
+                </button>
+                <button class="tutorial-btn tutorial-btn-secondary" onclick="skipTutorial()" id="skipBtn">
+                    <span data-i18n="tutorial.skip">Пропустить</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Button -->
+    <button class="help-button" onclick="startTutorial()" title="Помощь">
+        <i class="fas fa-question"></i>
+    </button>
+    
     <!-- Toast Notification -->
     <div class="toast" id="toast">
         <i class="fas fa-check-circle"></i>
@@ -1108,12 +1316,674 @@
         let allForms = [];
         let filteredWallets = [];
         
+        // Tutorial state
+        let tutorialSteps = [];
+        let currentTutorialStep = 0;
+        let isTutorialActive = false;
+        
         // Cache for API responses
         const apiCache = {
             forms: null,
             wallets: null,
             lastUpdated: null
         };
+        
+        // Translation dictionary with tutorial texts
+        const translations = {
+            ru: {
+                // Navigation
+                "nav.dashboard": "Дашборд",
+                "nav.wallets": "Кошельки",
+                "nav.forms": "Формы",
+                "nav.agents": "Агенты",
+                "nav.admins": "Администраторы",
+                "nav.logout": "Выход",
+                
+                // Wallets page
+                "wallets.title": "Кошельки",
+                "wallets.subtitle": "Управление кошельками",
+                "wallets.welcome": "Управление кошельками",
+                "wallets.refresh": "Обновить",
+                "wallets.refreshing": "Обновление...",
+                "wallets.add_wallet": "Добавить кошелёк",
+                "wallets.add": "Добавить",
+                "wallets.adding": "Добавление...",
+                "wallets.select_form": "Выберите форму",
+                "wallets.list": "Список кошельков",
+                "wallets.wallets_found": "кошельков найдено",
+                "wallets.loading": "Загрузка кошельков...",
+                "wallets.test_forms": "Тест форм",
+                "wallets.test_connection": "Проверить подключение",
+                "wallets.testing": "Тестирование...",
+                
+                // Filters
+                "wallets.filter_form": "Форма",
+                "wallets.all_forms": "Все формы",
+                "wallets.filter_type": "Тип кошелька",
+                "wallets.all_types": "Все типы",
+                "wallets.filter_status": "Статус",
+                "wallets.all_status": "Все статусы",
+                "wallets.active": "Активные",
+                "wallets.inactive": "Неактивные",
+                "wallets.search": "Поиск",
+                "wallets.search_placeholder": "По номеру или названию...",
+                
+                // Table
+                "wallets.table_form": "Форма",
+                "wallets.table_type": "Тип",
+                "wallets.table_name": "Название",
+                "wallets.table_number": "Номер",
+                "wallets.table_status": "Статус",
+                "wallets.table_actions": "Действия",
+                
+                // Modal
+                "wallets.edit_wallet": "Редактировать кошелёк",
+                "wallets.form_name": "Форма",
+                "wallets.wallet_type": "Тип кошелька",
+                "wallets.wallet_name": "Название кошелька",
+                "wallets.wallet_name_placeholder": "Введите название кошелька",
+                "wallets.wallet_number": "Номер кошелька",
+                "wallets.wallet_number_placeholder": "Введите номер кошелька",
+                "wallets.wallet_enabled": "Активен",
+                "wallets.cancel": "Отмена",
+                "wallets.save": "Сохранить",
+                "wallets.saving": "Сохранение...",
+                
+                // Actions
+                "wallets.edit": "Изменить",
+                "wallets.toggle": "Переключить статус",
+                "wallets.delete": "Удалить",
+                
+                // Status
+                "status.active": "Активен",
+                "status.inactive": "Неактивен",
+                
+                // Empty states
+                "wallets.no_wallets": "Кошельки не найдены",
+                "wallets.no_wallets_desc": "Нет доступных кошельков для отображения",
+                
+                // Toast messages
+                "toast.success": "Данные успешно обновлены",
+                "toast.error": "Ошибка при загрузке данных",
+                "toast.save_success": "Кошелёк успешно обновлён",
+                "toast.save_error": "Ошибка при сохранении кошелька",
+                "toast.toggle_success": "Статус кошелька изменён",
+                "toast.toggle_error": "Ошибка при изменении статуса",
+                "toast.delete_success": "Кошелёк успешно удалён",
+                "toast.delete_error": "Ошибка при удалении кошелька",
+                "toast.add_success": "Кошелёк успешно добавлен",
+                "toast.add_error": "Ошибка при добавлении кошелька",
+                "toast.logout_success": "Выход выполнен успешно",
+                "toast.logout_error": "Ошибка при выходе",
+                "toast.test_success": "Подключение успешно",
+                "toast.test_error": "Ошибка подключения",
+                
+                // Roles
+                "role.superadmin": "Супер-админ",
+                "role.admin": "Администратор",
+                "role.manager": "Менеджер",
+                "role.viewer": "Наблюдатель",
+                
+                // Tutorial
+                "tutorial.welcome": "Добро пожаловать в панель управления кошельками!",
+                "tutorial.welcome_desc": "Давайте познакомимся с основными функциями. Это интерактивная инструкция поможет вам освоить интерфейс.",
+                "tutorial.sidebar": "Навигационное меню",
+                "tutorial.sidebar_desc": "Здесь вы можете переключаться между разделами панели управления. Нажмите на бургер-меню, чтобы открыть/закрыть навигацию.",
+                "tutorial.refresh": "Кнопка обновления",
+                "tutorial.refresh_desc": "Эта кнопка обновляет список кошельков. Используйте её, чтобы получить актуальные данные.",
+                "tutorial.add_wallet": "Добавление кошелька",
+                "tutorial.add_wallet_desc": "Нажмите здесь, чтобы добавить новый кошелёк в систему.",
+                "tutorial.filters": "Фильтры",
+                "tutorial.filters_desc": "Используйте эти фильтры для поиска и сортировки кошельков по форме, типу, статусу или номеру.",
+                "tutorial.table": "Таблица кошельков",
+                "tutorial.table_desc": "Здесь отображаются все кошельки. Вы можете редактировать, включать/выключать или удалять кошельки с помощью кнопок действий.",
+                "tutorial.edit_wallet": "Редактирование кошелька",
+                "tutorial.edit_wallet_desc": "Нажмите на кнопку редактирования, чтобы изменить параметры кошелька.",
+                "tutorial.forms_navigation": "Переход к формам",
+                "tutorial.forms_navigation_desc": "Теперь давайте перейдём в раздел 'Формы', чтобы продолжить обучение. Откройте меню и выберите 'Формы'.",
+                "tutorial.complete": "Обучение завершено!",
+                "tutorial.complete_desc": "Вы успешно прошли базовое обучение. Теперь вы можете свободно использовать панель управления. Для повторения обучения нажмите на кнопку помощи в правом нижнем углу.",
+                "tutorial.next": "Далее",
+                "tutorial.prev": "Назад",
+                "tutorial.skip": "Пропустить",
+                "tutorial.start": "Начать обучение",
+                "tutorial.restart": "Повторить обучение"
+            },
+            en: {
+                "nav.dashboard": "Dashboard",
+                "nav.wallets": "Wallets",
+                "nav.forms": "Forms",
+                "nav.agents": "Agents",
+                "nav.admins": "Administrators",
+                "nav.logout": "Logout",
+                "wallets.title": "Wallets",
+                "wallets.subtitle": "Wallet Management",
+                "wallets.welcome": "Wallet Management",
+                "wallets.refresh": "Refresh",
+                "wallets.refreshing": "Refreshing...",
+                "wallets.add_wallet": "Add Wallet",
+                "wallets.add": "Add",
+                "wallets.adding": "Adding...",
+                "wallets.select_form": "Select form",
+                "wallets.list": "Wallets List",
+                "wallets.wallets_found": "wallets found",
+                "wallets.loading": "Loading wallets...",
+                "wallets.test_forms": "Test Forms",
+                "wallets.test_connection": "Test Connection",
+                "wallets.testing": "Testing...",
+                "wallets.filter_form": "Form",
+                "wallets.all_forms": "All forms",
+                "wallets.filter_type": "Wallet Type",
+                "wallets.all_types": "All types",
+                "wallets.filter_status": "Status",
+                "wallets.all_status": "All statuses",
+                "wallets.active": "Active",
+                "wallets.inactive": "Inactive",
+                "wallets.search": "Search",
+                "wallets.search_placeholder": "By number or name...",
+                "wallets.table_form": "Form",
+                "wallets.table_type": "Type",
+                "wallets.table_name": "Name",
+                "wallets.table_number": "Number",
+                "wallets.table_status": "Status",
+                "wallets.table_actions": "Actions",
+                "wallets.edit_wallet": "Edit Wallet",
+                "wallets.form_name": "Form",
+                "wallets.wallet_type": "Wallet Type",
+                "wallets.wallet_name": "Wallet Name",
+                "wallets.wallet_name_placeholder": "Enter wallet name",
+                "wallets.wallet_number": "Wallet Number",
+                "wallets.wallet_number_placeholder": "Enter wallet number",
+                "wallets.wallet_enabled": "Enabled",
+                "wallets.cancel": "Cancel",
+                "wallets.save": "Save",
+                "wallets.saving": "Saving...",
+                "wallets.edit": "Edit",
+                "wallets.toggle": "Toggle Status",
+                "wallets.delete": "Delete",
+                "status.active": "Active",
+                "status.inactive": "Inactive",
+                "wallets.no_wallets": "No wallets found",
+                "wallets.no_wallets_desc": "No wallets available to display",
+                "toast.success": "Data updated successfully",
+                "toast.error": "Error loading data",
+                "toast.save_success": "Wallet updated successfully",
+                "toast.save_error": "Error saving wallet",
+                "toast.toggle_success": "Wallet status changed",
+                "toast.toggle_error": "Error changing wallet status",
+                "toast.delete_success": "Wallet deleted successfully",
+                "toast.delete_error": "Error deleting wallet",
+                "toast.add_success": "Wallet added successfully",
+                "toast.add_error": "Error adding wallet",
+                "toast.logout_success": "Logout successful",
+                "toast.logout_error": "Logout error",
+                "toast.test_success": "Connection successful",
+                "toast.test_error": "Connection error",
+                "role.superadmin": "Super Admin",
+                "role.admin": "Administrator",
+                "role.manager": "Manager",
+                "role.viewer": "Viewer",
+                "tutorial.welcome": "Welcome to Wallet Management Panel!",
+                "tutorial.welcome_desc": "Let's get familiar with the main functions. This interactive tutorial will help you master the interface.",
+                "tutorial.sidebar": "Navigation Menu",
+                "tutorial.sidebar_desc": "Here you can switch between sections of the control panel. Click on the burger menu to open/close navigation.",
+                "tutorial.refresh": "Refresh Button",
+                "tutorial.refresh_desc": "This button refreshes the list of wallets. Use it to get up-to-date data.",
+                "tutorial.add_wallet": "Add Wallet",
+                "tutorial.add_wallet_desc": "Click here to add a new wallet to the system.",
+                "tutorial.filters": "Filters",
+                "tutorial.filters_desc": "Use these filters to search and sort wallets by form, type, status or number.",
+                "tutorial.table": "Wallets Table",
+                "tutorial.table_desc": "All wallets are displayed here. You can edit, enable/disable or delete wallets using action buttons.",
+                "tutorial.edit_wallet": "Edit Wallet",
+                "tutorial.edit_wallet_desc": "Click the edit button to change wallet parameters.",
+                "tutorial.forms_navigation": "Go to Forms",
+                "tutorial.forms_navigation_desc": "Now let's go to the 'Forms' section to continue learning. Open the menu and select 'Forms'.",
+                "tutorial.complete": "Tutorial Complete!",
+                "tutorial.complete_desc": "You have successfully completed basic training. Now you can freely use the control panel. To repeat the tutorial, click the help button in the lower right corner.",
+                "tutorial.next": "Next",
+                "tutorial.prev": "Back",
+                "tutorial.skip": "Skip",
+                "tutorial.start": "Start Tutorial",
+                "tutorial.restart": "Repeat Tutorial"
+            },
+            fr: {
+                "nav.dashboard": "Tableau de bord",
+                "nav.wallets": "Portefeuilles",
+                "nav.forms": "Formulaires",
+                "nav.agents": "Agents",
+                "nav.admins": "Administrateurs",
+                "nav.logout": "Déconnexion",
+                "wallets.title": "Portefeuilles",
+                "wallets.subtitle": "Gestion des portefeuilles",
+                "wallets.welcome": "Gestion des portefeuilles",
+                "wallets.refresh": "Rafraîchir",
+                "wallets.refreshing": "Rafraîchissement...",
+                "wallets.add_wallet": "Ajouter un portefeuille",
+                "wallets.add": "Ajouter",
+                "wallets.adding": "Ajout...",
+                "wallets.select_form": "Sélectionner un formulaire",
+                "wallets.list": "Liste des portefeuilles",
+                "wallets.wallets_found": "portefeuilles trouvés",
+                "wallets.loading": "Chargement des portefeuilles...",
+                "wallets.test_forms": "Tester les formulaires",
+                "wallets.test_connection": "Tester la connexion",
+                "wallets.testing": "Test en cours...",
+                "wallets.filter_form": "Formulaire",
+                "wallets.all_forms": "Tous les formulaires",
+                "wallets.filter_type": "Type de portefeuille",
+                "wallets.all_types": "Tous les types",
+                "wallets.filter_status": "Statut",
+                "wallets.all_status": "Tous les statuts",
+                "wallets.active": "Actif",
+                "wallets.inactive": "Inactif",
+                "wallets.search": "Recherche",
+                "wallets.search_placeholder": "Par numéro ou nom...",
+                "wallets.table_form": "Formulaire",
+                "wallets.table_type": "Type",
+                "wallets.table_name": "Nom",
+                "wallets.table_number": "Numéro",
+                "wallets.table_status": "Statut",
+                "wallets.table_actions": "Actions",
+                "wallets.edit_wallet": "Modifier le portefeuille",
+                "wallets.form_name": "Formulaire",
+                "wallets.wallet_type": "Type de portefeuille",
+                "wallets.wallet_name": "Nom du portefeuille",
+                "wallets.wallet_name_placeholder": "Entrez le nom du portefeuille",
+                "wallets.wallet_number": "Numéro du portefeuille",
+                "wallets.wallet_number_placeholder": "Entrez le numéro du portefeuille",
+                "wallets.wallet_enabled": "Activé",
+                "wallets.cancel": "Annuler",
+                "wallets.save": "Enregistrer",
+                "wallets.saving": "Enregistrement...",
+                "wallets.edit": "Modifier",
+                "wallets.toggle": "Changer le statut",
+                "wallets.delete": "Supprimer",
+                "status.active": "Actif",
+                "status.inactive": "Inactif",
+                "wallets.no_wallets": "Aucun portefeuille trouvé",
+                "wallets.no_wallets_desc": "Aucun portefeuille disponible à afficher",
+                "toast.success": "Données mises à jour avec succès",
+                "toast.error": "Erreur de chargement des données",
+                "toast.save_success": "Portefeuille mis à jour avec succès",
+                "toast.save_error": "Erreur lors de l'enregistrement du portefeuille",
+                "toast.toggle_success": "Statut du portefeuille changé",
+                "toast.toggle_error": "Erreur lors du changement de statut",
+                "toast.delete_success": "Portefeuille supprimé avec succès",
+                "toast.delete_error": "Erreur lors de la suppression du portefeuille",
+                "toast.add_success": "Portefeuille ajouté avec succès",
+                "toast.add_error": "Erreur lors de l'ajout du portefeuille",
+                "toast.logout_success": "Déconnexion réussie",
+                "toast.logout_error": "Erreur de déconnexion",
+                "toast.test_success": "Connexion réussie",
+                "toast.test_error": "Erreur de connexion",
+                "role.superadmin": "Super Admin",
+                "role.admin": "Administrateur",
+                "role.manager": "Manager",
+                "role.viewer": "Observateur",
+                "tutorial.welcome": "Bienvenue dans le panneau de gestion des portefeuilles !",
+                "tutorial.welcome_desc": "Familiarisons-nous avec les principales fonctions. Ce tutoriel interactif vous aidera à maîtriser l'interface.",
+                "tutorial.sidebar": "Menu de navigation",
+                "tutorial.sidebar_desc": "Ici, vous pouvez passer d'une section à l'autre du panneau de contrôle. Cliquez sur le menu burger pour ouvrir/fermer la navigation.",
+                "tutorial.refresh": "Bouton d'actualisation",
+                "tutorial.refresh_desc": "Ce bouton actualise la liste des portefeuilles. Utilisez-le pour obtenir des données à jour.",
+                "tutorial.add_wallet": "Ajouter un portefeuille",
+                "tutorial.add_wallet_desc": "Cliquez ici pour ajouter un nouveau portefeuille au système.",
+                "tutorial.filters": "Filtres",
+                "tutorial.filters_desc": "Utilisez ces filtres pour rechercher et trier les portefeuilles par formulaire, type, statut ou numéro.",
+                "tutorial.table": "Tableau des portefeuilles",
+                "tutorial.table_desc": "Tous les portefeuilles sont affichés ici. Vous pouvez modifier, activer/désactiver ou supprimer des portefeuilles à l'aide des boutons d'action.",
+                "tutorial.edit_wallet": "Modifier le portefeuille",
+                "tutorial.edit_wallet_desc": "Cliquez sur le bouton de modification pour changer les paramètres du portefeuille.",
+                "tutorial.forms_navigation": "Aller aux formulaires",
+                "tutorial.forms_navigation_desc": "Passons maintenant à la section 'Formulaires' pour continuer l'apprentissage. Ouvrez le menu et sélectionnez 'Formulaires'.",
+                "tutorial.complete": "Tutoriel terminé !",
+                "tutorial.complete_desc": "Vous avez terminé avec succès la formation de base. Vous pouvez maintenant utiliser librement le panneau de contrôle. Pour répéter le tutoriel, cliquez sur le bouton d'aide dans le coin inférieur droit.",
+                "tutorial.next": "Suivant",
+                "tutorial.prev": "Retour",
+                "tutorial.skip": "Passer",
+                "tutorial.start": "Commencer le tutoriel",
+                "tutorial.restart": "Répéter le tutoriel"
+            },
+            ar: {
+                "nav.dashboard": "لوحة التحكم",
+                "nav.wallets": "المحافظ",
+                "nav.forms": "النماذج",
+                "nav.agents": "الوكلاء",
+                "nav.admins": "المشرفين",
+                "nav.logout": "تسجيل الخروج",
+                "wallets.title": "المحافظ",
+                "wallets.subtitle": "إدارة المحافظ",
+                "wallets.welcome": "إدارة المحافظ",
+                "wallets.refresh": "تحديث",
+                "wallets.refreshing": "جاري التحديث...",
+                "wallets.add_wallet": "إضافة محفظة",
+                "wallets.add": "إضافة",
+                "wallets.adding": "جاري الإضافة...",
+                "wallets.select_form": "اختر نموذج",
+                "wallets.list": "قائمة المحافظ",
+                "wallets.wallets_found": "محفظة وجدت",
+                "wallets.loading": "جاري تحميل المحافظ...",
+                "wallets.test_forms": "اختبار النماذج",
+                "wallets.test_connection": "اختبار الاتصال",
+                "wallets.testing": "جاري الاختبار...",
+                "wallets.filter_form": "النموذج",
+                "wallets.all_forms": "جميع النماذج",
+                "wallets.filter_type": "نوع المحفظة",
+                "wallets.all_types": "جميع الأنواع",
+                "wallets.filter_status": "الحالة",
+                "wallets.all_status": "جميع الحالات",
+                "wallets.active": "نشط",
+                "wallets.inactive": "غير نشط",
+                "wallets.search": "بحث",
+                "wallets.search_placeholder": "بالرقم أو الاسم...",
+                "wallets.table_form": "النموذج",
+                "wallets.table_type": "النوع",
+                "wallets.table_name": "الاسم",
+                "wallets.table_number": "الرقم",
+                "wallets.table_status": "الحالة",
+                "wallets.table_actions": "الإجراءات",
+                "wallets.edit_wallet": "تعديل المحفظة",
+                "wallets.form_name": "النموذج",
+                "wallets.wallet_type": "نوع المحفظة",
+                "wallets.wallet_name": "اسم المحفظة",
+                "wallets.wallet_name_placeholder": "أدخل اسم المحفظة",
+                "wallets.wallet_number": "رقم المحفظة",
+                "wallets.wallet_number_placeholder": "أدخل رقم المحفظة",
+                "wallets.wallet_enabled": "مفعل",
+                "wallets.cancel": "إلغاء",
+                "wallets.save": "حفظ",
+                "wallets.saving": "جاري الحفظ...",
+                "wallets.edit": "تعديل",
+                "wallets.toggle": "تغيير الحالة",
+                "wallets.delete": "حذف",
+                "status.active": "نشط",
+                "status.inactive": "غير نشط",
+                "wallets.no_wallets": "لم يتم العثور على محافظ",
+                "wallets.no_wallets_desc": "لا توجد محافظ متاحة للعرض",
+                "toast.success": "تم تحديث البيانات بنجاح",
+                "toast.error": "خطأ في تحميل البيانات",
+                "toast.save_success": "تم تحديث المحفظة بنجاح",
+                "toast.save_error": "خطأ في حفظ المحفظة",
+                "toast.toggle_success": "تم تغيير حالة المحفظة",
+                "toast.toggle_error": "خطأ في تغيير الحالة",
+                "toast.delete_success": "تم حذف المحفظة بنجاح",
+                "toast.delete_error": "خطأ في حذف المحفظة",
+                "toast.add_success": "تم إضافة المحفظة بنجاح",
+                "toast.add_error": "خطأ في إضافة المحفظة",
+                "toast.logout_success": "تم تسجيل الخروج بنجاح",
+                "toast.logout_error": "خطأ في تسجيل الخروج",
+                "toast.test_success": "تم الاتصال بنجاح",
+                "toast.test_error": "خطأ في الاتصال",
+                "role.superadmin": "مشرف رئيسي",
+                "role.admin": "مشرف",
+                "role.manager": "مدير",
+                "role.viewer": "مشاهد",
+                "tutorial.welcome": "مرحبًا بك في لوحة إدارة المحافظ!",
+                "tutorial.welcome_desc": "دعنا نتعرف على الوظائف الرئيسية. سيساعدك هذا البرنامج التعليمي التفاعلي على إتقان الواجهة.",
+                "tutorial.sidebar": "قائمة التنقل",
+                "tutorial.sidebar_desc": "هنا يمكنك التبديل بين أقسام لوحة التحكم. انقر على قائمة البرجر لفتح/إغلاق التنقل.",
+                "tutorial.refresh": "زر التحديث",
+                "tutorial.refresh_desc": "يحدث هذا الزر قائمة المحافظ. استخدمه للحصول على بيانات محدثة.",
+                "tutorial.add_wallet": "إضافة محفظة",
+                "tutorial.add_wallet_desc": "انقر هنا لإضافة محفظة جديدة إلى النظام.",
+                "tutorial.filters": "الفلاتر",
+                "tutorial.filters_desc": "استخدم هذه الفلاتر للبحث وفرز المحافظ حسب النموذج أو النوع أو الحالة أو الرقم.",
+                "tutorial.table": "جدول المحافظ",
+                "tutorial.table_desc": "يتم عرض جميع المحافظ هنا. يمكنك تعديل أو تمكين/تعطيل أو حذف المحافظ باستخدام أزرار الإجراءات.",
+                "tutorial.edit_wallet": "تعديل المحفظة",
+                "tutorial.edit_wallet_desc": "انقر على زر التعديل لتغيير معلمات المحفظة.",
+                "tutorial.forms_navigation": "الانتقال إلى النماذج",
+                "tutorial.forms_navigation_desc": "الآن دعنا ننتقل إلى قسم 'النماذج' لمواصلة التعلم. افتح القائمة واختر 'النماذج'.",
+                "tutorial.complete": "اكتمل البرنامج التعليمي!",
+                "tutorial.complete_desc": "لقد أكملت بنجاح التدريب الأساسي. يمكنك الآن استخدام لوحة التحكم بحرية. لتكرار البرنامج التعليمي، انقر على زر المساعدة في الزاوية اليمنى السفلية.",
+                "tutorial.next": "التالي",
+                "tutorial.prev": "السابق",
+                "tutorial.skip": "تخطي",
+                "tutorial.start": "بدء البرنامج التعليمي",
+                "tutorial.restart": "تكرار البرنامج التعليمي"
+            }
+        };
+        
+        // Tutorial steps configuration
+        const tutorialStepsConfig = [
+            {
+                elementId: 'burgerMenu',
+                title: 'tutorial.sidebar',
+                description: 'tutorial.sidebar_desc',
+                position: 'bottom',
+                action: () => {
+                    // Auto-open sidebar on mobile
+                    if (window.innerWidth <= 1024) {
+                        toggleSidebar();
+                    }
+                }
+            },
+            {
+                elementId: 'refreshBtn',
+                title: 'tutorial.refresh',
+                description: 'tutorial.refresh_desc',
+                position: 'bottom'
+            },
+            {
+                elementId: 'addWalletBtn',
+                title: 'tutorial.add_wallet',
+                description: 'tutorial.add_wallet_desc',
+                position: 'bottom'
+            },
+            {
+                elementId: 'formFilter',
+                title: 'tutorial.filters',
+                description: 'tutorial.filters_desc',
+                position: 'bottom'
+            },
+            {
+                elementId: 'walletsTable',
+                title: 'tutorial.table',
+                description: 'tutorial.table_desc',
+                position: 'top'
+            },
+            {
+                elementId: 'editBtnPlaceholder',
+                title: 'tutorial.edit_wallet',
+                description: 'tutorial.edit_wallet_desc',
+                position: 'bottom',
+                action: () => {
+                    // Find first edit button in table
+                    const editBtn = document.querySelector('.action-btn.edit');
+                    if (editBtn) {
+                        const rect = editBtn.getBoundingClientRect();
+                        highlightElement(rect);
+                    }
+                }
+            },
+            {
+                elementId: 'sidebar',
+                title: 'tutorial.forms_navigation',
+                description: 'tutorial.forms_navigation_desc',
+                position: 'right',
+                action: () => {
+                    // Open sidebar and highlight Forms link
+                    if (window.innerWidth > 1024) {
+                        // Desktop - sidebar is already open
+                        const formsLink = document.querySelector('a[href*="forms.html"]');
+                        if (formsLink) {
+                            const rect = formsLink.getBoundingClientRect();
+                            highlightElement(rect);
+                        }
+                    } else {
+                        // Mobile - open sidebar first
+                        toggleSidebar();
+                        setTimeout(() => {
+                            const formsLink = document.querySelector('a[href*="forms.html"]');
+                            if (formsLink) {
+                                const rect = formsLink.getBoundingClientRect();
+                                highlightElement(rect);
+                            }
+                        }, 300);
+                    }
+                }
+            },
+            {
+                elementId: null, // No element for final step
+                title: 'tutorial.complete',
+                description: 'tutorial.complete_desc',
+                position: 'center'
+            }
+        ];
+        
+        // Initialize tutorial
+        function initTutorial() {
+            // Check if tutorial was completed before
+            const tutorialCompleted = localStorage.getItem('wallets_tutorial_completed');
+            if (!tutorialCompleted) {
+                // Show start tutorial button after page loads
+                setTimeout(() => {
+                    if (confirm(translations[currentLanguage]['tutorial.start'] + '?')) {
+                        startTutorial();
+                    }
+                }, 2000);
+            }
+        }
+        
+        // Start tutorial
+        function startTutorial() {
+            isTutorialActive = true;
+            currentTutorialStep = 0;
+            document.getElementById('tutorialOverlay').classList.add('active');
+            updateTutorialStep();
+            localStorage.removeItem('wallets_tutorial_completed');
+        }
+        
+        // Update tutorial step
+        function updateTutorialStep() {
+            const step = tutorialStepsConfig[currentTutorialStep];
+            const dict = translations[currentLanguage];
+            
+            // Update tutorial text
+            document.getElementById('tutorialTitle').textContent = dict[step.title];
+            document.getElementById('tutorialText').textContent = dict[step.description];
+            document.getElementById('tutorialProgress').textContent = 
+                `${dict['tutorial.next']} ${currentTutorialStep + 1} ${dict['tutorial.of'] || 'из'} ${tutorialStepsConfig.length}`;
+            
+            // Update buttons
+            document.getElementById('prevBtn').style.display = currentTutorialStep === 0 ? 'none' : 'inline-block';
+            document.getElementById('nextBtn').textContent = currentTutorialStep === tutorialStepsConfig.length - 1 ? 
+                dict['tutorial.complete'] : dict['tutorial.next'];
+            
+            // Highlight element
+            if (step.elementId) {
+                let element;
+                if (step.elementId === 'editBtnPlaceholder') {
+                    // Special case for edit button
+                    step.action();
+                    return;
+                } else {
+                    element = document.getElementById(step.elementId);
+                }
+                
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    highlightElement(rect);
+                    
+                    // Position popup
+                    positionPopup(rect, step.position);
+                    
+                    // Execute custom action if exists
+                    if (step.action) {
+                        setTimeout(step.action, 300);
+                    }
+                }
+            } else {
+                // Center popup for final step
+                document.getElementById('tutorialHighlight').style.display = 'none';
+                document.getElementById('tutorialPopup').style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                `;
+            }
+        }
+        
+        // Highlight element
+        function highlightElement(rect) {
+            const highlight = document.getElementById('tutorialHighlight');
+            highlight.style.cssText = `
+                display: block;
+                top: ${rect.top - 10}px;
+                left: ${rect.left - 10}px;
+                width: ${rect.width + 20}px;
+                height: ${rect.height + 20}px;
+            `;
+        }
+        
+        // Position popup
+        function positionPopup(rect, position) {
+            const popup = document.getElementById('tutorialPopup');
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            switch(position) {
+                case 'top':
+                    popup.style.cssText = `
+                        top: ${Math.max(20, rect.top - 200)}px;
+                        left: ${Math.max(20, Math.min(rect.left, viewportWidth - 420))}px;
+                    `;
+                    break;
+                case 'bottom':
+                    popup.style.cssText = `
+                        top: ${Math.min(viewportHeight - 300, rect.bottom + 20)}px;
+                        left: ${Math.max(20, Math.min(rect.left, viewportWidth - 420))}px;
+                    `;
+                    break;
+                case 'left':
+                    popup.style.cssText = `
+                        top: ${Math.max(20, rect.top)}px;
+                        left: ${Math.max(20, rect.left - 420)}px;
+                    `;
+                    break;
+                case 'right':
+                    popup.style.cssText = `
+                        top: ${Math.max(20, rect.top)}px;
+                        left: ${Math.min(viewportWidth - 420, rect.right + 20)}px;
+                    `;
+                    break;
+            }
+        }
+        
+        // Next tutorial step
+        function nextTutorialStep() {
+            if (currentTutorialStep < tutorialStepsConfig.length - 1) {
+                currentTutorialStep++;
+                updateTutorialStep();
+            } else {
+                completeTutorial();
+            }
+        }
+        
+        // Previous tutorial step
+        function prevTutorialStep() {
+            if (currentTutorialStep > 0) {
+                currentTutorialStep--;
+                updateTutorialStep();
+            }
+        }
+        
+        // Skip tutorial
+        function skipTutorial() {
+            if (confirm(translations[currentLanguage]['tutorial.skip'] + '?')) {
+                completeTutorial();
+            }
+        }
+        
+        // Complete tutorial
+        function completeTutorial() {
+            isTutorialActive = false;
+            document.getElementById('tutorialOverlay').classList.remove('active');
+            localStorage.setItem('wallets_tutorial_completed', 'true');
+            showToast(translations[currentLanguage]['tutorial.complete'], 'success');
+        }
         
         // Show toast notification
         function showToast(message, type = 'success') {
@@ -1125,7 +1995,8 @@
             toast.className = `toast ${type}`;
             toastIcon.className = type === 'success' ? 'fas fa-check-circle' : 
                                 type === 'error' ? 'fas fa-exclamation-circle' : 
-                                'fas fa-exclamation-triangle';
+                                type === 'warning' ? 'fas fa-exclamation-triangle' :
+                                'fas fa-info-circle';
             
             toast.classList.add('show');
             
@@ -1133,29 +2004,27 @@
                 toast.classList.remove('show');
             }, 3000);
         }
-
+        
         // Show table loader
         function showTableLoader() {
             document.getElementById('tableLoader').classList.add('show');
             document.getElementById('walletsTableBody').innerHTML = '';
             document.getElementById('noWallets').style.display = 'none';
         }
-
+        
         // Hide table loader
         function hideTableLoader() {
             document.getElementById('tableLoader').classList.remove('show');
         }
-
+        
         // Toggle sidebar for mobile
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('mobile-open');
         }
-
+        
         // Apply translation
         function applyTranslation(lang) {
             const dict = translations[lang];
-            if (!dict) return;
-            
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (dict[key]) el.textContent = dict[key];
@@ -1186,16 +2055,16 @@
                 updateRoleTranslation();
             }
         }
-
+        
         // Update role translation
         function updateRoleTranslation() {
             const roleKey = `role.${currentUser.role}`;
             const dict = translations[currentLanguage];
-            if (dict && dict[roleKey]) {
+            if (dict[roleKey]) {
                 document.getElementById('userRole').textContent = dict[roleKey];
             }
         }
-
+        
         // Setup navigation based on user role
         function setupNavigation() {
             const navLinks = document.getElementById('navLinks');
@@ -1239,66 +2108,61 @@
             // Re-apply translations after navigation is set up
             applyTranslation(currentLanguage);
         }
-
-        // Load user data from localStorage
-        function loadUserData() {
-            const token = localStorage.getItem('admin_token');
-            if (!token) {
-                window.location.href = 'index.html';
-                return false;
-            }
-            
-            const userData = localStorage.getItem('admin_user');
-            const permissionsData = localStorage.getItem('admin_permissions');
-            
-            if (userData && permissionsData) {
-                currentUser = JSON.parse(userData);
-                currentPermissions = JSON.parse(permissionsData);
-                
-                document.getElementById('userName').textContent = currentUser.username;
-                updateRoleTranslation();
-                
-                // Setup navigation based on role
-                setupNavigation();
-                return true;
-            }
-            
-            return false;
-        }
-
-        // Load initial data (fast load)
-        async function loadInitialData() {
+        
+        // Load page data
+        async function loadPageData() {
             showTableLoader();
             
             try {
-                // Load user data first
-                if (!loadUserData()) return;
+                const token = localStorage.getItem('admin_token');
+                if (!token) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                // Load user info
+                const userData = localStorage.getItem('admin_user');
+                const permissionsData = localStorage.getItem('admin_permissions');
+                
+                if (userData && permissionsData) {
+                    currentUser = JSON.parse(userData);
+                    currentPermissions = JSON.parse(permissionsData);
+                    
+                    document.getElementById('userName').textContent = currentUser.username;
+                    updateRoleTranslation();
+                    
+                    // Setup navigation based on role
+                    setupNavigation();
+                }
                 
                 // Load language
                 const savedLang = localStorage.getItem('dashboard_language') || localStorage.getItem('preferred_language') || 'ru';
                 applyTranslation(savedLang);
                 
-                // Load forms and wallets in parallel for faster loading
+                // Load forms and wallets in parallel
                 await Promise.all([
                     loadForms(),
                     loadWallets()
                 ]);
                 
+                // Initialize tutorial after page loads
+                setTimeout(initTutorial, 1000);
+                
             } catch (error) {
-                console.error('Error loading initial data:', error);
-                showToast(translations[currentLanguage]?.['toast.error'] || 'Ошибка загрузки', 'error');
+                console.error('Error loading page:', error);
+                showToast(translations[currentLanguage]?.['toast.error'], 'error');
             } finally {
                 hideTableLoader();
             }
         }
-
+        
         // Load forms
         async function loadForms() {
             try {
                 const token = localStorage.getItem('admin_token');
                 
                 // Check cache
-                if (apiCache.forms && Date.now() - apiCache.lastUpdated < 30000) { // 30 second cache
+                if (apiCache.forms && Date.now() - apiCache.lastUpdated < 30000) {
                     allForms = apiCache.forms;
                 } else {
                     const response = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
@@ -1349,13 +2213,13 @@
                 console.error('Error loading forms:', error);
             }
         }
-
+        
         // Update form API when form is selected in add modal
         function updateAddFormApi() {
             // This function is called when form selection changes
             // No action needed as we get API from option dataset
         }
-
+        
         // Get assigned forms for manager
         async function getAssignedForms() {
             try {
@@ -1377,8 +2241,8 @@
                 return [];
             }
         }
-
-        // Load wallets with cache support
+        
+        // Load wallets
         async function loadWallets() {
             showTableLoader();
             
@@ -1458,7 +2322,7 @@
                 
                 filterWallets();
                 
-                showToast(translations[currentLanguage]?.['toast.success'] || 'Данные обновлены', 'success');
+                showToast(translations[currentLanguage]?.['toast.success'], 'success');
                 
             } catch (error) {
                 console.error('Error loading wallets:', error);
@@ -1468,7 +2332,7 @@
                 hideTableLoader();
             }
         }
-
+        
         // Filter wallets
         function filterWallets() {
             const formFilter = document.getElementById('formFilter').value;
@@ -1511,13 +2375,13 @@
             renderWalletsTable(filteredWallets);
             updateWalletsCount();
         }
-
+        
         // Update wallets count
         function updateWalletsCount() {
             const countElement = document.getElementById('walletsCount');
             countElement.textContent = filteredWallets.length;
         }
-
+        
         // Render wallets table
         function renderWalletsTable(wallets) {
             const tbody = document.getElementById('walletsTableBody');
@@ -1564,7 +2428,7 @@
                 tbody.appendChild(row);
             });
         }
-
+        
         // Open edit modal
         function openEditModal(walletId) {
             const wallet = allWallets.find(w => w.id === walletId);
@@ -1580,31 +2444,152 @@
             
             document.getElementById('editModal').classList.add('show');
         }
-
+        
         // Close edit modal
         function closeEditModal() {
             document.getElementById('editModal').classList.remove('show');
             document.getElementById('editForm').reset();
         }
-
+        
         // Open add modal
         function openAddModal() {
             document.getElementById('addModal').classList.add('show');
         }
-
+        
         // Close add modal
         function closeAddModal() {
             document.getElementById('addModal').classList.remove('show');
             document.getElementById('addForm').reset();
         }
-
+        
+        // Test form connection
+        async function testCurrentForm() {
+            const formSelect = document.getElementById('addFormSelect');
+            const selectedOption = formSelect.options[formSelect.selectedIndex];
+            const formName = formSelect.value;
+            const formApi = selectedOption?.dataset.api;
+            
+            if (!formName || !formApi) {
+                showToast('Выберите форму для тестирования', 'warning');
+                return;
+            }
+            
+            const testBtn = event?.target?.closest('button');
+            const originalText = testBtn?.innerHTML;
+            
+            try {
+                if (testBtn) {
+                    testBtn.disabled = true;
+                    testBtn.classList.add('loading');
+                    testBtn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]?.['wallets.testing'] || 'Тестирование...'}`;
+                }
+                
+                const params = new URLSearchParams();
+                params.append('action', 'test');
+                params.append('_t', Date.now().toString());
+                
+                const testUrl = `${formApi}?${params.toString()}`;
+                console.log('Testing form:', testUrl);
+                
+                let response;
+                let result;
+                
+                try {
+                    response = await fetch(testUrl, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' },
+                        cache: 'no-cache'
+                    });
+                    
+                    const responseText = await response.text();
+                    
+                    try {
+                        result = JSON.parse(responseText);
+                    } catch {
+                        result = { success: true, message: 'Form is responding' };
+                    }
+                    
+                } catch (fetchError) {
+                    console.warn('Direct fetch failed, trying /exec:', fetchError);
+                    
+                    const execUrl = formApi.replace(/\/[^\/]*$/, '/exec') + '?' + params.toString();
+                    response = await fetch(execUrl, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' },
+                        cache: 'no-cache'
+                    });
+                    
+                    const responseText = await response.text();
+                    result = JSON.parse(responseText);
+                }
+                
+                if (result && (result.success || result.status === 'success')) {
+                    showToast(`${formName}: ${translations[currentLanguage]?.['toast.test_success'] || 'Подключение успешно'}`, 'success');
+                } else {
+                    throw new Error(result?.error || result?.message || 'Unknown error');
+                }
+                
+            } catch (error) {
+                console.error('Form test error:', error);
+                showToast(`${formName}: ${translations[currentLanguage]?.['toast.test_error'] || 'Ошибка подключения'}: ${error.message}`, 'error');
+            } finally {
+                if (testBtn) {
+                    testBtn.disabled = false;
+                    testBtn.classList.remove('loading');
+                    testBtn.innerHTML = originalText;
+                }
+            }
+        }
+        
+        // Test all forms
+        async function testAllForms() {
+            const btn = document.getElementById('testFormsBtn');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.classList.add('loading');
+                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]?.['wallets.testing'] || 'Тестирование...'}`;
+                
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const form of allForms) {
+                    try {
+                        const testUrl = `${form.formAPI}?action=test&_t=${Date.now()}`;
+                        const response = await fetch(testUrl, { method: 'GET', cache: 'no-cache' });
+                        
+                        if (response.ok) {
+                            successCount++;
+                        } else {
+                            errorCount++;
+                        }
+                    } catch {
+                        errorCount++;
+                    }
+                }
+                
+                showToast(
+                    `${translations[currentLanguage]?.['wallets.test_forms'] || 'Тест форм'}: ${successCount} успешно, ${errorCount} с ошибками`,
+                    errorCount === 0 ? 'success' : errorCount === allForms.length ? 'error' : 'warning'
+                );
+                
+            } catch (error) {
+                console.error('Test all forms error:', error);
+                showToast(translations[currentLanguage]?.['toast.error'], 'error');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                btn.innerHTML = originalText;
+            }
+        }
+        
         // Save wallet changes
         async function saveWalletChanges(event) {
             event.preventDefault();
             
             const btn = document.getElementById('saveBtn');
             const originalText = btn.innerHTML;
-            const originalState = btn.disabled;
             
             try {
                 btn.disabled = true;
@@ -1619,32 +2604,41 @@
                 const walletEnabled = document.getElementById('editWalletEnabled').checked;
                 
                 if (!formApi) {
-                    throw new Error('Form API not found');
+                    throw new Error('API формы не найден');
                 }
                 
                 const originalWallet = allWallets.find(w => w.id === walletId);
                 if (!originalWallet) {
-                    throw new Error('Wallet not found');
+                    throw new Error('Кошелек не найден');
                 }
                 
                 // Prepare update data
                 const updateData = {
-                    action: 'update_wallet',
+                    action: 'update_wallet_status',
                     wallet_type: walletType,
                     wallet_number: walletNumber,
-                    wallet_name: walletName,
-                    enabled: walletEnabled
+                    enabled: walletEnabled.toString(),
+                    wallet_name: walletName || walletType
                 };
                 
                 // Send update request to form API
-                const updateUrl = `${formApi}?${Object.keys(updateData).map(key => `${key}=${encodeURIComponent(updateData[key])}`).join('&')}`;
+                const params = new URLSearchParams();
+                for (const key in updateData) {
+                    params.append(key, updateData[key]);
+                }
                 
-                await fetch(updateUrl, {
-                    method: 'GET',
-                    mode: 'no-cors'
-                }).catch(err => {
-                    return fetch(`${formApi}/exec?${Object.keys(updateData).map(key => `${key}=${encodeURIComponent(updateData[key])}`).join('&')}`);
-                });
+                const updateUrl = `${formApi}?${params.toString()}`;
+                
+                try {
+                    const response = await fetch(updateUrl, {
+                        method: 'GET',
+                        mode: 'no-cors'
+                    }).catch(err => {
+                        return fetch(`${formApi}/exec?${params.toString()}`);
+                    });
+                } catch (fetchError) {
+                    console.warn('Update fetch error:', fetchError);
+                }
                 
                 // Clear cache for this form
                 const formName = originalWallet.formName;
@@ -1654,19 +2648,19 @@
                 // Reload wallets
                 await loadWallets();
                 
-                showToast(translations[currentLanguage]?.['toast.save_success'] || 'Кошелёк обновлён', 'success');
+                showToast(translations[currentLanguage]?.['toast.save_success'] || 'Кошелёк успешно обновлён', 'success');
                 closeEditModal();
                 
             } catch (error) {
                 console.error('Error saving wallet:', error);
                 showToast((translations[currentLanguage]?.['toast.save_error'] || 'Ошибка сохранения') + ': ' + error.message, 'error');
             } finally {
-                btn.disabled = originalState;
+                btn.disabled = false;
                 btn.classList.remove('loading');
                 btn.innerHTML = originalText;
             }
         }
-
+        
         // Add new wallet
         async function addNewWallet(event) {
             event.preventDefault();
@@ -1733,7 +2727,6 @@
                     });
                     
                     console.log('Response status:', response.status);
-                    console.log('Response headers:', response.headers);
                     
                     const responseText = await response.text();
                     console.log('Response text:', responseText);
@@ -1780,46 +2773,7 @@
                         
                     } catch (execError) {
                         console.warn('Method 2 failed:', execError);
-                        
-                        // Пробуем Method 3: через iframe (для обхода CORS)
-                        console.log('Пробуем Method 3: через callback...');
-                        
-                        // Создаем обещание для callback
-                        const callbackPromise = new Promise((resolve, reject) => {
-                            const callbackName = 'callback_' + Date.now();
-                            
-                            // Добавляем callback параметр
-                            params.append('callback', callbackName);
-                            
-                            // Создаем функцию callback
-                            window[callbackName] = function(data) {
-                                console.log('Callback received:', data);
-                                delete window[callbackName];
-                                resolve(data);
-                                
-                                // Удаляем скрипт
-                                if (script.parentNode) {
-                                    script.parentNode.removeChild(script);
-                                }
-                            };
-                            
-                            // Создаем script тег для JSONP
-                            const script = document.createElement('script');
-                            script.src = `${formApi}?${params.toString()}`;
-                            script.onerror = reject;
-                            document.head.appendChild(script);
-                            
-                            // Таймаут на случай если callback не сработает
-                            setTimeout(() => {
-                                if (window[callbackName]) {
-                                    delete window[callbackName];
-                                    reject(new Error('Timeout waiting for callback'));
-                                }
-                            }, 10000);
-                        });
-                        
-                        result = await callbackPromise;
-                        console.log('Callback result:', result);
+                        throw new Error('Не удалось подключиться к форме. Проверьте подключение.');
                     }
                 }
                 
@@ -1871,7 +2825,7 @@
                 btn.innerHTML = originalText;
             }
         }
-
+        
         // Toggle wallet status
         async function toggleWalletStatus(walletId, newStatus, button) {
             const wallet = allWallets.find(w => w.id === walletId);
@@ -1895,11 +2849,11 @@
                 // Reload wallets
                 await loadWallets();
                 
-                showToast(translations[currentLanguage]?.['toast.toggle_success'] || 'Статус изменён', 'success');
+                showToast(translations[currentLanguage]?.['toast.toggle_success'] || 'Статус кошелька изменён', 'success');
                 
             } catch (error) {
                 console.error('Error toggling wallet:', error);
-                showToast((translations[currentLanguage]?.['toast.toggle_error'] || 'Ошибка изменения') + ': ' + error.message, 'error');
+                showToast((translations[currentLanguage]?.['toast.toggle_error'] || 'Ошибка при изменении статуса') + ': ' + error.message, 'error');
                 
                 // Restore button state on error
                 if (button) {
@@ -1908,7 +2862,7 @@
                 }
             }
         }
-
+        
         // Delete wallet
         async function deleteWallet(walletId, button) {
             if (!confirm(translations[currentLanguage]?.['wallets.delete'] || 'Удалить' + '?')) return;
@@ -1934,11 +2888,11 @@
                 // Reload wallets
                 await loadWallets();
                 
-                showToast(translations[currentLanguage]?.['toast.delete_success'] || 'Кошелёк удалён', 'success');
+                showToast(translations[currentLanguage]?.['toast.delete_success'] || 'Кошелёк успешно удалён', 'success');
                 
             } catch (error) {
                 console.error('Error deleting wallet:', error);
-                showToast((translations[currentLanguage]?.['toast.delete_error'] || 'Ошибка удаления') + ': ' + error.message, 'error');
+                showToast((translations[currentLanguage]?.['toast.delete_error'] || 'Ошибка при удалении кошелька') + ': ' + error.message, 'error');
                 
                 // Restore button state on error
                 if (button) {
@@ -1947,12 +2901,11 @@
                 }
             }
         }
-
+        
         // Refresh wallets
         async function refreshWallets() {
             const btn = document.getElementById('refreshBtn');
             const originalText = btn.innerHTML;
-            const originalState = btn.disabled;
             
             try {
                 btn.disabled = true;
@@ -1974,19 +2927,18 @@
                 
             } catch (error) {
                 console.error('Error refreshing:', error);
-                showToast(translations[currentLanguage]?.['toast.error'] || 'Ошибка', 'error');
+                showToast(translations[currentLanguage]?.['toast.error'], 'error');
             } finally {
-                btn.disabled = originalState;
+                btn.disabled = false;
                 btn.classList.remove('loading');
                 btn.innerHTML = originalText;
             }
         }
-
+        
         // Logout
         async function logout() {
             const btn = document.getElementById('logoutBtn');
             const originalText = btn.innerHTML;
-            const originalState = btn.disabled;
             
             try {
                 btn.disabled = true;
@@ -2004,14 +2956,14 @@
                 
             } catch (error) {
                 console.error('Logout error:', error);
-                showToast(translations[currentLanguage]?.['toast.logout_error'] || 'Ошибка выхода', 'error');
+                showToast(translations[currentLanguage]?.['toast.logout_error'], 'error');
             } finally {
-                btn.disabled = originalState;
+                btn.disabled = false;
                 btn.classList.remove('loading');
                 btn.innerHTML = originalText;
             }
         }
-
+        
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             // Burger menu
@@ -2061,25 +3013,9 @@
                 });
             });
             
-            // Load initial data
-            loadInitialData();
+            // Load page data
+            loadPageData();
         });
-
-        // Translations dictionary (the same as before, included for completeness)
-        const translations = {
-            ru: {
-                // ... (same translations as before)
-            },
-            en: {
-                // ... (same translations as before)
-            },
-            fr: {
-                // ... (same translations as before)
-            },
-            ar: {
-                // ... (same translations as before)
-            }
-        };
     </script>
 </body>
 </html>
