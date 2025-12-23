@@ -2162,7 +2162,7 @@
                                 </button>
                             ` : ''}
                             ${currentPermissions?.canToggleServiceMode ? `
-                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName.replace(/'/g, "\\'")}', '${(form.formApi || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
+                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName.replace(/'/g, "\\'")}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
                                     <i class="fas fa-power-off"></i>
                                 </button>
                             ` : ''}
@@ -2747,51 +2747,36 @@
         }
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
-        async function toggleFormStatus(formName, formApi, newStatus) {
-            console.log('TOGGLE FORM STATUS - Starting:', {formName, formApi, newStatus});
+        async function toggleFormStatus(formName, newStatus) {
+            console.log('TOGGLE FORM STATUS - Starting:', {formName, newStatus});
             
             try {
                 const token = localStorage.getItem('admin_token');
-                if (!token) {
-                    showToast('Ошибка авторизации', 'error');
-                    return;
-                }
                 
-                // Показываем загрузку на кнопке
-                const buttons = document.querySelectorAll(`.action-btn.toggle[onclick*="${formName}"]`);
-                buttons.forEach(btn => {
-                    btn.classList.add('loading');
-                    btn.disabled = true;
-                });
+                // Создаем URL только с form_name
+                const params = new URLSearchParams();
+                params.append('action', 'toggle_form_status');
+                params.append('token', token);
+                params.append('form_name', formName);
+                params.append('enabled', newStatus.toString());
                 
-                // Отправляем запрос на бэкенд админ-панели
-                const response = await fetch(
-                    `${API_URL}?action=toggle_form_status&token=${token}&form_name=${encodeURIComponent(formName)}&enabled=${newStatus}`
-                );
+                const url = `${API_URL}?${params.toString()}`;
+                console.log('TOGGLE - Request URL:', url);
+                
+                const response = await fetch(url);
                 
                 const result = await response.json();
                 console.log('TOGGLE - result:', result);
                 
                 if (result.success) {
-                    showToast(result.message || 'Статус формы изменён', 'success');
-                    
-                    // Перезагружаем список форм
-                    await loadForms();
-                    
+                    showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
+                    await loadForms(); // Обновляем таблицу
                 } else {
-                    throw new Error(result.error || 'Unknown error');
+                    showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${result.error}`, 'error');
                 }
-                
             } catch (error) {
                 console.error('TOGGLE - error:', error);
-                showToast('Ошибка при изменении статуса: ' + error.message, 'error');
-                
-                // Восстанавливаем кнопки
-                const buttons = document.querySelectorAll(`.action-btn.toggle[onclick*="${formName}"]`);
-                buttons.forEach(btn => {
-                    btn.classList.remove('loading');
-                    btn.disabled = false;
-                });
+                showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${error.message}`, 'error');
             }
         }
 
