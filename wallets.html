@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кошельки | Панель управления</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
+    <link rel="preconnect" href="https://script.google.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <style>
         :root {
             --primary-bg: linear-gradient(135deg, #042F28 0%, #0A5C4A 100%);
@@ -17,6 +21,7 @@
             --success: #2ecc71;
             --warning: #f39c12;
             --info: #3498db;
+            /*--tutorial-overlay: rgba(4, 47, 40, 0.85);*/
         }
         
         * {
@@ -31,6 +36,7 @@
             color: var(--text);
             min-height: 100vh;
             display: flex;
+            position: relative;
         }
         
         /* Sidebar */
@@ -42,7 +48,8 @@
             display: flex;
             flex-direction: column;
             border-right: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            z-index: 800;
         }
         
         .logo {
@@ -76,11 +83,11 @@
             font-size: 24px;
             cursor: pointer;
             padding: 5px;
-            margin-left: 10px;
         }
         
         .nav-links {
             flex: 1;
+            overflow-y: auto;
         }
         
         .nav-links a {
@@ -91,6 +98,8 @@
             text-decoration: none;
             transition: all 0.3s;
             border-left: 3px solid transparent;
+            position: relative;
+            z-inex: 2001;
         }
         
         .nav-links a:hover {
@@ -109,10 +118,11 @@
             text-align: center;
         }
         
-        /* User Info - Updated Layout */
+        /* User Info */
         .user-info {
             padding: 15px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: auto;
         }
         
         .user-details {
@@ -222,6 +232,7 @@
             flex: 1;
             padding: 30px;
             overflow-y: auto;
+            position: relative;
         }
         
         .header {
@@ -251,6 +262,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            position: relative;
         }
         
         .btn-primary {
@@ -264,6 +276,13 @@
         }
         
         .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        btn-secondaryTest {
+            display: none;
             background: rgba(255, 255, 255, 0.1);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -286,12 +305,14 @@
             padding: 20px;
             margin-bottom: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1;
         }
         
         .filter-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
+            z-index: 2;
         }
         
         .filter-group {
@@ -312,12 +333,20 @@
             border-radius: 8px;
             color: #2c3e50;
             font-size: 14px;
+            position: relative;
+            z-index: 3;
         }
         
         .filter-select:focus, .filter-input:focus {
             outline: none;
             border-color: var(--accent);
             background: white;
+        }
+        
+        /* Wallets Table Container */
+        .table-section-container {
+            position: relative;
+            min-height: 400px;
         }
         
         /* Wallets Table */
@@ -327,6 +356,8 @@
             padding: 25px;
             margin-bottom: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            min-height: 400px;
         }
         
         .section-header {
@@ -334,6 +365,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
         }
         
         .section-header h3 {
@@ -342,6 +375,8 @@
         
         .table-container {
             overflow-x: auto;
+            position: relative;
+            min-height: 200px;
         }
         
         table {
@@ -395,6 +430,7 @@
             font-size: 12px;
             transition: all 0.2s;
             margin-right: 5px;
+            position: relative;
         }
         
         .action-btn.edit {
@@ -443,6 +479,42 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* Table Loader */
+        .table-loader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(4, 47, 40, 0.9);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 12px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .table-loader.show {
+            opacity: 1;
+            visibility: visible;
+            z-index: 3;
+        }
+        
+        .table-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
         /* Modals */
         .modal-overlay {
             position: fixed;
@@ -475,6 +547,8 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             transform: translateY(20px);
             transition: transform 0.3s;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         .modal-overlay.show .modal {
@@ -586,6 +660,7 @@
         .toast.success i { color: #2ecc71; }
         .toast.error i { color: #e74c3c; }
         .toast.warning i { color: #f39c12; }
+        .toast.info i { color: #3498db; }
         
         /* Empty State */
         .empty-state {
@@ -600,153 +675,290 @@
             opacity: 0.5;
         }
         
-        /* Loading overlay */
-        .loading-overlay {
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            background: var(--sidebar-bg);
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 4;
+        }
+        
+        .mobile-logo h2 {
+            font-size: 20px;
+            color: var(--accent);
+            z-index: 2;
+        }
+        
+        /* Tutorial Overlay - ОБНОВЛЁННЫЙ СТИЛЬ */
+        .tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1; /* Ниже подсветки и попапа */
+            display: none;
+            pointer-events: none;
+            /*background: rgba(4, 47, 40, 0.6); /* Только лёгкая затемнённая подложка */
+        }
+        
+        .tutorial-overlay.active {
+            display: block;
+        }
+        
+        /* Убираем блюр с самого оверлея */
+        .tutorial-overlay::before {
+            content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(4, 47, 40, 0.8);
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(2px); /* Только лёгкий блюр */
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 1;
+        }
+        
+        /* Подсветка элемента - ВЫШЕ всего */
+        .tutorial-highlight {
+            position: absolute;
+            border: 3px solid var(--accent);
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(208, 228, 30, 0.8),
+                        0 0 60px rgba(208, 228, 30, 0.4),
+                        inset 0 0 20px rgba(208, 228, 30, 0.3);
+            z-index: 2003; /* Выше попапа и оверлея */
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: pulse 2s infinite ease-in-out;
+            background: rgba(4, 47, 40, 0.1); /* Полупрозрачный фон */
+            mix-blend-mode: normal;
+        }
+        
+        /* Убираем тёмный фон вокруг подсветки */
+        .tutorial-highlight::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            right: -15px;
+            bottom: -15px;
+            background: transparent;
+            z-index: -1;
+            border-radius: 20px;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 20px rgba(208, 228, 30, 0.6),
+                            0 0 40px rgba(208, 228, 30, 0.4),
+                            inset 0 0 20px rgba(208, 228, 30, 0.3);
+                border-color: var(--accent);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(208, 228, 30, 0.9),
+                            0 0 60px rgba(208, 228, 30, 0.6),
+                            inset 0 0 30px rgba(208, 228, 30, 0.4);
+                border-color: #e8f542;
+                transform: scale(1.01);
+            }
+            100% {
+                box-shadow: 0 0 20px rgba(208, 228, 30, 0.6),
+                            0 0 40px rgba(208, 228, 30, 0.4),
+                            inset 0 0 20px rgba(208, 228, 30, 0.3);
+                border-color: var(--accent);
+                transform: scale(1);
+            }
+        }
+        
+        .tutorial-popup {
+            position: absolute;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(250, 250, 250, 0.98));
+            color: #2c3e50;
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4),
+                        0 0 0 1px rgba(255, 255, 255, 0.9);
+            z-index: 2002; /* Выше оверлея, но ниже подсветки */
+            animation: slideIn 0.4s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            pointer-events: none;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .tutorial-popup h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tutorial-popup p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: #4a5568;
+            font-size: 15px;
+        }
+        
+        .tutorial-popup .tutorial-progress {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 15px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .tutorial-actions {
             display: flex;
-            flex-direction: column;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .tutorial-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+            min-width: 80px;
+            text-align: center;
+            pointer-events: auto;
+        }
+        
+        .tutorial-btn-primary {
+            background: linear-gradient(145deg, var(--accent), var(--accent-hover));
+            color: #2c3e50;
+            box-shadow: 0 4px 12px rgba(208, 228, 30, 0.3);
+        }
+        
+        .tutorial-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(208, 228, 30, 0.4);
+        }
+        
+        .tutorial-btn-secondary {
+            background: linear-gradient(145deg, #f7fafc, #edf2f7);
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .tutorial-btn-secondary:hover {
+            background: linear-gradient(145deg, #edf2f7, #e2e8f0);
+            transform: translateY(-2px);
+        }
+        
+        .tutorial-close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            color: #718096;
+            display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            pointer-events: auto;
+        }
+        
+        .tutorial-close-btn:hover {
+            background: white;
+            color: #2d3748;
+            transform: rotate(90deg);
+        }
+        
+        /* Help Button */
+        .help-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #2c3e50;
+            border: none;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             z-index: 100;
-            opacity: 0;
-            visibility: hidden;
             transition: all 0.3s;
         }
         
-        .loading-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid var(--accent);
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+        .help-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
         
         /* Responsive */
         @media (max-width: 1024px) {
             .sidebar {
-                width: 70px;
-            }
-            
-            .logo h1, .logo p, .nav-links a span, .user-details .username, .user-details .role {
-                display: none;
-            }
-            
-            .logo-content {
-                display: none;
-            }
-            
-            .burger-menu {
-                display: block;
-                margin: 0;
-            }
-            
-            .nav-links a {
-                justify-content: center;
-                padding: 15px 0;
-            }
-            
-            .nav-links a i {
-                margin-right: 0;
-                font-size: 20px;
-            }
-            
-            .user-controls {
-                flex-direction: column;
-            }
-            
-            .user-control-btn span {
-                display: none;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                width: 100%;
-                height: 60px;
-                flex-direction: row;
-                padding: 0;
-                transform: translateY(-100%);
                 position: fixed;
+                left: -250px;
                 top: 0;
-                z-index: 1000;
+                bottom: 0;
+                z-index: 4;
+                transition: left 0.3s ease;
             }
             
             .sidebar.mobile-open {
-                transform: translateY(0);
-                height: 100vh;
-                flex-direction: column;
-            }
-            
-            .logo {
-                padding: 15px;
-                margin-bottom: 0;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                width: 100%;
+                left: 0;
+                z-index: 4;
             }
             
             .burger-menu {
                 display: block;
+                z-index: 2;
             }
             
-            .nav-links {
-                display: none;
-                flex: 1;
-                overflow-y: auto;
-            }
-            
-            .sidebar.mobile-open .nav-links {
+            .mobile-header {
                 display: flex;
-                flex-direction: column;
-            }
-            
-            .nav-links a {
-                justify-content: flex-start;
-                padding: 15px 20px;
-                border-left: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            
-            .nav-links a:hover, .nav-links a.active {
-                border-left: none;
-                background: rgba(255, 255, 255, 0.1);
-            }
-            
-            .user-info {
-                display: none;
-                padding: 15px;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            
-            .sidebar.mobile-open .user-info {
-                display: block;
             }
             
             .main-content {
+                margin-top: 70px;
                 padding: 20px;
-                margin-top: 60px;
             }
             
             .header {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 15px;
+                z-index: 2;
             }
             
             .header-actions {
@@ -755,10 +967,25 @@
             }
             
             .btn {
-                flex: 1;
                 padding: 12px;
+                flex: 1;
             }
             
+            .section {
+                padding: 20px;
+            }
+            
+            .table-loader {
+                border-radius: 12px;
+            }
+            
+            .tutorial-popup {
+                max-width: 90%;
+                margin: 0 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
             .filter-grid {
                 grid-template-columns: 1fr;
             }
@@ -782,6 +1009,19 @@
                 font-size: 10px;
                 margin-right: 3px;
             }
+            
+            .modal {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            .form-control {
+                padding: 10px;
+            }
+            
+            .tutorial-popup {
+                padding: 20px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -793,13 +1033,25 @@
                 width: 100%;
             }
             
-            .modal {
-                padding: 20px;
-                width: 95%;
+            .user-controls {
+                flex-direction: column;
             }
             
-            .form-control {
-                padding: 10px;
+            .section {
+                min-height: 350px;
+                padding: 15px;
+            }
+            
+            .table-loader {
+                border-radius: 12px;
+            }
+            
+            .tutorial-actions {
+                flex-direction: column;
+            }
+            
+            .tutorial-btn {
+                width: 100%;
             }
         }
         
@@ -819,18 +1071,38 @@
             left: auto;
         }
         
-        @media (max-width: 1024px) {
-            body[dir="rtl"] .nav-links a i {
-                margin-left: 0;
-            }
-        }
-        
         body[dir="rtl"] td, body[dir="rtl"] th {
             text-align: right;
+        }
+        
+        /* Performance optimizations */
+        .table-container {
+            will-change: transform;
+        }
+        
+        .table-loader {
+            will-change: opacity;
+        }
+        
+        /* Временный стиль для элементов под подсветкой */
+        .tutorial-highlighted-element {
+            position: relative;
+            z-index: 2004 !important;
+            transform: translateZ(0);
         }
     </style>
 </head>
 <body>
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="mobile-logo">
+            <h2 data-i18n="wallets.title">Кошельки</h2>
+        </div>
+        <button class="burger-menu" id="burgerMenu">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="logo">
@@ -838,8 +1110,8 @@
                 <h1 data-i18n="wallets.title">Кошельки</h1>
                 <p data-i18n="wallets.subtitle">Управление кошельками</p>
             </div>
-            <button class="burger-menu" id="burgerMenu">
-                <i class="fas fa-bars"></i>
+            <button class="burger-menu" onclick="toggleSidebar()">
+                <i class="fas fa-times"></i>
             </button>
         </div>
         
@@ -877,12 +1149,6 @@
     
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Loading Overlay -->
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="loading-spinner"></div>
-            <p data-i18n="wallets.loading">Загрузка кошельков...</p>
-        </div>
-        
         <div class="header">
             <h2 data-i18n="wallets.welcome">Управление кошельками</h2>
             <div class="header-actions">
@@ -937,37 +1203,46 @@
             </div>
         </div>
         
-        <!-- Wallets Table -->
-        <div class="section">
-            <div class="section-header">
-                <h3 data-i18n="wallets.list">Список кошельков</h3>
-                <div class="table-info">
-                    <span id="walletsCount">0</span> <span data-i18n="wallets.wallets_found">кошельков найдено</span>
+        <!-- Wallets Table Container -->
+        <div class="table-section-container">
+            <!-- Table Loader -->
+            <div class="table-loader show" id="tableLoader">
+                <div class="table-spinner"></div>
+                <p data-i18n="wallets.loading">Загрузка кошельков...</p>
+            </div>
+            
+            <!-- Wallets Table -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 data-i18n="wallets.list">Список кошельков</h3>
+                    <div class="table-info">
+                        <span id="walletsCount">0</span> <span data-i18n="wallets.wallets_found">кошельков найдено</span>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="table-container">
-                <table id="walletsTable">
-                    <thead>
-                        <tr>
-                            <th data-i18n="wallets.table_form">Форма</th>
-                            <th data-i18n="wallets.table_type">Тип</th>
-                            <th data-i18n="wallets.table_name">Название</th>
-                            <th data-i18n="wallets.table_number">Номер</th>
-                            <th data-i18n="wallets.table_status">Статус</th>
-                            <th data-i18n="wallets.table_actions">Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody id="walletsTableBody">
-                        <!-- Data will be loaded here -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <div id="noWallets" class="empty-state" style="display: none;">
-                <i class="fas fa-wallet"></i>
-                <h4 data-i18n="wallets.no_wallets">Кошельки не найдены</h4>
-                <p data-i18n="wallets.no_wallets_desc">Нет доступных кошельков для отображения</p>
+                
+                <div class="table-container">
+                    <table id="walletsTable">
+                        <thead>
+                            <tr>
+                                <th data-i18n="wallets.table_form">Форма</th>
+                                <th data-i18n="wallets.table_type">Тип</th>
+                                <th data-i18n="wallets.table_name">Название</th>
+                                <th data-i18n="wallets.table_number">Номер</th>
+                                <th data-i18n="wallets.table_status">Статус</th>
+                                <th data-i18n="wallets.table_actions">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="walletsTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="noWallets" class="empty-state" style="display: none;">
+                    <i class="fas fa-wallet"></i>
+                    <h4 data-i18n="wallets.no_wallets">Кошельки не найдены</h4>
+                    <p data-i18n="wallets.no_wallets_desc">Нет доступных кошельков для отображения</p>
+                </div>
             </div>
         </div>
     </div>
@@ -1049,6 +1324,13 @@
                 </div>
                 
                 <div class="form-group">
+                    <button type="button" class="btn btn-secondary" onclick="testCurrentForm()" style="margin-top: 10px;">
+                        <i class="fas fa-wifi"></i>
+                        <span data-i18n="wallets.test_connection">Проверить подключение</span>
+                    </button>
+                </div>
+                
+                <div class="form-group">
                     <label for="addWalletType" data-i18n="wallets.wallet_type">Тип кошелька</label>
                     <select class="form-control" id="addWalletType" required>
                         <option value="vodafone">Vodafone Cash</option>
@@ -1090,6 +1372,33 @@
         </div>
     </div>
     
+    <!-- Tutorial Overlay -->
+    <div class="tutorial-overlay" id="tutorialOverlay">
+        <div class="tutorial-highlight" id="tutorialHighlight"></div>
+        <div class="tutorial-popup" id="tutorialPopup">
+            <button class="tutorial-close-btn" onclick="skipTutorial()">&times;</button>
+            <h3 id="tutorialTitle">Добро пожаловать!</h3>
+            <div class="tutorial-progress" id="tutorialProgress">Шаг 1 из 8</div>
+            <p id="tutorialText">Начнем изучение панели управления кошельками.</p>
+            <div class="tutorial-actions">
+                <button class="tutorial-btn tutorial-btn-secondary" onclick="prevTutorialStep()" id="prevBtn" style="display: none;">
+                    <span data-i18n="tutorial.prev">Назад</span>
+                </button>
+                <button class="tutorial-btn tutorial-btn-primary" onclick="nextTutorialStep()" id="nextBtn">
+                    <span data-i18n="tutorial.next">Далее</span>
+                </button>
+                <button class="tutorial-btn tutorial-btn-secondary" onclick="skipTutorial()" id="skipBtn">
+                    <span data-i18n="tutorial.skip">Пропустить</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Button -->
+    <button class="help-button" onclick="startTutorial()" title="Помощь">
+        <i class="fas fa-question"></i>
+    </button>
+    
     <!-- Toast Notification -->
     <div class="toast" id="toast">
         <i class="fas fa-check-circle"></i>
@@ -1108,7 +1417,21 @@
         let allForms = [];
         let filteredWallets = [];
         
-        // Translation dictionary
+        // Tutorial state
+        let tutorialStepsConfig = [];
+        let currentTutorialStep = 0;
+        let isTutorialActive = false;
+        let isScrollingEnabled = true;
+        let highlightedElements = new Set();
+        
+        // Cache for API responses
+        const apiCache = {
+            forms: null,
+            wallets: null,
+            lastUpdated: null
+        };
+        
+        // Translation dictionary with tutorial texts
         const translations = {
             ru: {
                 // Navigation
@@ -1132,6 +1455,9 @@
                 "wallets.list": "Список кошельков",
                 "wallets.wallets_found": "кошельков найдено",
                 "wallets.loading": "Загрузка кошельков...",
+                "wallets.test_forms": "Тест форм",
+                "wallets.test_connection": "Проверить подключение",
+                "wallets.testing": "Тестирование...",
                 
                 // Filters
                 "wallets.filter_form": "Форма",
@@ -1192,12 +1518,39 @@
                 "toast.add_error": "Ошибка при добавлении кошелька",
                 "toast.logout_success": "Выход выполнен успешно",
                 "toast.logout_error": "Ошибка при выходе",
+                "toast.test_success": "Подключение успешно",
+                "toast.test_error": "Ошибка подключения",
                 
                 // Roles
                 "role.superadmin": "Супер-админ",
                 "role.admin": "Администратор",
                 "role.manager": "Менеджер",
-                "role.viewer": "Наблюдатель"
+                "role.viewer": "Наблюдатель",
+                
+                // Tutorial
+                "tutorial.welcome": "Добро пожаловать в панель управления кошельками!",
+                "tutorial.welcome_desc": "Давайте познакомимся с основными функциями. Это интерактивная инструкция поможет вам освоить интерфейс.",
+                "tutorial.sidebar": "Навигационное меню",
+                "tutorial.sidebar_desc": "Здесь вы можете переключаться между разделами панели управления. Нажмите на бургер-меню, чтобы открыть/закрыть навигацию.",
+                "tutorial.refresh": "Кнопка обновления",
+                "tutorial.refresh_desc": "Эта кнопка обновляет список кошельков. Используйте её, чтобы получить актуальные данные.",
+                "tutorial.add_wallet": "Добавление кошелька",
+                "tutorial.add_wallet_desc": "Нажмите здесь, чтобы добавить новый кошелёк в систему.",
+                "tutorial.filters": "Фильтры",
+                "tutorial.filters_desc": "Используйте эти фильтры для поиска и сортировки кошельков по форме, типу, статусу или номеру.",
+                "tutorial.table": "Таблица кошельков",
+                "tutorial.table_desc": "Здесь отображаются все кошельки. Вы можете редактировать, включать/выключать или удалять кошельки с помощью кнопок действий.",
+                "tutorial.edit_wallet": "Редактирование кошелька",
+                "tutorial.edit_wallet_desc": "Нажмите на кнопку редактирования, чтобы изменить параметры кошелька.",
+                "tutorial.forms_navigation": "Переход к формам",
+                "tutorial.forms_navigation_desc": "Теперь давайте перейдём в раздел 'Формы', чтобы продолжить обучение. Откройте меню и выберите 'Формы'.",
+                "tutorial.complete": "Обучение завершено!",
+                "tutorial.complete_desc": "Вы успешно прошли базовое обучение. Теперь вы можете свободно использовать панель управления. Для повторения обучения нажмите на кнопку помощи в правом нижнем углу.",
+                "tutorial.next": "Далее",
+                "tutorial.prev": "Назад",
+                "tutorial.skip": "Пропустить",
+                "tutorial.start": "Начать обучение",
+                "tutorial.restart": "Повторить обучение"
             },
             en: {
                 "nav.dashboard": "Dashboard",
@@ -1218,6 +1571,9 @@
                 "wallets.list": "Wallets List",
                 "wallets.wallets_found": "wallets found",
                 "wallets.loading": "Loading wallets...",
+                "wallets.test_forms": "Test Forms",
+                "wallets.test_connection": "Test Connection",
+                "wallets.testing": "Testing...",
                 "wallets.filter_form": "Form",
                 "wallets.all_forms": "All forms",
                 "wallets.filter_type": "Wallet Type",
@@ -1264,10 +1620,35 @@
                 "toast.add_error": "Error adding wallet",
                 "toast.logout_success": "Logout successful",
                 "toast.logout_error": "Logout error",
+                "toast.test_success": "Connection successful",
+                "toast.test_error": "Connection error",
                 "role.superadmin": "Super Admin",
                 "role.admin": "Administrator",
                 "role.manager": "Manager",
-                "role.viewer": "Viewer"
+                "role.viewer": "Viewer",
+                "tutorial.welcome": "Welcome to Wallet Management Panel!",
+                "tutorial.welcome_desc": "Let's get familiar with the main functions. This interactive tutorial will help you master the interface.",
+                "tutorial.sidebar": "Navigation Menu",
+                "tutorial.sidebar_desc": "Here you can switch between sections of the control panel. Click on the burger menu to open/close navigation.",
+                "tutorial.refresh": "Refresh Button",
+                "tutorial.refresh_desc": "This button refreshes the list of wallets. Use it to get up-to-date data.",
+                "tutorial.add_wallet": "Add Wallet",
+                "tutorial.add_wallet_desc": "Click here to add a new wallet to the system.",
+                "tutorial.filters": "Filters",
+                "tutorial.filters_desc": "Use these filters to search and sort wallets by form, type, status or number.",
+                "tutorial.table": "Wallets Table",
+                "tutorial.table_desc": "All wallets are displayed here. You can edit, enable/disable or delete wallets using action buttons.",
+                "tutorial.edit_wallet": "Edit Wallet",
+                "tutorial.edit_wallet_desc": "Click the edit button to change wallet parameters.",
+                "tutorial.forms_navigation": "Go to Forms",
+                "tutorial.forms_navigation_desc": "Now let's go to the 'Forms' section to continue learning. Open the menu and select 'Forms'.",
+                "tutorial.complete": "Tutorial Complete!",
+                "tutorial.complete_desc": "You have successfully completed basic training. Now you can freely use the control panel. To repeat the tutorial, click the help button in the lower right corner.",
+                "tutorial.next": "Next",
+                "tutorial.prev": "Back",
+                "tutorial.skip": "Skip",
+                "tutorial.start": "Start Tutorial",
+                "tutorial.restart": "Repeat Tutorial"
             },
             fr: {
                 "nav.dashboard": "Tableau de bord",
@@ -1288,6 +1669,9 @@
                 "wallets.list": "Liste des portefeuilles",
                 "wallets.wallets_found": "portefeuilles trouvés",
                 "wallets.loading": "Chargement des portefeuilles...",
+                "wallets.test_forms": "Tester les formulaires",
+                "wallets.test_connection": "Tester la connexion",
+                "wallets.testing": "Test en cours...",
                 "wallets.filter_form": "Formulaire",
                 "wallets.all_forms": "Tous les formulaires",
                 "wallets.filter_type": "Type de portefeuille",
@@ -1334,10 +1718,35 @@
                 "toast.add_error": "Erreur lors de l'ajout du portefeuille",
                 "toast.logout_success": "Déconnexion réussie",
                 "toast.logout_error": "Erreur de déconnexion",
+                "toast.test_success": "Connexion réussie",
+                "toast.test_error": "Erreur de connexion",
                 "role.superadmin": "Super Admin",
                 "role.admin": "Administrateur",
                 "role.manager": "Manager",
-                "role.viewer": "Observateur"
+                "role.viewer": "Observateur",
+                "tutorial.welcome": "Bienvenue dans le panneau de gestion des portefeuilles !",
+                "tutorial.welcome_desc": "Familiarisons-nous avec les principales fonctions. Ce tutoriel interactif vous aidera à maîtriser l'interface.",
+                "tutorial.sidebar": "Menu de navigation",
+                "tutorial.sidebar_desc": "Ici, vous pouvez passer d'une section à l'autre du panneau de contrôle. Cliquez sur le menu burger pour ouvrir/fermer la navigation.",
+                "tutorial.refresh": "Bouton d'actualisation",
+                "tutorial.refresh_desc": "Ce bouton actualise la liste des portefeuilles. Utilisez-le pour obtenir des données à jour.",
+                "tutorial.add_wallet": "Ajouter un portefeuille",
+                "tutorial.add_wallet_desc": "Cliquez ici pour ajouter un nouveau portefeuille au système.",
+                "tutorial.filters": "Filtres",
+                "tutorial.filters_desc": "Utilisez ces filtres pour rechercher и trier les portefeuilles par formulaire, type, statut ou numéro.",
+                "tutorial.table": "Tableau des portefeuilles",
+                "tutorial.table_desc": "Tous les portefeuilles sont affichés ici. Vous pouvez modifier, activer/désactiver ou supprimer des portefeuilles à l'aide des boutons d'action.",
+                "tutorial.edit_wallet": "Modifier le portefeuille",
+                "tutorial.edit_wallet_desc": "Cliquez sur le bouton de modification pour changer les paramètres du portefeuille.",
+                "tutorial.forms_navigation": "Aller aux formulaires",
+                "tutorial.forms_navigation_desc": "Passons maintenant à la section 'Formulaires' pour continuer l'apprentissage. Ouvrez le menu et sélectionnez 'Formulaires'.",
+                "tutorial.complete": "Tutoriel terminé !",
+                "tutorial.complete_desc": "Vous avez terminé avec succès la formation de base. Vous pouvez maintenant utiliser librement le panneau de contrôle. Pour répéter le tutoriel, cliquez sur le bouton d'aide dans le coin inférieur droit.",
+                "tutorial.next": "Suivant",
+                "tutorial.prev": "Retour",
+                "tutorial.skip": "Passer",
+                "tutorial.start": "Commencer le tutoriel",
+                "tutorial.restart": "Répéter le tutoriel"
             },
             ar: {
                 "nav.dashboard": "لوحة التحكم",
@@ -1358,6 +1767,9 @@
                 "wallets.list": "قائمة المحافظ",
                 "wallets.wallets_found": "محفظة وجدت",
                 "wallets.loading": "جاري تحميل المحافظ...",
+                "wallets.test_forms": "اختبار النماذج",
+                "wallets.test_connection": "اختبار الاتصال",
+                "wallets.testing": "جاري الاختبار...",
                 "wallets.filter_form": "النموذج",
                 "wallets.all_forms": "جميع النماذج",
                 "wallets.filter_type": "نوع المحفظة",
@@ -1404,13 +1816,134 @@
                 "toast.add_error": "خطأ في إضافة المحفظة",
                 "toast.logout_success": "تم تسجيل الخروج بنجاح",
                 "toast.logout_error": "خطأ في تسجيل الخروج",
+                "toast.test_success": "تم الاتصال بنجاح",
+                "toast.test_error": "خطأ في الاتصال",
                 "role.superadmin": "مشرف رئيسي",
                 "role.admin": "مشرف",
                 "role.manager": "مدير",
-                "role.viewer": "مشاهد"
+                "role.viewer": "مشاهد",
+                "tutorial.welcome": "مرحبًا بك في لوحة إدارة المحافظ!",
+                "tutorial.welcome_desc": "دعنا نتعرف على الوظائف الرئيسية. سيساعدك هذا البرنامج التعليمي التفاعلي على إتقان الواجهة.",
+                "tutorial.sidebar": "قائمة التنقل",
+                "tutorial.sidebar_desc": "هنا يمكنك التبديل بين أقسام لوحة التحكم. انقر على قائمة البرجر لفتح/إغلاق التنقل.",
+                "tutorial.refresh": "زر التحديث",
+                "tutorial.refresh_desc": "يحدث هذا الزر قائمة المحافظ. استخدمه للحصول على بيانات محدثة.",
+                "tutorial.add_wallet": "إضافة محفظة",
+                "tutorial.add_wallet_desc": "انقر هنا لإضافة محفظة جديدة إلى النظام.",
+                "tutorial.filters": "الفلاتر",
+                "tutorial.filters_desc": "استخدم هذه الفلاتر للبحث وفرز المحافظ حسب النموذج أو النوع أو الحالة أو الرقم.",
+                "tutorial.table": "جدول المحافظ",
+                "tutorial.table_desc": "يتم عرض جميع المحافظ هنا. يمكنك تعديل أو تمكين/تعطيل أو حذف المحافظ باستخدام أزرار الإجراءات.",
+                "tutorial.edit_wallet": "تعديل المحفظة",
+                "tutorial.edit_wallet_desc": "انقر على زر التعديل لتغيير معلمات المحفظة.",
+                "tutorial.forms_navigation": "الانتقال إلى النماذج",
+                "tutorial.forms_navigation_desc": "الآن دعنا ننتقل إلى قسم 'النماذج' لمواصلة التعلم. افتح القائمة واختر 'النماذج'.",
+                "tutorial.complete": "اكتمل البرنامج التعليمي!",
+                "tutorial.complete_desc": "لقد أكملت بنجاح التدريب الأساسي. يمكنك الآن استخدام لوحة التحكم بحرية. لتكرار البرنامج التعليمي، انقر على زر المساعدة في الزاوية اليمنى السفلية.",
+                "tutorial.next": "التالي",
+                "tutorial.prev": "السابق",
+                "tutorial.skip": "تخطي",
+                "tutorial.start": "بدء البرنامج التعليمي",
+                "tutorial.restart": "تكرار البرنامج التعليمي"
             }
         };
-
+        
+        // Tutorial steps configuration
+        /*const*/ tutorialStepsConfig = [
+            {
+                elementId: 'burgerMenu',
+                title: 'tutorial.sidebar',
+                description: 'tutorial.sidebar_desc',
+                position: 'bottom',
+                action: () => {
+                    // Auto-open sidebar on mobile
+                    if (window.innerWidth <= 1024) {
+                        toggleSidebar();
+                    }
+                }
+            },
+            {
+                elementId: 'refreshBtn',
+                title: 'tutorial.refresh',
+                description: 'tutorial.refresh_desc',
+                position: 'bottom'
+            },
+            {
+                elementId: 'addWalletBtn',
+                title: 'tutorial.add_wallet',
+                description: 'tutorial.add_wallet_desc',
+                position: 'bottom'
+            },
+            {
+                elementId: 'formFilter',
+                title: 'tutorial.filters',
+                description: 'tutorial.filters_desc',
+                position: 'bottom'
+            },
+            {
+                elementId: 'walletsTable',
+                title: 'tutorial.table',
+                description: 'tutorial.table_desc',
+                position: 'top'
+            },
+            {
+                elementId: 'editBtnPlaceholder',
+                title: 'tutorial.edit_wallet',
+                description: 'tutorial.edit_wallet_desc',
+                position: 'bottom',
+                action: () => {
+                    // Find first edit button in table
+                    const editBtn = document.querySelector('.action-btn.edit');
+                    if (editBtn) {
+                        highlightElement(editBtn.getBoundingClientRect());
+                    }
+                }
+            },
+            {
+                elementId: 'sidebar',
+                title: 'tutorial.forms_navigation',
+                description: 'tutorial.forms_navigation_desc',
+                position: 'right',
+                action: () => {
+                    // Open sidebar and highlight Forms link
+                    if (window.innerWidth > 1024) {
+                        const formsLink = document.querySelector('a[href*="forms.html"]');
+                        if (formsLink) {
+                            highlightElement(formsLink.getBoundingClientRect());
+                        }
+                    } else {
+                        toggleSidebar();
+                        setTimeout(() => {
+                            const formsLink = document.querySelector('a[href*="forms.html"]');
+                            if (formsLink) {
+                                highlightElement(formsLink.getBoundingClientRect());
+                            }
+                        }, 300);
+                    }
+                }
+            },
+            {
+                elementId: null, // No element for final step
+                title: 'tutorial.complete',
+                description: 'tutorial.complete_desc',
+                position: 'center'
+            }
+        ];
+        
+        // Initialize tutorial
+       /* function initTutorial() {
+            // Check if tutorial was completed before
+            const tutorialCompleted = localStorage.getItem('wallets_tutorial_completed');
+            if (!tutorialCompleted) {
+                // Show start tutorial button after page loads
+                setTimeout(() => {
+                    if (confirm(translations[currentLanguage]['tutorial.start'] + '?')) {
+                        startTutorial();
+                    }
+                }, 2000);
+            }
+        }*/
+        
         // Show toast notification
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
@@ -1421,7 +1954,8 @@
             toast.className = `toast ${type}`;
             toastIcon.className = type === 'success' ? 'fas fa-check-circle' : 
                                 type === 'error' ? 'fas fa-exclamation-circle' : 
-                                'fas fa-exclamation-triangle';
+                                type === 'warning' ? 'fas fa-exclamation-triangle' :
+                                'fas fa-info-circle';
             
             toast.classList.add('show');
             
@@ -1429,17 +1963,24 @@
                 toast.classList.remove('show');
             }, 3000);
         }
-
-        // Show loading overlay
-        function showLoading() {
-            document.getElementById('loadingOverlay').classList.add('show');
+        
+        // Show table loader
+        function showTableLoader() {
+            document.getElementById('tableLoader').classList.add('show');
+            document.getElementById('walletsTableBody').innerHTML = '';
+            document.getElementById('noWallets').style.display = 'none';
         }
-
-        // Hide loading overlay
-        function hideLoading() {
-            document.getElementById('loadingOverlay').classList.remove('show');
+        
+        // Hide table loader
+        function hideTableLoader() {
+            document.getElementById('tableLoader').classList.remove('show');
         }
-
+        
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        }
+        
         // Apply translation
         function applyTranslation(lang) {
             const dict = translations[lang];
@@ -1473,7 +2014,7 @@
                 updateRoleTranslation();
             }
         }
-
+        
         // Update role translation
         function updateRoleTranslation() {
             const roleKey = `role.${currentUser.role}`;
@@ -1482,7 +2023,7 @@
                 document.getElementById('userRole').textContent = dict[roleKey];
             }
         }
-
+        
         // Setup navigation based on user role
         function setupNavigation() {
             const navLinks = document.getElementById('navLinks');
@@ -1515,16 +2056,21 @@
                     <i class="${item.icon}"></i>
                     <span data-i18n="${item.text}">${item.text}</span>
                 `;
+                a.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 1024) {
+                        toggleSidebar();
+                    }
+                });
                 navLinks.appendChild(a);
             });
             
             // Re-apply translations after navigation is set up
             applyTranslation(currentLanguage);
         }
-
+        
         // Load page data
         async function loadPageData() {
-            showLoading();
+            showTableLoader();
             
             try {
                 const token = localStorage.getItem('admin_token');
@@ -1552,78 +2098,87 @@
                 const savedLang = localStorage.getItem('dashboard_language') || localStorage.getItem('preferred_language') || 'ru';
                 applyTranslation(savedLang);
                 
-                // Load forms
-                await loadForms();
+                // Load forms and wallets in parallel
+                await Promise.all([
+                    loadForms(),
+                    loadWallets()
+                ]);
                 
-                // Load wallets
-                await loadWallets();
+                /*// Initialize tutorial after page loads
+                setTimeout(initTutorial, 1000);*/
                 
             } catch (error) {
                 console.error('Error loading page:', error);
-                showToast(translations[currentLanguage]['toast.error'], 'error');
+                showToast(translations[currentLanguage]?.['toast.error'], 'error');
             } finally {
-                hideLoading();
+                hideTableLoader();
             }
         }
-
+        
         // Load forms
         async function loadForms() {
             try {
                 const token = localStorage.getItem('admin_token');
-                const response = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
                 
-                if (!response.ok) throw new Error('Network error');
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    allForms = result.forms || [];
-                    
-                    // Filter forms based on user role
-                    let displayForms = allForms;
-                    
-                    // If user is manager, filter by assigned forms
-                    if (currentUser.role === 'manager') {
-                        const assignedForms = await getAssignedForms();
-                        displayForms = allForms.filter(form => 
-                            assignedForms.some(assigned => assigned === form.formName)
-                        );
-                    }
-                    
-                    // Populate form filter dropdown
-                    const formFilter = document.getElementById('formFilter');
-                    formFilter.innerHTML = '<option value="all">' + translations[currentLanguage]['wallets.all_forms'] + '</option>';
-                    
-                    // Populate add form dropdown
-                    const addFormSelect = document.getElementById('addFormSelect');
-                    addFormSelect.innerHTML = '<option value="">' + translations[currentLanguage]['wallets.select_form'] + '</option>';
-                    
-                    displayForms.forEach(form => {
-                        const option = document.createElement('option');
-                        option.value = form.formName;
-                        option.textContent = form.formName;
-                        option.dataset.api = form.formAPI;
-                        formFilter.appendChild(option.cloneNode(true));
-                        addFormSelect.appendChild(option);
-                    });
-                    
+                // Check cache
+                if (apiCache.forms && Date.now() - apiCache.lastUpdated < 30000) {
+                    allForms = apiCache.forms;
                 } else {
-                    showToast(result.error || translations[currentLanguage]['toast.error'], 'error');
+                    const response = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
+                    
+                    if (!response.ok) throw new Error('Network error');
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        allForms = result.forms || [];
+                        apiCache.forms = allForms;
+                        apiCache.lastUpdated = Date.now();
+                    } else {
+                        showToast(result.error || translations[currentLanguage]?.['toast.error'], 'error');
+                        return;
+                    }
                 }
+                
+                // Filter forms based on user role
+                let displayForms = allForms;
+                
+                // If user is manager, filter by assigned forms
+                if (currentUser.role === 'manager') {
+                    const assignedForms = await getAssignedForms();
+                    displayForms = allForms.filter(form => 
+                        assignedForms.some(assigned => assigned === form.formName)
+                    );
+                }
+                
+                // Populate form filter dropdown
+                const formFilter = document.getElementById('formFilter');
+                formFilter.innerHTML = '<option value="all">' + (translations[currentLanguage]?.['wallets.all_forms'] || 'Все формы') + '</option>';
+                
+                // Populate add form dropdown
+                const addFormSelect = document.getElementById('addFormSelect');
+                addFormSelect.innerHTML = '<option value="">' + (translations[currentLanguage]?.['wallets.select_form'] || 'Выберите форму') + '</option>';
+                
+                displayForms.forEach(form => {
+                    const option = document.createElement('option');
+                    option.value = form.formName;
+                    option.textContent = form.formName;
+                    option.dataset.api = form.formAPI;
+                    formFilter.appendChild(option.cloneNode(true));
+                    addFormSelect.appendChild(option);
+                });
+                
             } catch (error) {
                 console.error('Error loading forms:', error);
             }
         }
-
+        
         // Update form API when form is selected in add modal
         function updateAddFormApi() {
-            const formSelect = document.getElementById('addFormSelect');
-            const selectedOption = formSelect.options[formSelect.selectedIndex];
-            if (selectedOption && selectedOption.dataset.api) {
-                selectedOption.dataset.api = selectedOption.dataset.api;
-            }
+            // This function is called when form selection changes
+            // No action needed as we get API from option dataset
         }
-
+        
         // Get assigned forms for manager
         async function getAssignedForms() {
             try {
@@ -1645,22 +2200,19 @@
                 return [];
             }
         }
-
+        
         // Load wallets
         async function loadWallets() {
+            showTableLoader();
+            
             try {
                 const token = localStorage.getItem('admin_token');
                 
-                // Get all forms
-                const formsResponse = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
-                if (!formsResponse.ok) throw new Error('Failed to load forms');
+                // Check cache for forms
+                if (!apiCache.forms) {
+                    await loadForms();
+                }
                 
-                const formsResult = await formsResponse.json();
-                if (!formsResult.success) throw new Error(formsResult.error || 'Failed to load forms');
-                
-                allForms = formsResult.forms || [];
-                
-                // Filter forms for manager
                 let displayForms = allForms;
                 if (currentUser.role === 'manager') {
                     const assignedForms = await getAssignedForms();
@@ -1669,9 +2221,18 @@
                     );
                 }
                 
-                // Get wallets from each form
+                // Get wallets from each form in parallel
                 const walletsPromises = displayForms.map(async (form) => {
                     try {
+                        const cacheKey = `wallets_${form.formName}`;
+                        const cachedWallets = localStorage.getItem(cacheKey);
+                        const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+                        
+                        // Use cache if less than 30 seconds old
+                        if (cachedWallets && cacheTimestamp && Date.now() - parseInt(cacheTimestamp) < 30000) {
+                            return JSON.parse(cachedWallets);
+                        }
+                        
                         const walletsResponse = await fetch(`${form.formAPI}?action=get_wallets&show_all=true`);
                         if (!walletsResponse.ok) {
                             console.warn(`Failed to load wallets from form: ${form.formName}`);
@@ -1679,8 +2240,10 @@
                         }
                         
                         const walletsResult = await walletsResponse.json();
+                        let formWallets = [];
+                        
                         if (walletsResult.status === 'success' && walletsResult.wallets) {
-                            return Object.entries(walletsResult.wallets).flatMap(([walletType, walletData]) => {
+                            formWallets = Object.entries(walletsResult.wallets).flatMap(([walletType, walletData]) => {
                                 const walletNumbers = walletData.numbersInfo || walletData.availableNumbers || [];
                                 
                                 return Object.entries(walletNumbers).map(([walletNumber, walletInfo]) => {
@@ -1700,8 +2263,13 @@
                                     };
                                 });
                             });
+                            
+                            // Cache the results
+                            localStorage.setItem(cacheKey, JSON.stringify(formWallets));
+                            localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
                         }
-                        return [];
+                        
+                        return formWallets;
                     } catch (error) {
                         console.error(`Error loading wallets from form ${form.formName}:`, error);
                         return [];
@@ -1713,15 +2281,17 @@
                 
                 filterWallets();
                 
-                showToast(translations[currentLanguage]['toast.success'], 'success');
+                showToast(translations[currentLanguage]?.['toast.success'], 'success');
                 
             } catch (error) {
                 console.error('Error loading wallets:', error);
-                showToast(translations[currentLanguage]['toast.error'] + ': ' + error.message, 'error');
+                showToast((translations[currentLanguage]?.['toast.error'] || 'Ошибка') + ': ' + error.message, 'error');
                 renderWalletsTable([]);
+            } finally {
+                hideTableLoader();
             }
         }
-
+        
         // Filter wallets
         function filterWallets() {
             const formFilter = document.getElementById('formFilter').value;
@@ -1764,13 +2334,13 @@
             renderWalletsTable(filteredWallets);
             updateWalletsCount();
         }
-
+        
         // Update wallets count
         function updateWalletsCount() {
             const countElement = document.getElementById('walletsCount');
             countElement.textContent = filteredWallets.length;
         }
-
+        
         // Render wallets table
         function renderWalletsTable(wallets) {
             const tbody = document.getElementById('walletsTableBody');
@@ -1790,8 +2360,8 @@
                 
                 const statusClass = wallet.enabled ? 'active' : 'inactive';
                 const statusText = wallet.enabled ? 
-                    translations[currentLanguage]['status.active'] : 
-                    translations[currentLanguage]['status.inactive'];
+                    translations[currentLanguage]?.['status.active'] || 'Активен' : 
+                    translations[currentLanguage]?.['status.inactive'] || 'Неактивен';
                 
                 row.innerHTML = `
                     <td>${wallet.formName || 'N/A'}</td>
@@ -1801,13 +2371,13 @@
                     <td><span class="status ${statusClass}">${statusText}</span></td>
                     <td>
                         ${currentPermissions.canManageWallets ? `
-                            <button class="action-btn edit" onclick="openEditModal('${wallet.id}')" title="${translations[currentLanguage]['wallets.edit']}">
+                            <button class="action-btn edit" onclick="openEditModal('${wallet.id}')" title="${translations[currentLanguage]?.['wallets.edit'] || 'Изменить'}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="action-btn toggle" onclick="toggleWalletStatus('${wallet.id}', ${!wallet.enabled})" title="${translations[currentLanguage]['wallets.toggle']}">
+                            <button class="action-btn toggle" onclick="toggleWalletStatus('${wallet.id}', ${!wallet.enabled}, this)" title="${translations[currentLanguage]?.['wallets.toggle'] || 'Переключить'}">
                                 <i class="fas fa-power-off"></i>
                             </button>
-                            <button class="action-btn delete" onclick="deleteWallet('${wallet.id}')" title="${translations[currentLanguage]['wallets.delete']}">
+                            <button class="action-btn delete" onclick="deleteWallet('${wallet.id}', this)" title="${translations[currentLanguage]?.['wallets.delete'] || 'Удалить'}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         ` : ''}
@@ -1817,7 +2387,7 @@
                 tbody.appendChild(row);
             });
         }
-
+        
         // Open edit modal
         function openEditModal(walletId) {
             const wallet = allWallets.find(w => w.id === walletId);
@@ -1833,24 +2403,146 @@
             
             document.getElementById('editModal').classList.add('show');
         }
-
+        
         // Close edit modal
         function closeEditModal() {
             document.getElementById('editModal').classList.remove('show');
             document.getElementById('editForm').reset();
         }
-
+        
         // Open add modal
         function openAddModal() {
             document.getElementById('addModal').classList.add('show');
         }
-
+        
         // Close add modal
         function closeAddModal() {
             document.getElementById('addModal').classList.remove('show');
             document.getElementById('addForm').reset();
         }
-
+        
+        // Test form connection
+        async function testCurrentForm() {
+            const formSelect = document.getElementById('addFormSelect');
+            const selectedOption = formSelect.options[formSelect.selectedIndex];
+            const formName = formSelect.value;
+            const formApi = selectedOption?.dataset.api;
+            
+            if (!formName || !formApi) {
+                showToast('Выберите форму для тестирования', 'warning');
+                return;
+            }
+            
+            const testBtn = event?.target?.closest('button');
+            const originalText = testBtn?.innerHTML;
+            
+            try {
+                if (testBtn) {
+                    testBtn.disabled = true;
+                    testBtn.classList.add('loading');
+                    testBtn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]?.['wallets.testing'] || 'Тестирование...'}`;
+                }
+                
+                const params = new URLSearchParams();
+                params.append('action', 'test');
+                params.append('_t', Date.now().toString());
+                
+                const testUrl = `${formApi}?${params.toString()}`;
+                console.log('Testing form:', testUrl);
+                
+                let response;
+                let result;
+                
+                try {
+                    response = await fetch(testUrl, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' },
+                        cache: 'no-cache'
+                    });
+                    
+                    const responseText = await response.text();
+                    
+                    try {
+                        result = JSON.parse(responseText);
+                    } catch {
+                        result = { success: true, message: 'Form is responding' };
+                    }
+                    
+                } catch (fetchError) {
+                    console.warn('Direct fetch failed, trying /exec:', fetchError);
+                    
+                    const execUrl = formApi.replace(/\/[^\/]*$/, '/exec') + '?' + params.toString();
+                    response = await fetch(execUrl, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' },
+                        cache: 'no-cache'
+                    });
+                    
+                    const responseText = await response.text();
+                    result = JSON.parse(responseText);
+                }
+                
+                if (result && (result.success || result.status === 'success')) {
+                    showToast(`${formName}: ${translations[currentLanguage]?.['toast.test_success'] || 'Подключение успешно'}`, 'success');
+                } else {
+                    throw new Error(result?.error || result?.message || 'Unknown error');
+                }
+                
+            } catch (error) {
+                console.error('Form test error:', error);
+                showToast(`${formName}: ${translations[currentLanguage]?.['toast.test_error'] || 'Ошибка подключения'}: ${error.message}`, 'error');
+            } finally {
+                if (testBtn) {
+                    testBtn.disabled = false;
+                    testBtn.classList.remove('loading');
+                    testBtn.innerHTML = originalText;
+                }
+            }
+        }
+        
+        // Test all forms
+        async function testAllForms() {
+            const btn = document.getElementById('testFormsBtn');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.classList.add('loading');
+                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]?.['wallets.testing'] || 'Тестирование...'}`;
+                
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const form of allForms) {
+                    try {
+                        const testUrl = `${form.formAPI}?action=test&_t=${Date.now()}`;
+                        const response = await fetch(testUrl, { method: 'GET', cache: 'no-cache' });
+                        
+                        if (response.ok) {
+                            successCount++;
+                        } else {
+                            errorCount++;
+                        }
+                    } catch {
+                        errorCount++;
+                    }
+                }
+                
+                showToast(
+                    `${translations[currentLanguage]?.['wallets.test_forms'] || 'Тест форм'}: ${successCount} успешно, ${errorCount} с ошибками`,
+                    errorCount === 0 ? 'success' : errorCount === allForms.length ? 'error' : 'warning'
+                );
+                
+            } catch (error) {
+                console.error('Test all forms error:', error);
+                showToast(translations[currentLanguage]?.['toast.error'], 'error');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                btn.innerHTML = originalText;
+            }
+        }
+        
         // Save wallet changes
         async function saveWalletChanges(event) {
             event.preventDefault();
@@ -1861,7 +2553,7 @@
             try {
                 btn.disabled = true;
                 btn.classList.add('loading');
-                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]['wallets.saving']}`;
+                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]?.['wallets.saving'] || 'Сохранение...'}`;
                 
                 const walletId = document.getElementById('editWalletId').value;
                 const formApi = document.getElementById('editWalletFormApi').value;
@@ -1871,50 +2563,63 @@
                 const walletEnabled = document.getElementById('editWalletEnabled').checked;
                 
                 if (!formApi) {
-                    throw new Error('Form API not found');
+                    throw new Error('API формы не найден');
                 }
                 
                 const originalWallet = allWallets.find(w => w.id === walletId);
                 if (!originalWallet) {
-                    throw new Error('Wallet not found');
+                    throw new Error('Кошелек не найден');
                 }
                 
-                const updateParams = new URLSearchParams({
+                // Prepare update data
+                const updateData = {
                     action: 'update_wallet_status',
-                    wallet_type: originalWallet.type,
-                    wallet_number: originalWallet.number,
+                    wallet_type: walletType,
+                    wallet_number: walletNumber,
                     enabled: walletEnabled.toString(),
-                    wallet_name: walletName
-                });
+                    wallet_name: walletName || walletType
+                };
                 
-                if (walletType !== originalWallet.type) {
-                    updateParams.set('wallet_type', walletType);
+                // Send update request to form API
+                const params = new URLSearchParams();
+                for (const key in updateData) {
+                    params.append(key, updateData[key]);
                 }
                 
-                const updateUrl = `${formApi}?${updateParams.toString()}`;
+                const updateUrl = `${formApi}?${params.toString()}`;
                 
-                await fetch(updateUrl, {
-                    method: 'GET',
-                    mode: 'no-cors'
-                }).catch(err => {
-                    return fetch(`${formApi}/exec?${updateParams.toString()}`);
-                });
+                try {
+                    const response = await fetch(updateUrl, {
+                        method: 'GET',
+                        mode: 'no-cors'
+                    }).catch(err => {
+                        return fetch(`${formApi}/exec?${params.toString()}`);
+                    });
+                } catch (fetchError) {
+                    console.warn('Update fetch error:', fetchError);
+                }
                 
+                // Clear cache for this form
+                const formName = originalWallet.formName;
+                localStorage.removeItem(`wallets_${formName}`);
+                localStorage.removeItem(`wallets_${formName}_timestamp`);
+                
+                // Reload wallets
                 await loadWallets();
                 
-                showToast(translations[currentLanguage]['toast.save_success'], 'success');
+                showToast(translations[currentLanguage]?.['toast.save_success'] || 'Кошелёк успешно обновлён', 'success');
                 closeEditModal();
                 
             } catch (error) {
                 console.error('Error saving wallet:', error);
-                showToast(translations[currentLanguage]['toast.save_error'] + ': ' + error.message, 'error');
+                showToast((translations[currentLanguage]?.['toast.save_error'] || 'Ошибка сохранения') + ': ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('loading');
                 btn.innerHTML = originalText;
             }
         }
-
+        
         // Add new wallet
         async function addNewWallet(event) {
             event.preventDefault();
@@ -1925,102 +2630,237 @@
             try {
                 btn.disabled = true;
                 btn.classList.add('loading');
-                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]['wallets.adding']}`;
+                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]?.['wallets.adding'] || 'Добавление...'}`;
                 
                 const formSelect = document.getElementById('addFormSelect');
                 const selectedOption = formSelect.options[formSelect.selectedIndex];
                 const formName = formSelect.value;
                 const formApi = selectedOption.dataset.api;
                 const walletType = document.getElementById('addWalletType').value;
-                const walletName = document.getElementById('addWalletName').value;
+                const walletName = document.getElementById('addWalletName').value || walletType;
                 const walletNumber = document.getElementById('addWalletNumber').value;
                 const walletEnabled = document.getElementById('addWalletEnabled').checked;
                 
+                console.log('=== ДАННЫЕ ДЛЯ ДОБАВЛЕНИЯ ===');
+                console.log('Форма:', formName);
+                console.log('API формы:', formApi);
+                console.log('Тип кошелька:', walletType);
+                console.log('Имя кошелька:', walletName);
+                console.log('Номер кошелька:', walletNumber);
+                console.log('Активен:', walletEnabled);
+                
                 if (!formName || !formApi) {
-                    throw new Error('Please select a form');
+                    throw new Error('Пожалуйста, выберите форму');
                 }
                 
-                if (!walletName || !walletNumber) {
-                    throw new Error('Please fill all required fields');
+                if (!walletType || !walletNumber) {
+                    throw new Error('Пожалуйста, заполните тип и номер кошелька');
                 }
                 
-                // Send request to add wallet
-                const addParams = new URLSearchParams({
-                    action: 'add_wallet',
-                    wallet_type: walletType,
-                    wallet_number: walletNumber,
-                    wallet_name: walletName,
-                    enabled: walletEnabled.toString()
-                });
+                // Создаем URL с параметрами
+                const params = new URLSearchParams();
+                params.append('action', 'add_wallet');
+                params.append('type', walletType);
+                params.append('name', walletName);
+                params.append('number', walletNumber);
+                params.append('enabled', walletEnabled.toString());
                 
-                const addUrl = `${formApi}?${addParams.toString()}`;
+                // Добавляем timestamp для предотвращения кэширования
+                params.append('_t', Date.now().toString());
                 
-                await fetch(addUrl, {
-                    method: 'GET',
-                    mode: 'no-cors'
-                }).catch(err => {
-                    return fetch(`${formApi}/exec?${addParams.toString()}`);
-                });
+                const addUrl = `${formApi}?${params.toString()}`;
+                console.log('Полный URL запроса:', addUrl);
                 
-                await loadWallets();
+                // Пробуем разные методы запроса
+                let response;
+                let result;
                 
-                showToast(translations[currentLanguage]['toast.add_success'], 'success');
-                closeAddModal();
+                try {
+                    console.log('Пробуем Method 1: прямой fetch...');
+                    response = await fetch(addUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        cache: 'no-cache'
+                    });
+                    
+                    console.log('Response status:', response.status);
+                    
+                    const responseText = await response.text();
+                    console.log('Response text:', responseText);
+                    
+                    // Пробуем распарсить JSON
+                    try {
+                        result = JSON.parse(responseText);
+                        console.log('Parsed JSON result:', result);
+                    } catch (parseError) {
+                        console.warn('Не удалось распарсить JSON:', parseError);
+                        // Может быть, это JSONP?
+                        if (responseText.includes('(') && responseText.includes(')')) {
+                            const jsonpMatch = responseText.match(/\((.*)\)/);
+                            if (jsonpMatch && jsonpMatch[1]) {
+                                result = JSON.parse(jsonpMatch[1]);
+                                console.log('Parsed JSONP result:', result);
+                            }
+                        }
+                        throw new Error('Некорректный ответ от сервера');
+                    }
+                    
+                } catch (fetchError) {
+                    console.warn('Method 1 failed:', fetchError);
+                    
+                    // Пробуем Method 2: через /exec
+                    try {
+                        console.log('Пробуем Method 2: через /exec...');
+                        const execUrl = formApi.replace(/\/[^\/]*$/, '/exec') + '?' + params.toString();
+                        console.log('Exec URL:', execUrl);
+                        
+                        response = await fetch(execUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                            },
+                            cache: 'no-cache'
+                        });
+                        
+                        const responseText = await response.text();
+                        console.log('Exec response text:', responseText);
+                        
+                        result = JSON.parse(responseText);
+                        console.log('Exec parsed result:', result);
+                        
+                    } catch (execError) {
+                        console.warn('Method 2 failed:', execError);
+                        throw new Error('Не удалось подключиться к форме. Проверьте подключение.');
+                    }
+                }
+                
+                // Проверяем результат
+                if (result && (result.success === true || result.status === 'success')) {
+                    console.log('✅ Кошелек успешно добавлен');
+                    
+                    // Очищаем кэш
+                    localStorage.removeItem(`wallets_${formName}`);
+                    localStorage.removeItem(`wallets_${formName}_timestamp`);
+                    
+                    // Показываем успешное сообщение
+                    showToast(
+                        result.message || translations[currentLanguage]?.['toast.add_success'] || 'Кошелёк успешно добавлен', 
+                        'success'
+                    );
+                    
+                    // Перезагружаем кошельки
+                    await loadWallets();
+                    
+                    // Закрываем модальное окно
+                    closeAddModal();
+                    
+                } else {
+                    // Показываем ошибку
+                    const errorMsg = result?.error || result?.message || 'Неизвестная ошибка при добавлении кошелька';
+                    console.error('Ошибка добавления кошелька:', errorMsg);
+                    throw new Error(errorMsg);
+                }
                 
             } catch (error) {
-                console.error('Error adding wallet:', error);
-                showToast(translations[currentLanguage]['toast.add_error'] + ': ' + error.message, 'error');
+                console.error('❌ Ошибка в addNewWallet:', error);
+                
+                // Более подробное сообщение об ошибке
+                let errorMessage = error.message;
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMessage = 'Проблема с сетью. Проверьте подключение к интернету.';
+                } else if (error.message.includes('CORS')) {
+                    errorMessage = 'Проблема с CORS. Попробуйте обновить страницу.';
+                }
+                
+                showToast(
+                    (translations[currentLanguage]?.['toast.add_error'] || 'Ошибка добавления') + ': ' + errorMessage, 
+                    'error'
+                );
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('loading');
                 btn.innerHTML = originalText;
             }
         }
-
+        
         // Toggle wallet status
-        async function toggleWalletStatus(walletId, newStatus) {
+        async function toggleWalletStatus(walletId, newStatus, button) {
+            const wallet = allWallets.find(w => w.id === walletId);
+            if (!wallet || !wallet.formApi) return;
+            
             try {
-                const wallet = allWallets.find(w => w.id === walletId);
-                if (!wallet || !wallet.formApi) return;
+                // Add loading state to button
+                const originalHTML = button.innerHTML;
+                button.innerHTML = `<div class="loader"></div>`;
+                button.disabled = true;
                 
                 const updateUrl = `${wallet.formApi}?action=update_wallet_status&wallet_type=${encodeURIComponent(wallet.type)}&wallet_number=${encodeURIComponent(wallet.number)}&enabled=${newStatus.toString()}`;
                 
                 await fetch(updateUrl, { method: 'GET', mode: 'no-cors' })
                     .catch(err => fetch(`${wallet.formApi}/exec?action=update_wallet_status&wallet_type=${wallet.type}&wallet_number=${wallet.number}&enabled=${newStatus}`));
                 
+                // Clear cache for this form
+                localStorage.removeItem(`wallets_${wallet.formName}`);
+                localStorage.removeItem(`wallets_${wallet.formName}_timestamp`);
+                
+                // Reload wallets
                 await loadWallets();
                 
-                showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
+                showToast(translations[currentLanguage]?.['toast.toggle_success'] || 'Статус кошелька изменён', 'success');
                 
             } catch (error) {
                 console.error('Error toggling wallet:', error);
-                showToast(translations[currentLanguage]['toast.toggle_error'] + ': ' + error.message, 'error');
+                showToast((translations[currentLanguage]?.['toast.toggle_error'] || 'Ошибка при изменении статуса') + ': ' + error.message, 'error');
+                
+                // Restore button state on error
+                if (button) {
+                    button.innerHTML = originalHTML;
+                    button.disabled = false;
+                }
             }
         }
-
+        
         // Delete wallet
-        async function deleteWallet(walletId) {
-            if (!confirm(translations[currentLanguage]['wallets.delete'] + '?')) return;
+        async function deleteWallet(walletId, button) {
+            if (!confirm(translations[currentLanguage]?.['wallets.delete'] || 'Удалить' + '?')) return;
+            
+            const wallet = allWallets.find(w => w.id === walletId);
+            if (!wallet || !wallet.formApi) return;
             
             try {
-                const wallet = allWallets.find(w => w.id === walletId);
-                if (!wallet || !wallet.formApi) return;
+                // Add loading state to button
+                const originalHTML = button.innerHTML;
+                button.innerHTML = `<div class="loader"></div>`;
+                button.disabled = true;
                 
                 const deleteUrl = `${wallet.formApi}?action=delete_wallet&wallet_type=${encodeURIComponent(wallet.type)}&wallet_number=${encodeURIComponent(wallet.number)}`;
                 
                 await fetch(deleteUrl, { method: 'GET', mode: 'no-cors' })
                     .catch(err => fetch(`${wallet.formApi}/exec?action=delete_wallet&wallet_type=${wallet.type}&wallet_number=${wallet.number}`));
                 
+                // Clear cache for this form
+                localStorage.removeItem(`wallets_${wallet.formName}`);
+                localStorage.removeItem(`wallets_${wallet.formName}_timestamp`);
+                
+                // Reload wallets
                 await loadWallets();
                 
-                showToast(translations[currentLanguage]['toast.delete_success'], 'success');
+                showToast(translations[currentLanguage]?.['toast.delete_success'] || 'Кошелёк успешно удалён', 'success');
                 
             } catch (error) {
                 console.error('Error deleting wallet:', error);
-                showToast(translations[currentLanguage]['toast.delete_error'] + ': ' + error.message, 'error');
+                showToast((translations[currentLanguage]?.['toast.delete_error'] || 'Ошибка при удалении кошелька') + ': ' + error.message, 'error');
+                
+                // Restore button state on error
+                if (button) {
+                    button.innerHTML = originalHTML;
+                    button.disabled = false;
+                }
             }
         }
-
+        
         // Refresh wallets
         async function refreshWallets() {
             const btn = document.getElementById('refreshBtn');
@@ -2029,22 +2869,31 @@
             try {
                 btn.disabled = true;
                 btn.classList.add('loading');
-                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]['wallets.refreshing']}`;
+                btn.innerHTML = `<div class="loader"></div> ${translations[currentLanguage]?.['wallets.refreshing'] || 'Обновление...'}`;
+                
+                // Clear all cache
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('wallets_') || key.includes('_timestamp')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                apiCache.forms = null;
+                apiCache.lastUpdated = null;
                 
                 await loadWallets();
                 
-                showToast(translations[currentLanguage]['toast.success'], 'success');
+                showToast(translations[currentLanguage]?.['toast.success'] || 'Данные обновлены', 'success');
                 
             } catch (error) {
                 console.error('Error refreshing:', error);
-                showToast(translations[currentLanguage]['toast.error'], 'error');
+                showToast(translations[currentLanguage]?.['toast.error'], 'error');
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('loading');
                 btn.innerHTML = originalText;
             }
         }
-
+        
         // Logout
         async function logout() {
             const btn = document.getElementById('logoutBtn');
@@ -2058,32 +2907,313 @@
                 const token = localStorage.getItem('admin_token');
                 await fetch(`${API_URL}?action=logout&token=${token}`).catch(() => {});
                 
-                // Clear local storage
-                localStorage.removeItem('admin_token');
-                localStorage.removeItem('admin_user');
-                localStorage.removeItem('admin_permissions');
+                // Clear all local storage
+                localStorage.clear();
                 
                 // Redirect to login
                 window.location.href = 'index.html';
                 
             } catch (error) {
                 console.error('Logout error:', error);
-                showToast(translations[currentLanguage]['toast.logout_error'], 'error');
+                showToast(translations[currentLanguage]?.['toast.logout_error'], 'error');
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('loading');
                 btn.innerHTML = originalText;
             }
         }
-
+        
+        // ТУТОРИАЛ - ОСНОВНЫЕ ИСПРАВЛЕНИЯ
+        
+        // Start tutorial
+       /* function startTutorial() {
+            console.log('=== START TUTORIAL ===');
+            
+            isTutorialActive = true;
+            currentTutorialStep = 0;
+            highlightedElements.clear();
+            
+            // Прокручиваем к верху страницы
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Запрещаем скроллинг
+            disableScroll();
+            
+            const overlay = document.getElementById('tutorialOverlay');
+            if (overlay) {
+                overlay.classList.add('active');
+            } else {
+                console.error('Tutorial overlay element not found!');
+                return;
+            }
+            
+            // Даем время для прокрутки
+            setTimeout(() => {
+                updateTutorialStep();
+            }, 300);
+            
+            localStorage.removeItem('wallets_tutorial_completed');
+            
+            console.log('=== TUTORIAL STARTED SUCCESSFULLY ===');
+        }*/
+        
+        // Disable scroll during tutorial
+        function disableScroll() {
+            if (!isScrollingEnabled) return;
+            
+            isScrollingEnabled = false;
+            
+            // Сохраняем текущую позицию скролла
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+            
+            // Функция для предотвращения скролла
+            window.onscroll = function() {
+                window.scrollTo(scrollLeft, scrollTop);
+            };
+            
+            // Добавляем стили для body
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.top = `-${scrollTop}px`;
+        }
+        
+        // Enable scroll after tutorial
+        function enableScroll() {
+            if (isScrollingEnabled) return;
+            
+            isScrollingEnabled = true;
+            
+            // Восстанавливаем скролл
+            window.onscroll = null;
+            
+            // Восстанавливаем стили body
+            const scrollTop = parseInt(document.body.style.top || '0') * -1;
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+            
+            // Восстанавливаем позицию скролла
+            window.scrollTo(0, scrollTop);
+        }
+        
+        // Highlight element - УЛУЧШЕННАЯ ВЕРСИЯ
+        function highlightElement(rect) {
+            const highlight = document.getElementById('tutorialHighlight');
+            
+            if (!highlight) return;
+            
+            // Добавляем небольшие отступы
+            const padding = 8;
+            
+            // Учитываем текущую позицию скролла
+            const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+            
+            highlight.style.cssText = `
+                display: block;
+                top: ${rect.top + scrollY - padding}px;
+                left: ${rect.left + scrollX - padding}px;
+                width: ${rect.width + (padding * 2)}px;
+                height: ${rect.height + (padding * 2)}px;
+                pointer-events: none;
+                z-index: 2003;
+                transform: translateZ(0);
+            `;
+        }
+        
+        // Position popup
+        function positionPopup(rect, position) {
+            const popup = document.getElementById('tutorialPopup');
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // Рассчитываем оптимальную позицию
+            let top, left;
+            
+            switch(position) {
+                case 'top':
+                    top = Math.max(20, rect.top - 220);
+                    left = Math.max(20, Math.min(rect.left - 200, viewportWidth - 420));
+                    break;
+                case 'bottom':
+                    top = Math.min(viewportHeight - 320, rect.bottom + 25);
+                    left = Math.max(20, Math.min(rect.left - 150, viewportWidth - 420));
+                    break;
+                case 'left':
+                    top = Math.max(20, rect.top - 50);
+                    left = Math.max(20, rect.left - 440);
+                    break;
+                case 'right':
+                    top = Math.max(20, rect.top - 50);
+                    left = Math.min(viewportWidth - 420, rect.right + 25);
+                    break;
+                default:
+                    // Центр для финального шага
+                    top = '50%';
+                    left = '50%';
+                    popup.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        max-width: 450px;
+                        z-index: 2002;
+                    `;
+                    return;
+            }
+            
+            popup.style.cssText = `
+                position: absolute;
+                top: ${top}px;
+                left: ${left}px;
+                max-width: 380px;
+                z-index: 2002;
+            `;
+        }
+        
+        // Update tutorial step
+        function updateTutorialStep() {
+            // Очищаем стили от предыдущего шага
+            resetElementStyles();
+            
+            const step = tutorialStepsConfig[currentTutorialStep];
+            const dict = translations[currentLanguage];
+            
+            if (!step || !dict) {
+                console.error('Step or dictionary not found');
+                return;
+            }
+            
+            // Update tutorial text
+            document.getElementById('tutorialTitle').textContent = dict[step.title];
+            document.getElementById('tutorialText').textContent = dict[step.description];
+            document.getElementById('tutorialProgress').textContent = 
+                `Шаг ${currentTutorialStep + 1} из ${tutorialStepsConfig.length}`;
+            
+            // Update buttons
+            document.getElementById('prevBtn').style.display = currentTutorialStep === 0 ? 'none' : 'inline-block';
+            document.getElementById('nextBtn').textContent = currentTutorialStep === tutorialStepsConfig.length - 1 ? 
+                dict['tutorial.complete'] : dict['tutorial.next'];
+            
+            // Highlight element
+            if (step.elementId) {
+                if (step.elementId === 'editBtnPlaceholder') {
+                    // Special case for edit button
+                    if (step.action) step.action();
+                } else {
+                    const element = document.getElementById(step.elementId);
+                    if (element) {
+                        const rect = element.getBoundingClientRect();
+                        highlightElement(rect);
+                        positionPopup(rect, step.position);
+                        
+                        // Выделяем элемент на передний план
+                        element.classList.add('tutorial-highlighted-element');
+                        element.style.zIndex = '2004';
+                        element.style.position = 'relative';
+                        
+                        // Execute custom action if exists
+                        if (step.action) {
+                            setTimeout(() => {
+                                if (step.action) step.action();
+                            }, 300);
+                        }
+                    }
+                }
+            } else {
+                // Center popup for final step
+                document.getElementById('tutorialHighlight').style.display = 'none';
+                document.getElementById('tutorialPopup').style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    z-index: 2002;
+                    max-width: 450px;
+                `;
+            }
+        }
+        
+        // Reset element styles
+        function resetElementStyles() {
+            // Убираем классы подсветки
+            document.querySelectorAll('.tutorial-highlighted-element').forEach(el => {
+                el.classList.remove('tutorial-highlighted-element');
+                el.style.zIndex = '';
+                el.style.position = '';
+            });
+            
+            // Скрываем подсветку
+            const highlight = document.getElementById('tutorialHighlight');
+            if (highlight) {
+                highlight.style.display = 'none';
+            }
+        }
+        
+        // Next tutorial step
+        function nextTutorialStep() {
+            if (currentTutorialStep < tutorialStepsConfig.length - 1) {
+                currentTutorialStep++;
+                updateTutorialStep();
+            } else {
+                completeTutorial();
+            }
+        }
+        
+        // Previous tutorial step
+        function prevTutorialStep() {
+            if (currentTutorialStep > 0) {
+                currentTutorialStep--;
+                updateTutorialStep();
+            }
+        }
+        
+        // Skip tutorial
+        function skipTutorial() {
+            if (confirm(translations[currentLanguage]?.['tutorial.skip'] || 'Пропустить обучение?')) {
+                completeTutorial();
+            }
+        }
+        
+        // Complete tutorial
+        function completeTutorial() {
+            isTutorialActive = false;
+            
+            // Восстанавливаем скроллинг
+            enableScroll();
+            
+            // Очищаем стили
+            resetElementStyles();
+            
+            // Скрываем overlay
+            const overlay = document.getElementById('tutorialOverlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+            }
+            
+            localStorage.setItem('wallets_tutorial_completed', 'true');
+            showToast(translations[currentLanguage]?.['tutorial.complete'] || 'Обучение завершено!', 'success');
+        }
+        
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             // Burger menu
             const burgerMenu = document.getElementById('burgerMenu');
             const sidebar = document.getElementById('sidebar');
             
-            burgerMenu.addEventListener('click', function() {
-                sidebar.classList.toggle('mobile-open');
+            burgerMenu.addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 1024 && 
+                    !sidebar.contains(e.target) && 
+                    !burgerMenu.contains(e.target) &&
+                    sidebar.classList.contains('mobile-open')) {
+                    sidebar.classList.remove('mobile-open');
+                }
             });
             
             // Language selector
@@ -2115,6 +3245,36 @@
                         this.classList.remove('show');
                     }
                 });
+            });
+            
+            // Разрешаем клики через overlay НА КНОПКИ ТУТОРИАЛА
+            document.getElementById('tutorialOverlay').addEventListener('click', function(e) {
+                if (!isTutorialActive) return;
+                
+                // Если кликнули на кнопки туториала - пропускаем
+                if (e.target.closest('.tutorial-popup') || 
+                    e.target.closest('.tutorial-btn') ||
+                    e.target.closest('.tutorial-close-btn')) {
+                    return;
+                }
+                
+                // Если кликнули на подсвечиваемый элемент - переходим дальше
+                const highlight = document.getElementById('tutorialHighlight');
+                if (highlight && highlight.style.display !== 'none') {
+                    const rect = highlight.getBoundingClientRect();
+                    
+                    // Проверяем, был ли клик внутри подсветки
+                    if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                        e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                        
+                        // Ищем реальный элемент под курсором
+                        const element = document.elementFromPoint(e.clientX, e.clientY);
+                        if (element && !element.closest('.tutorial-popup')) {
+                            // Клик на подсвечиваемый элемент - переходим дальше
+                            setTimeout(nextTutorialStep, 100);
+                        }
+                    }
+                }
             });
             
             // Load page data
