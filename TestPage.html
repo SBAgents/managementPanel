@@ -2042,7 +2042,7 @@
             
             if (currentUser.role === 'manager' || currentUser.role === 'admin') {
                 allowedNavItems = navItems.filter(item => 
-                    item.id === 'wallets' || item.id === 'forms' || item.id === 'dashboard'
+                    item.id === 'wallets' || item.id === 'forms'
                 );
             } else if (currentUser.role === 'viewer') {
                 allowedNavItems = navItems.filter(item => item.id === 'dashboard');
