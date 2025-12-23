@@ -2571,33 +2571,61 @@
                     throw new Error('Кошелек не найден');
                 }
                 
-                // Prepare update data
-                const updateData = {
-                    action: 'update_wallet_status',
-                    wallet_type: walletType,
-                    wallet_number: walletNumber,
-                    enabled: walletEnabled.toString(),
-                    wallet_name: walletName || walletType
-                };
-                
-                // Send update request to form API
-                const params = new URLSearchParams();
-                for (const key in updateData) {
-                    params.append(key, updateData[key]);
-                }
-                
-                const updateUrl = `${formApi}?${params.toString()}`;
-                
+                // Шаг 1: Сначала добавляем новый кошелёк
+                const addParams = new URLSearchParams();
+                addParams.append('action', 'add_wallet');
+                addParams.append('type', walletType);
+                addParams.append('name', walletName || walletType);
+                addParams.append('number', walletNumber);
+                addParams.append('enabled', walletEnabled.toString());
+                addParams.append('_t', Date.now().toString());
+            
+                const addUrl = `${formApi}?${addParams.toString()}`;
+                console.log('Add new wallet URL:', addUrl);
+            
+                const addResponse = await fetch(addUrl, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-cache'
+                });
+            
+                const addResultText = await addResponse.text();
+                console.log('Add response:', addResultText);
+            
+                // Проверяем, что добавление успешно
+                let addResult;
                 try {
-                    const response = await fetch(updateUrl, {
-                        method: 'GET',
-                        mode: 'no-cors'
-                    }).catch(err => {
-                        return fetch(`${formApi}/exec?${params.toString()}`);
-                    });
-                } catch (fetchError) {
-                    console.warn('Update fetch error:', fetchError);
+                    addResult = JSON.parse(addResultText);
+                } catch {
+                    // Если не JSON, но ответ пришел
+                    if (addResponse.ok || addResultText.includes('success')) {
+                        addResult = { success: true };
+                    } else {
+                        throw new Error('Ошибка при добавлении нового кошелька');
+                    }
                 }
+            
+                if (!addResult.success && addResult.status !== 'success') {
+                    throw new Error(addResult.error || 'Ошибка добавления');
+                }
+            
+                // Шаг 2: Только после успешного добавления удаляем старый
+                const deleteParams = new URLSearchParams();
+                deleteParams.append('action', 'delete_wallet');
+                deleteParams.append('wallet_type', originalWallet.type);
+                deleteParams.append('wallet_number', originalWallet.number);
+                deleteParams.append('_t', Date.now().toString() + '2');
+            
+                const deleteUrl = `${formApi}?${deleteParams.toString()}`;
+                console.log('Delete old wallet URL:', deleteUrl);
+            
+                await fetch(deleteUrl, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-cache'
+                });
+            
+                console.log('✅ Кошелёк успешно заменен');
                 
                 // Clear cache for this form
                 const formName = originalWallet.formName;
@@ -2610,6 +2638,13 @@
                 showToast(translations[currentLanguage]?.['toast.save_success'] || 'Кошелёк успешно обновлён', 'success');
                 closeEditModal();
                 
+            } catch (error) {
+                console.error('Error in saveWalletChanges:', error);
+                showToast((translations[currentLanguage]?.['toast.save_error'] || 'Ошибка сохранения') + ': ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                btn.innerHTML = originalText;
             } catch (error) {
                 console.error('Error saving wallet:', error);
                 showToast((translations[currentLanguage]?.['toast.save_error'] || 'Ошибка сохранения') + ': ' + error.message, 'error');
