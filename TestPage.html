@@ -1215,27 +1215,9 @@
             </button>
         </div>
         
-        <div class="nav-links">
-            <a href="dashboard.html" data-i18n="nav.dashboard">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>Дашборд</span>
-            </a>
-            <a href="wallets.html" data-i18n="nav.wallets">
-                <i class="fas fa-wallet"></i>
-                <span>Кошельки</span>
-            </a>
-            <a href="forms.html" class="active" data-i18n="nav.forms">
-                <i class="fas fa-clipboard-list"></i>
-                <span>Формы</span>
-            </a>
-            <a href="agents.html" data-i18n="nav.agents">
-                <i class="fas fa-users"></i>
-                <span>Агенты</span>
-            </a>
-            <a href="admins.html" data-i18n="nav.admins">
-                <i class="fas fa-user-shield"></i>
-                <span>Администраторы</span>
-            </a>
+        <!-- НАВИГАЦИЯ ТЕПЕРЬ ЗАГРУЖАЕТСЯ ДИНАМИЧЕСКИ -->
+        <div class="nav-links" id="navLinks">
+            <!-- Navigation will be loaded dynamically based on user role -->
         </div>
         
         <div class="user-info">
@@ -1737,6 +1719,50 @@
             }
         };
 
+        // НОВАЯ ФУНКЦИЯ: Настройка навигации по ролям
+        function setupNavigation() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.innerHTML = '';
+            
+            const navItems = [
+                { id: 'dashboard', icon: 'fas fa-tachometer-alt', text: 'nav.dashboard', href: 'dashboard.html' },
+                { id: 'wallets', icon: 'fas fa-wallet', text: 'nav.wallets', href: 'wallets.html' },
+                { id: 'forms', icon: 'fas fa-clipboard-list', text: 'nav.forms', href: 'forms.html' },
+                { id: 'agents', icon: 'fas fa-users', text: 'nav.agents', href: 'agents.html' },
+                { id: 'admins', icon: 'fas fa-user-shield', text: 'nav.admins', href: 'admins.html' }
+            ];
+            
+            // Filter navigation based on user role
+            let allowedNavItems = navItems;
+            
+            if (currentUser.role === 'manager' || currentUser.role === 'admin') {
+                allowedNavItems = navItems.filter(item => 
+                    item.id === 'wallets' || item.id === 'forms'
+                );
+            } else if (currentUser.role === 'viewer') {
+                allowedNavItems = navItems.filter(item => item.id === 'dashboard');
+            }
+            
+            allowedNavItems.forEach(item => {
+                const a = document.createElement('a');
+                a.href = item.href;
+                a.className = window.location.pathname.includes(item.href) ? 'active' : '';
+                a.innerHTML = `
+                    <i class="${item.icon}"></i>
+                    <span data-i18n="${item.text}">${item.text}</span>
+                `;
+                a.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 1024) {
+                        toggleSidebar();
+                    }
+                });
+                navLinks.appendChild(a);
+            });
+            
+            // Re-apply translations after navigation is set up
+            applyTranslation(currentLanguage);
+        }
+
         // Apply translation
         function applyTranslation(lang) {
             const dict = translations[lang];
@@ -1887,6 +1913,9 @@
                     document.getElementById('userName').textContent = currentUser.username;
                     const roleTranslation = translations[currentLanguage][`role.${currentUser.role}`] || currentUser.role;
                     document.getElementById('userRole').textContent = roleTranslation;
+                    
+                    // Setup navigation based on role
+                    setupNavigation(); // ← ВЫЗЫВАЕМ НОВУЮ ФУНКЦИЮ
                     
                     // Show filter section only for admin and superadmin
                     if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
