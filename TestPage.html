@@ -2172,8 +2172,23 @@
                     tbody.appendChild(row);
                 });
                 
-                // All data loaded, hide loading
+                // Все данные загружены, скрываем загрузку
                 hideLoading();
+                
+                // ВОТ ТУТ НУЖНО ВЫЗВАТЬ hideTableColumns() - ПОСЛЕ ТОГО КАК ТАБЛИЦА СОЗДАНА
+                if (currentUser) {
+                    if (currentUser.role === 'manager') {
+                        // Скрываем колонки в таблице
+                        setTimeout(() => {
+                            hideTableColumns(['wallets', 'actions']);
+                        }, 100); // Небольшая задержка для гарантии отрисовки
+                    } else if (currentUser.role === 'admin') {
+                        // Скрываем только колонку "Кошельки"
+                        setTimeout(() => {
+                            hideTableColumns(['wallets']);
+                        }, 100);
+                    }
+                }
                 
             } catch (error) {
                 console.error('Error rendering forms table:', error);
@@ -2814,6 +2829,33 @@
                 btn.classList.remove('loading');
                 btn.innerHTML = originalText;
             }
+        }
+
+        function hideTableColumns(columnsToHide) {
+            const table = document.getElementById('formsTable');
+            const thElements = table.querySelectorAll('th');
+            const tdElements = table.querySelectorAll('td');
+            
+            // Определяем индексы колонок по их содержимому
+            const columnIndices = {
+                'wallets': 3, // Индекс колонки "Кошельки"
+                'actions': 5  // Индекс колонки "Действия"
+            };
+            
+            columnsToHide.forEach(colName => {
+                const index = columnIndices[colName];
+                if (index !== undefined) {
+                    // Скрываем заголовок
+                    if (thElements[index]) thElements[index].style.display = 'none';
+                    
+                    // Скрываем все ячейки в этой колонке
+                    tdElements.forEach((td, i) => {
+                        if (i % 6 === index) { // 6 - общее количество колонок
+                            td.style.display = 'none';
+                        }
+                    });
+                }
+            });
         }
 
         // Initialize page when loaded
