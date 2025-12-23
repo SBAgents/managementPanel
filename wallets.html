@@ -2645,14 +2645,14 @@
                 btn.disabled = false;
                 btn.classList.remove('loading');
                 btn.innerHTML = originalText;
-            } catch (error) {
+            } /*catch (error) {
                 console.error('Error saving wallet:', error);
                 showToast((translations[currentLanguage]?.['toast.save_error'] || 'Ошибка сохранения') + ': ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('loading');
                 btn.innerHTML = originalText;
-            }
+            }*/
         }
         
         // Add new wallet
