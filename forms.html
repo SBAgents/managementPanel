@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Формы | Панель управления</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
+    <link rel="preconnect" href="https://script.google.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <style>
         :root {
             --primary-bg: linear-gradient(135deg, #042F28 0%, #0A5C4A 100%);
@@ -33,6 +37,37 @@
             display: flex;
         }
         
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            background: var(--sidebar-bg);
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .mobile-logo h2 {
+            font-size: 20px;
+            color: var(--accent);
+        }
+        
+        .burger-menu {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 1001;
+        }
+        
         /* Sidebar */
         .sidebar {
             width: 250px;
@@ -42,12 +77,21 @@
             display: flex;
             flex-direction: column;
             border-right: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+            z-index: 999;
         }
         
         .logo {
             padding: 0 20px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo-content {
+            flex: 1;
         }
         
         .logo h1 {
@@ -60,8 +104,19 @@
             opacity: 0.8;
         }
         
+        .sidebar-close {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
         .nav-links {
             flex: 1;
+            overflow-y: auto;
         }
         
         .nav-links a {
@@ -90,20 +145,30 @@
             text-align: center;
         }
         
+        /* User Info */
         .user-info {
-            padding: 20px;
+            padding: 15px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: auto;
+        }
+        
+        .user-details {
+            margin-bottom: 10px;
+        }
+        
+        .user-details h3 {
+            font-size: 14px;
+            margin-bottom: 5px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
-        .user-details h3 {
-            font-size: 16px;
-            margin-bottom: 5px;
+        .user-details .username {
+            font-weight: bold;
         }
         
-        .user-details span {
+        .user-details .role {
             font-size: 12px;
             opacity: 0.7;
             background: rgba(255, 255, 255, 0.1);
@@ -111,53 +176,63 @@
             border-radius: 10px;
         }
         
-        .logout-btn {
-            background: rgba(231, 76, 60, 0.2);
-            border: 1px solid rgba(231, 76, 60, 0.5);
-            color: #ff6b6b;
-            padding: 8px 12px;
+        .user-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .user-control-btn {
+            flex: 1;
+            padding: 8px;
             border-radius: 6px;
+            border: none;
             cursor: pointer;
             transition: all 0.3s;
             font-size: 12px;
-        }
-        
-        .logout-btn:hover {
-            background: rgba(231, 76, 60, 0.3);
-        }
-        
-        /* Language Selector */
-        .language-selector {
-            position: relative;
-            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
         
         .language-btn {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
         }
         
         .language-btn:hover {
             background: rgba(255, 255, 255, 0.2);
         }
         
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+            color: #ff6b6b;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+        
+        .logout-btn.loading, .language-btn.loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        /* Language Selector */
+        .language-selector {
+            position: relative;
+        }
+        
         .language-dropdown {
             position: absolute;
             bottom: 100%;
+            left: 0;
             right: 0;
             background: rgba(0, 0, 0, 0.95);
             border-radius: 8px;
             margin-bottom: 5px;
-            min-width: 140px;
             display: none;
             overflow: hidden;
             z-index: 100;
@@ -171,21 +246,12 @@
             padding: 10px 12px;
             cursor: pointer;
             transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             font-size: 12px;
+            text-align: center;
         }
         
         .language-option:hover {
             background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .language-flag {
-            width: 20px;
-            height: 14px;
-            object-fit: cover;
-            border-radius: 2px;
         }
         
         /* Main Content */
@@ -193,6 +259,7 @@
             flex: 1;
             padding: 30px;
             overflow-y: auto;
+            position: relative;
         }
         
         .header {
@@ -234,13 +301,13 @@
             transform: translateY(-2px);
         }
 
-        .btn-save-cahnges {
+        .btn-save-changes {
             display: none;
             background: var(--accent);
             color: #2c3e50;
         }
         
-        .btn-save-cahnges:hover {
+        .btn-save-changes:hover {
             background: var(--accent-hover);
             transform: translateY(-2px);
         }
@@ -252,7 +319,7 @@
         }
 
         .btn-closeModal {
-            dispay: none;
+            display: none;
             background: rgba(255, 255, 255, 0.1);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -262,7 +329,7 @@
             background: rgba(255, 255, 255, 0.2);
         }
         
-        .btn:disabled {
+        .btn:disabled, .btn.loading {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none !important;
@@ -348,6 +415,8 @@
             padding: 25px;
             margin-bottom: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            min-height: 400px;
         }
         
         .section-header {
@@ -469,7 +538,7 @@
             color: #f39c12;
         }
 
-         /* Анимация нажатия для кнопки Manage Agents */
+        /* Анимация нажатия для кнопки Manage Agents */
         .action-btn.manage:active {
             transform: scale(0.95);
             transition: transform 0.1s ease;
@@ -509,8 +578,8 @@
         .action-btn.manage.loading::after {
             content: '';
             position: absolute;
-            /*left: 50%;
-            top: 50%;*/
+            left: 50%;
+            top: 50%;
             transform: translate(-50%, -50%);
             border: 2px solid var(--accent);
             border-top: 2px solid transparent;
@@ -520,7 +589,6 @@
             animation: spin 1s linear infinite;
         }
 
-        
         .action-btn {
             padding: 6px 12px;
             border-radius: 6px;
@@ -565,8 +633,8 @@
         .action-btn.loading::after {
             content: '';
             position: absolute;
-            /*left: 50%;
-            top: 50%;*/
+            left: 50%;
+            top: 50%;
             transform: translate(-50%, -50%);
             border: 2px solid var(--accent);
             border-top: 2px solid transparent;
@@ -735,8 +803,8 @@
         .agent-btn.loading::after {
             content: '';
             position: absolute;
-            /*left: 50%;
-            top: 50%;*/
+            left: 50%;
+            top: 50%;
             transform: translate(-50%, -50%);
             border: 2px solid var(--accent);
             border-top: 2px solid transparent;
@@ -841,7 +909,7 @@
             gap: 10px;
             transform: translateX(150%);
             transition: transform 0.3s;
-            z-index: 1000;
+            z-index: 1001;
         }
         
         .toast.show {
@@ -869,35 +937,65 @@
             opacity: 0.5;
         }
         
-        /* Responsive */
+        /* RESPONSIVE STYLES - ОСНОВНЫЕ ИЗМЕНЕНИЯ */
         @media (max-width: 1024px) {
-            .sidebar {
-                width: 70px;
-            }
-            
-            .logo h1, .logo p, .nav-links a span, .user-details h3, .user-details span {
-                display: none;
-            }
-            
-            .nav-links a {
-                justify-content: center;
-                padding: 15px 0;
-            }
-            
-            .nav-links a i {
-                margin-right: 0;
-                font-size: 20px;
-            }
-            
-            .user-info {
+            body {
                 flex-direction: column;
-                gap: 10px;
             }
             
-            .language-selector {
-                margin-left: 0;
+            /* Mobile Header */
+            .mobile-header {
+                display: flex;
             }
             
+            /* Sidebar для мобильных */
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                top: 0;
+                bottom: 0;
+                z-index: 999;
+                transition: left 0.3s ease;
+                width: 250px;
+            }
+            
+            .sidebar.mobile-open {
+                left: 0;
+            }
+            
+            .burger-menu {
+                display: block;
+            }
+            
+            .sidebar-close {
+                display: block;
+            }
+            
+            /* Main Content */
+            .main-content {
+                margin-top: 70px;
+                padding: 20px;
+                min-height: calc(100vh - 70px);
+            }
+            
+            /* Header */
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .btn {
+                padding: 12px;
+                flex: 1;
+            }
+            
+            /* Filter Section */
             .filter-row {
                 flex-direction: column;
             }
@@ -905,68 +1003,154 @@
             .filter-group {
                 min-width: 100%;
             }
-        }
-        
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
             
-            .sidebar {
-                width: 100%;
-                flex-direction: row;
-                padding: 10px;
-            }
-            
-            .logo {
-                padding: 0 10px;
-                border-bottom: none;
-                border-right: 1px solid rgba(255, 255, 255, 0.1);
-                margin-bottom: 0;
-                margin-right: 10px;
-            }
-            
-            .nav-links {
-                display: flex;
-                flex: 1;
-            }
-            
-            .nav-links a {
-                flex: 1;
-                justify-content: center;
-                border-left: none;
-                border-bottom: 3px solid transparent;
-            }
-            
-            .nav-links a:hover, .nav-links a.active {
-                border-left: none;
-                border-bottom: 3px solid var(--accent);
-            }
-            
-            .user-info {
-                border-top: none;
-                border-left: 1px solid rgba(255, 255, 255, 0.1);
-                padding: 0 10px;
-                min-width: 120px;
-            }
-            
-            .main-content {
+            /* Table */
+            .section {
                 padding: 20px;
+                min-height: 350px;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+                white-space: nowrap;
+            }
+            
+            .action-btn {
+                padding: 4px 8px;
+                font-size: 11px;
+                margin-right: 3px;
+                min-width: 60px;
+            }
+            
+            /* Modal */
+            .modal {
+                padding: 20px;
+                width: 95%;
+                max-height: 85vh;
             }
             
             .agents-grid {
                 grid-template-columns: 1fr;
             }
             
-            .header {
+            .agent-card {
+                padding: 12px;
+            }
+            
+            /* User Info in Sidebar */
+            .user-details h3 {
                 flex-direction: column;
-                gap: 15px;
                 align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .user-controls {
+                flex-direction: column;
+            }
+            
+            .user-control-btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+            
+            .header h2 {
+                font-size: 24px;
+            }
+            
+            .section-header h3 {
+                font-size: 18px;
+            }
+            
+            table {
+                font-size: 13px;
+            }
+            
+            th, td {
+                padding: 8px 5px;
+            }
+            
+            .action-btn {
+                padding: 3px 6px;
+                font-size: 10px;
+                min-width: 50px;
+            }
+            
+            .status {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+            
+            .modal {
+                padding: 15px;
+                width: 98%;
+            }
+            
+            .modal-header h3 {
+                font-size: 18px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .mobile-logo h2 {
+                font-size: 18px;
             }
             
             .header-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
                 width: 100%;
-                justify-content: flex-end;
+                margin-bottom: 5px;
+            }
+            
+            .filter-actions {
+                flex-direction: column;
+            }
+            
+            .filter-actions .btn {
+                width: 100%;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 6px 4px;
+            }
+            
+            .action-btn {
+                display: block;
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            .action-btn i {
+                margin-right: 5px;
+            }
+            
+            .modal-actions {
+                flex-direction: column;
+            }
+            
+            .modal-actions .btn {
+                width: 100%;
             }
         }
         
@@ -981,24 +1165,25 @@
             border-left: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        body[dir="rtl"] .language-selector {
-            margin-left: 0;
-            margin-right: 10px;
-        }
-        
         body[dir="rtl"] .language-dropdown {
-            right: auto;
-            left: 0;
-        }
-        
-        @media (max-width: 1024px) {
-            body[dir="rtl"] .nav-links a i {
-                margin-left: 0;
-            }
+            right: 0;
+            left: auto;
         }
         
         body[dir="rtl"] td, body[dir="rtl"] th {
             text-align: right;
+        }
+        
+        @media (max-width: 1024px) {
+            body[dir="rtl"] .sidebar {
+                left: auto;
+                right: -250px;
+            }
+            
+            body[dir="rtl"] .sidebar.mobile-open {
+                left: auto;
+                right: 0;
+            }
         }
         
         /* Hide API URL column */
@@ -1008,68 +1193,56 @@
     </style>
 </head>
 <body>
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="mobile-logo">
+            <h2 data-i18n="forms.title">Формы</h2>
+        </div>
+        <button class="burger-menu" id="burgerMenu">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="logo">
-            <h1 data-i18n="forms.title">Формы</h1>
-            <p data-i18n="forms.subtitle">Управление формами</p>
+            <div class="logo-content">
+                <h1 data-i18n="forms.title">Формы</h1>
+                <p data-i18n="forms.subtitle">Управление формами</p>
+            </div>
+            <button class="sidebar-close" onclick="toggleSidebar()">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         
-        <div class="nav-links">
-            <a href="dashboard.html" data-i18n="nav.dashboard">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>Дашборд</span>
-            </a>
-            <a href="wallets.html" data-i18n="nav.wallets">
-                <i class="fas fa-wallet"></i>
-                <span>Кошельки</span>
-            </a>
-            <a href="forms.html" class="active" data-i18n="nav.forms">
-                <i class="fas fa-clipboard-list"></i>
-                <span>Формы</span>
-            </a>
-            <a href="agents.html" data-i18n="nav.agents">
-                <i class="fas fa-users"></i>
-                <span>Агенты</span>
-            </a>
-            <a href="admins.html" data-i18n="nav.admins">
-                <i class="fas fa-user-shield"></i>
-                <span>Администраторы</span>
-            </a>
+        <!-- НАВИГАЦИЯ ТЕПЕРЬ ЗАГРУЖАЕТСЯ ДИНАМИЧЕСКИ -->
+        <div class="nav-links" id="navLinks">
+            <!-- Navigation will be loaded dynamically based on user role -->
         </div>
         
         <div class="user-info">
             <div class="user-details">
-                <h3 id="userName">Загрузка...</h3>
-                <span id="userRole">Загрузка...</span>
+                <h3>
+                    <span class="username" id="userName">Загрузка...</span>
+                    <span class="role" id="userRole">Загрузка...</span>
+                </h3>
             </div>
-            <div style="display: flex; align-items: center;">
+            <div class="user-controls">
                 <div class="language-selector">
-                    <div class="language-btn" id="languageBtn">
-                        <span id="currentLanguage">🌐 RU</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
+                    <button class="user-control-btn language-btn" id="languageBtn">
+                        <i class="fas fa-globe"></i>
+                        <span id="currentLanguage">RU</span>
+                    </button>
                     <div class="language-dropdown" id="languageDropdown">
-                        <div class="language-option" data-lang="ru">
-                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjE2IiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB5PSI1IiB3aWR0aD0iMjQiIGhlaWdodD0iNiIgZmlsbD0iI0Q1MjgzNCIvPgo8cmVjdCB5PSIxMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIGZpbGw9IiMwMDlDOTkiLz4KPC9zdmc+" alt="RU" class="language-flag">
-                            Русский
-                        </div>
-                        <div class="language-option" data-lang="en">
-                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjE2IiBmaWxsPSIjMDEyMTY5Ii8+CjxwYXRoIGQ9Ik0wIDBMMjQgMEwyNCAyTDIgMkwyIDZMMjQgNkwyNCA4TDIgOEwyIDE0TDI0IDE0TDI0IDE2TDAgMTZaTTAgMEwwIDE2TDAgMFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0wIDBMMjQgMEwyNCAxTDIgMUwyIDVMMjQgNUwyNCA3TDIgN0wyIDEzTDI0IDEzTDI0IDE1TDAgMTVaTTAgMEwwIDE1TDAgMFoiIGZpbGw9IiNFNDAyMzMiLz4KPC9zdmc+" alt="EN" class="language-flag">
-                            English
-                        </div>
-                        <div class="language-option" data-lang="fr">
-                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iMTYiIHdpZHRoPSI4IiBoZWlnaHQ9IjE2IiBmaWxsPSIjRjUxRTIyIi8+CjxyZWN0IHg9IjgiIHdpZHRoPSI4IiBoZWlnaHQ9IjE2IiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSIxNiIgZmlsbD0iIzAwMjY1MyIvPgo8L3N2Zz4=" alt="FR" class="language-flag">
-                            Français
-                        </div>
-                        <div class="language-option" data-lang="ar">
-                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjE2IiBmaWxsPSIjQ0VBMjMxIi8+CjxwYXRoIGQ9Ik0wIDBIMjRWMUgweiIgZmlsbD0iI0U3MDM0NCIvPgo8cGF0aCBkPSJNMCAxNUgyNFYxNkwyNlYxNUgweiIgZmlsbD0iIzAwNzc0MSIvPgo8cGF0aCBkPSJNNS44IDkuMjFMMy42NiA4LjM5IDQuMDggNi4yOSA2LjIgNy4xMiA4LjMzIDYuMjkgOC43NSA4LjM5IDYuNjQgOS4yMSA4Ljc3IDEwLjA0IDguMzUgMTIuMTQgNi4yIDExLjMgNC4wOCAxIEMgMy42NiAxMC4wNCA1LjggOS4yMVoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPg==" alt="AR" class="language-flag">
-                            العربية
-                        </div>
+                        <div class="language-option" data-lang="ru">Русский</div>
+                        <div class="language-option" data-lang="en">English</div>
+                        <div class="language-option" data-lang="fr">Français</div>
+                        <div class="language-option" data-lang="ar">العربية</div>
                     </div>
                 </div>
-                <button class="logout-btn" onclick="logout()" data-i18n="nav.logout">
+                <button class="user-control-btn logout-btn" onclick="logout()" id="logoutBtn" data-i18n="nav.logout">
                     <i class="fas fa-sign-out-alt"></i>
+                    <span>Выход</span>
                 </button>
             </div>
         </div>
@@ -1185,7 +1358,7 @@
                 <button type="button" class="btn btn-closeModal" onclick="closeAgentsModal()" data-i18n="forms.cancel">
                     Отмена
                 </button>
-                <button type="button" class="btn btn-save-cahnges" onclick="saveAgentAssignments()" data-i18n="forms.save_changes">
+                <button type="button" class="btn btn-save-changes" onclick="saveAgentAssignments()" data-i18n="forms.save_changes">
                     Сохранить изменения
                 </button>
             </div>
@@ -1546,6 +1719,50 @@
             }
         };
 
+        // НОВАЯ ФУНКЦИЯ: Настройка навигации по ролям
+        function setupNavigation() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.innerHTML = '';
+            
+            const navItems = [
+                { id: 'dashboard', icon: 'fas fa-tachometer-alt', text: 'nav.dashboard', href: 'dashboard.html' },
+                { id: 'wallets', icon: 'fas fa-wallet', text: 'nav.wallets', href: 'wallets.html' },
+                { id: 'forms', icon: 'fas fa-clipboard-list', text: 'nav.forms', href: 'forms.html' },
+                { id: 'agents', icon: 'fas fa-users', text: 'nav.agents', href: 'agents.html' },
+                { id: 'admins', icon: 'fas fa-user-shield', text: 'nav.admins', href: 'admins.html' }
+            ];
+            
+            // Filter navigation based on user role
+            let allowedNavItems = navItems;
+            
+            if (currentUser.role === 'manager' || currentUser.role === 'admin') {
+                allowedNavItems = navItems.filter(item => 
+                    item.id === 'wallets' || item.id === 'forms'
+                );
+            } else if (currentUser.role === 'viewer') {
+                allowedNavItems = navItems.filter(item => item.id === 'dashboard');
+            }
+            
+            allowedNavItems.forEach(item => {
+                const a = document.createElement('a');
+                a.href = item.href;
+                a.className = window.location.pathname.includes(item.href) ? 'active' : '';
+                a.innerHTML = `
+                    <i class="${item.icon}"></i>
+                    <span data-i18n="${item.text}">${item.text}</span>
+                `;
+                a.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 1024) {
+                        toggleSidebar();
+                    }
+                });
+                navLinks.appendChild(a);
+            });
+            
+            // Re-apply translations after navigation is set up
+            applyTranslation(currentLanguage);
+        }
+
         // Apply translation
         function applyTranslation(lang) {
             const dict = translations[lang];
@@ -1561,9 +1778,9 @@
             });
             
             document.getElementById('currentLanguage').textContent = 
-                lang === 'ru' ? '🌐 RU' : 
-                lang === 'en' ? '🌐 EN' : 
-                lang === 'fr' ? '🌐 FR' : '🌐 AR';
+                lang === 'ru' ? 'RU' : 
+                lang === 'en' ? 'EN' : 
+                lang === 'fr' ? 'FR' : 'AR';
             
             // Set RTL for Arabic
             if (lang === 'ar') {
@@ -1671,6 +1888,11 @@
             isLoading = false;
         }
 
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        }
+
         // Load page data
         async function loadPageData() {
             try {
@@ -1691,6 +1913,9 @@
                     document.getElementById('userName').textContent = currentUser.username;
                     const roleTranslation = translations[currentLanguage][`role.${currentUser.role}`] || currentUser.role;
                     document.getElementById('userRole').textContent = roleTranslation;
+                    
+                    // Setup navigation based on role
+                    setupNavigation(); // ← ВЫЗЫВАЕМ НОВУЮ ФУНКЦИЮ
                     
                     // Show filter section only for admin and superadmin
                     if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
@@ -1937,7 +2162,7 @@
                                 </button>
                             ` : ''}
                             ${currentPermissions?.canToggleServiceMode ? `
-                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName.replace(/'/g, "\\'")}', '${(form.formApi || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
+                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName.replace(/'/g, "\\'")}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
                                     <i class="fas fa-power-off"></i>
                                 </button>
                             ` : ''}
@@ -1947,8 +2172,23 @@
                     tbody.appendChild(row);
                 });
                 
-                // All data loaded, hide loading
+                // Все данные загружены, скрываем загрузку
                 hideLoading();
+                
+                // ВОТ ТУТ НУЖНО ВЫЗВАТЬ hideTableColumns() - ПОСЛЕ ТОГО КАК ТАБЛИЦА СОЗДАНА
+                if (currentUser) {
+                    if (currentUser.role === 'manager') {
+                        // Скрываем колонки в таблице
+                        setTimeout(() => {
+                            hideTableColumns(['wallets', 'actions']);
+                        }, 100); // Небольшая задержка для гарантии отрисовки
+                    } else if (currentUser.role === 'admin') {
+                        // Скрываем только колонку "Кошельки"
+                        setTimeout(() => {
+                            hideTableColumns(['wallets']);
+                        }, 100);
+                    }
+                }
                 
             } catch (error) {
                 console.error('Error rendering forms table:', error);
@@ -2447,7 +2687,7 @@
 
         // Save agent assignments с анимацией загрузки
         async function saveAgentAssignments() {
-            const saveBtn = document.querySelector('.btn-primary[onclick="saveAgentAssignments()"]');
+            const saveBtn = document.querySelector('.btn-save-changes');
             
             // Показываем анимацию загрузки на кнопке сохранения
             saveBtn.classList.add('loading');
@@ -2506,63 +2746,37 @@
             }
         }
 
-        // Toggle form status с анимацией загрузки
-        /*async function toggleFormStatus(formName, newStatus) {
-            // Находим все кнопки переключения статуса для этой формы
-            const buttons = document.querySelectorAll(`.action-btn.toggle[onclick*="${formName}"]`);
-            
-            // Показываем анимацию загрузки на всех кнопках
-            buttons.forEach(btn => {
-                btn.classList.add('loading');
-                btn.disabled = true;
-            });
+        //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
+        async function toggleFormStatus(formName, newStatus) {
+            console.log('TOGGLE FORM STATUS - Starting:', {formName, newStatus});
             
             try {
                 const token = localStorage.getItem('admin_token');
                 
-                const response = await fetch(`${API_URL}?action=toggle_form_status&token=${token}&form_name=${encodeURIComponent(formName)}&enabled=${newStatus}`);
+                // Создаем URL только с form_name
+                const params = new URLSearchParams();
+                params.append('action', 'toggle_form_status');
+                params.append('token', token);
+                params.append('form_name', formName);
+                params.append('enabled', newStatus.toString());
                 
-                if (!response.ok) throw new Error('Network error');
+                const url = `${API_URL}?${params.toString()}`;
+                console.log('TOGGLE - Request URL:', url);
+                
+                const response = await fetch(url);
                 
                 const result = await response.json();
+                console.log('TOGGLE - result:', result);
                 
                 if (result.success) {
-                    showToast(`${translations[currentLanguage]['toast.toggle_success']}: ${formName}`, 'success');
-                    await loadForms();
+                    showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
+                    await loadForms(); // Обновляем таблицу
                 } else {
-                    throw new Error(result.error || 'Toggle failed');
-                }
-                
-            } catch (error) {
-                console.error('Error toggling form status:', error);
-                showToast(translations[currentLanguage]['toast.toggle_error'] + ': ' + error.message, 'error');
-                
-                // Убираем анимацию загрузки при ошибке
-                buttons.forEach(btn => {
-                    btn.classList.remove('loading');
-                    btn.disabled = false;
-                });
-            }
-        }*/
-
-        async function toggleFormStatus(formName, formApi, newStatus) {
-            console.log('TEST - params received:', {formName, formApi, newStatus});
-            
-            try {
-                const token = localStorage.getItem('admin_token');
-                const response = await fetch(
-                    `${API_URL}?action=toggle_form_status&token=${token}&form_name=${formName}&enabled=${newStatus}`
-                );
-                
-                const result = await response.json();
-                console.log('TEST - result:', result);
-                
-                if (result.success) {
-                    showToast('Success!', 'success');
-                    await loadForms();
+                    showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${result.error}`, 'error');
                 }
             } catch (error) {
-                console.error('TEST - error:', error);
+                console.error('TOGGLE - error:', error);
+                showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${error.message}`, 'error');
             }
         }
 
@@ -2601,9 +2815,16 @@
 
         // Logout
         async function logout() {
+            const btn = document.getElementById('logoutBtn');
+            const originalText = btn.innerHTML;
+            
             try {
+                btn.disabled = true;
+                btn.classList.add('loading');
+                btn.innerHTML = `<div class="loader"></div> ...`;
+                
                 const token = localStorage.getItem('admin_token');
-                await fetch(`${API_URL}?action=logout&token=${token}`);
+                await fetch(`${API_URL}?action=logout&token=${token}`).catch(() => {});
                 
                 // Clear local storage
                 localStorage.removeItem('admin_token');
@@ -2616,11 +2837,58 @@
             } catch (error) {
                 console.error('Logout error:', error);
                 showToast(translations[currentLanguage]['toast.logout_error'], 'error');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                btn.innerHTML = originalText;
             }
+        }
+
+        function hideTableColumns(columnsToHide) {
+            const table = document.getElementById('formsTable');
+            const thElements = table.querySelectorAll('th');
+            const tdElements = table.querySelectorAll('td');
+            
+            // Определяем индексы колонок по их содержимому
+            const columnIndices = {
+                'wallets': 3, // Индекс колонки "Кошельки"
+                'actions': 5  // Индекс колонки "Действия"
+            };
+            
+            columnsToHide.forEach(colName => {
+                const index = columnIndices[colName];
+                if (index !== undefined) {
+                    // Скрываем заголовок
+                    if (thElements[index]) thElements[index].style.display = 'none';
+                    
+                    // Скрываем все ячейки в этой колонке
+                    tdElements.forEach((td, i) => {
+                        if (i % 6 === index) { // 6 - общее количество колонок
+                            td.style.display = 'none';
+                        }
+                    });
+                }
+            });
         }
 
         // Initialize page when loaded
         document.addEventListener('DOMContentLoaded', function() {
+            // Burger menu
+            const burgerMenu = document.getElementById('burgerMenu');
+            const sidebar = document.getElementById('sidebar');
+            
+            burgerMenu.addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 1024 && 
+                    !sidebar.contains(e.target) && 
+                    !burgerMenu.contains(e.target) &&
+                    sidebar.classList.contains('mobile-open')) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            });
+            
             // Language selector
             const languageBtn = document.getElementById('languageBtn');
             const languageDropdown = document.getElementById('languageDropdown');
@@ -2663,6 +2931,15 @@
             // Clear filters button
             const clearFiltersBtn = document.getElementById('clearFiltersBtn');
             clearFiltersBtn.title = translations[currentLanguage]['forms.clear_filters_title'];
+            
+            // Close modals on overlay click
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('show');
+                    }
+                });
+            });
             
             // Load page data
             loadPageData();
