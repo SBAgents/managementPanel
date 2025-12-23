@@ -1400,9 +1400,11 @@
         let filteredWallets = [];
         
         // Tutorial state
-        let tutorialSteps = [];
+        let tutorialStepsConfig = [];
         let currentTutorialStep = 0;
         let isTutorialActive = false;
+        let isScrollingEnabled = true; // Добавляем контроль скроллинга
+        let highlightedElements = new Set(); // Для отслеживания подсвеченных элементов
         
         // Cache for API responses
         const apiCache = {
@@ -3004,13 +3006,6 @@
                 btn.innerHTML = originalText;
             }
         }
-
-        // Tutorial state - UPDATED
-        let tutorialStepsConfig = [];
-        let currentTutorialStep = 0;
-        let isTutorialActive = false;
-        let isScrollingEnabled = true; // Добавляем контроль скроллинга
-        let highlightedElements = new Set(); // Для отслеживания подсвеченных элементов
         
         // Initialize tutorial steps
         function initTutorialSteps() {
@@ -3434,70 +3429,6 @@
             // Инициализируем шаги туториала при загрузке
             initTutorialSteps();
         });
-        
-        /*document.addEventListener('DOMContentLoaded', function() {
-            // Burger menu
-            const burgerMenu = document.getElementById('burgerMenu');
-            const sidebar = document.getElementById('sidebar');
-            
-            burgerMenu.addEventListener('click', toggleSidebar);
-            
-            // Close sidebar when clicking outside on mobile
-            document.addEventListener('click', function(e) {
-                if (window.innerWidth <= 1024 && 
-                    !sidebar.contains(e.target) && 
-                    !burgerMenu.contains(e.target) &&
-                    sidebar.classList.contains('mobile-open')) {
-                    sidebar.classList.remove('mobile-open');
-                }
-            });
-            
-            // Language selector
-            const languageBtn = document.getElementById('languageBtn');
-            const languageDropdown = document.getElementById('languageDropdown');
-            
-            languageBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                languageDropdown.classList.toggle('show');
-            });
-            
-            document.querySelectorAll('.language-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    const lang = this.getAttribute('data-lang');
-                    applyTranslation(lang);
-                    languageDropdown.classList.remove('show');
-                    refreshWallets();
-                });
-            });
-            
-            document.addEventListener('click', function() {
-                languageDropdown.classList.remove('show');
-            });
-            
-            // Close modals on overlay click
-            document.querySelectorAll('.modal-overlay').forEach(overlay => {
-                overlay.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        this.classList.remove('show');
-                    }
-                });
-            });
-            
-            // Если кликнули на подсвечиваемый элемент, переходим дальше
-            if (step.elementId && e.target !== this && !e.target.closest('.tutorial-popup')) {
-                // Проверяем, был ли клик в области подсвечиваемого элемента
-                const highlight = document.getElementById('tutorialHighlight');
-                const highlightRect = highlight.getBoundingClientRect();
-                
-                if (e.clientX >= highlightRect.left && e.clientX <= highlightRect.right &&
-                    e.clientY >= highlightRect.top && e.clientY <= highlightRect.bottom) {
-                    nextTutorialStep();
-                }
-        } true);
-            
-            // Load page data
-            loadPageData();
-        });*/
     </script>
 </body>
 </html>
