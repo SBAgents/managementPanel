@@ -2746,24 +2746,52 @@
             }
         }
 
+        //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
         async function toggleFormStatus(formName, formApi, newStatus) {
-            console.log('TEST - params received:', {formName, formApi, newStatus});
+            console.log('TOGGLE FORM STATUS - Starting:', {formName, formApi, newStatus});
             
             try {
                 const token = localStorage.getItem('admin_token');
+                if (!token) {
+                    showToast('Ошибка авторизации', 'error');
+                    return;
+                }
+                
+                // Показываем загрузку на кнопке
+                const buttons = document.querySelectorAll(`.action-btn.toggle[onclick*="${formName}"]`);
+                buttons.forEach(btn => {
+                    btn.classList.add('loading');
+                    btn.disabled = true;
+                });
+                
+                // Отправляем запрос на бэкенд админ-панели
                 const response = await fetch(
-                    `${API_URL}?action=toggle_form_status&token=${token}&form_name=${formName}&enabled=${newStatus}`
+                    `${API_URL}?action=toggle_form_status&token=${token}&form_name=${encodeURIComponent(formName)}&enabled=${newStatus}`
                 );
                 
                 const result = await response.json();
-                console.log('TEST - result:', result);
+                console.log('TOGGLE - result:', result);
                 
                 if (result.success) {
-                    showToast('Success!', 'success');
+                    showToast(result.message || 'Статус формы изменён', 'success');
+                    
+                    // Перезагружаем список форм
                     await loadForms();
+                    
+                } else {
+                    throw new Error(result.error || 'Unknown error');
                 }
+                
             } catch (error) {
-                console.error('TEST - error:', error);
+                console.error('TOGGLE - error:', error);
+                showToast('Ошибка при изменении статуса: ' + error.message, 'error');
+                
+                // Восстанавливаем кнопки
+                const buttons = document.querySelectorAll(`.action-btn.toggle[onclick*="${formName}"]`);
+                buttons.forEach(btn => {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                });
             }
         }
 
