@@ -1489,7 +1489,7 @@
             navLinks.innerHTML = '';
             
             const navItems = [
-                /*{ id: 'dashboard', icon: 'fas fa-tachometer-alt', text: 'nav.dashboard', href: 'dashboard.html' },*/
+                { id: 'dashboard', icon: 'fas fa-tachometer-alt', text: 'nav.dashboard', href: 'dashboard.html' },
                 { id: 'wallets', icon: 'fas fa-wallet', text: 'nav.wallets', href: 'wallets.html' },
                 { id: 'forms', icon: 'fas fa-clipboard-list', text: 'nav.forms', href: 'forms.html' },
                 { id: 'agents', icon: 'fas fa-users', text: 'nav.agents', href: 'agents.html' },
@@ -1501,7 +1501,7 @@
             
             if (currentUser.role === 'manager' || currentUser.role === 'admin') {
                 allowedNavItems = navItems.filter(item => 
-                    item.id === 'wallets' || item.id === 'forms' || item.id === 'dashboard'
+                    item.id === 'wallets' || item.id === 'forms'
                 );
             } else if (currentUser.role === 'viewer') {
                 allowedNavItems = navItems.filter(item => item.id === 'dashboard');
