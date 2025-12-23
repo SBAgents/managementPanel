@@ -21,7 +21,7 @@
             --success: #2ecc71;
             --warning: #f39c12;
             --info: #3498db;
-            --tutorial-overlay: rgba(0, 0, 0, 0.85);
+            --tutorial-overlay: rgba(4, 47, 40, 0.85);
         }
         
         * {
@@ -684,30 +684,24 @@
             color: var(--accent);
         }
         
-        /* Tutorial Overlay */
+        /* Tutorial Overlay - ОБНОВЛЁННЫЙ СТИЛЬ */
         .tutorial-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(4, 47, 40, 0.7);
-            z-index: 2000;
+            z-index: 1999; /* Ниже подсветки и попапа */
             display: none;
-            pointer-events: auto; /* Теперь перехватывает события */
+            pointer-events: auto;
+            background: rgba(4, 47, 40, 0.6); /* Только лёгкая затемнённая подложка */
         }
         
         .tutorial-overlay.active {
             display: block;
         }
-
-        /* Ensure highlighted elements are above blur */
-        .tutorial-overlay.active ~ * {
-            position: relative;
-            z-index: auto;
-        }
         
-        /* Blur только для фона, не для подсвечиваемых элементов */
+        /* Убираем блюр с самого оверлея */
         .tutorial-overlay::before {
             content: '';
             position: absolute;
@@ -715,35 +709,38 @@
             left: 0;
             right: 0;
             bottom: 0;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(2px); /* Только лёгкий блюр */
+            -webkit-backdrop-filter: blur(2px);
             z-index: 1;
         }
         
+        /* Подсветка элемента - ВЫШЕ всего */
         .tutorial-highlight {
             position: absolute;
             border: 3px solid var(--accent);
             border-radius: 12px;
-            box-shadow: 0 0 20px rgba(208, 228, 30, 0.6),
-                        0 0 40px rgba(208, 228, 30, 0.4),
+            box-shadow: 0 0 30px rgba(208, 228, 30, 0.8),
+                        0 0 60px rgba(208, 228, 30, 0.4),
                         inset 0 0 20px rgba(208, 228, 30, 0.3);
-            z-index: 2002;
+            z-index: 2003; /* Выше попапа и оверлея */
             pointer-events: none;
-            transition: all 0.3s ease;
-            animation: pulse 1.5s infinite ease-in-out;
-            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: pulse 2s infinite ease-in-out;
+            background: rgba(4, 47, 40, 0.1); /* Полупрозрачный фон */
+            mix-blend-mode: normal;
         }
         
-        /* Убираем темный фон вокруг подсветки */
+        /* Убираем тёмный фон вокруг подсветки */
         .tutorial-highlight::before {
             content: '';
             position: absolute;
-            top: -20px;
-            left: -20px;
-            right: -20px;
-            bottom: -20px;
+            top: -15px;
+            left: -15px;
+            right: -15px;
+            bottom: -15px;
             background: transparent;
             z-index: -1;
+            border-radius: 20px;
         }
         
         @keyframes pulse {
@@ -752,18 +749,21 @@
                             0 0 40px rgba(208, 228, 30, 0.4),
                             inset 0 0 20px rgba(208, 228, 30, 0.3);
                 border-color: var(--accent);
+                transform: scale(1);
             }
             50% {
-                box-shadow: 0 0 25px rgba(208, 228, 30, 0.8),
-                            0 0 50px rgba(208, 228, 30, 0.6),
-                            inset 0 0 25px rgba(208, 228, 30, 0.4);
+                box-shadow: 0 0 30px rgba(208, 228, 30, 0.9),
+                            0 0 60px rgba(208, 228, 30, 0.6),
+                            inset 0 0 30px rgba(208, 228, 30, 0.4);
                 border-color: #e8f542;
+                transform: scale(1.01);
             }
             100% {
                 box-shadow: 0 0 20px rgba(208, 228, 30, 0.6),
                             0 0 40px rgba(208, 228, 30, 0.4),
                             inset 0 0 20px rgba(208, 228, 30, 0.3);
                 border-color: var(--accent);
+                transform: scale(1);
             }
         }
         
@@ -774,13 +774,13 @@
             border-radius: 16px;
             padding: 25px;
             max-width: 400px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
-                        0 0 0 1px rgba(255, 255, 255, 0.8);
-            z-index: 2003;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4),
+                        0 0 0 1px rgba(255, 255, 255, 0.9);
+            z-index: 2002; /* Выше оверлея, но ниже подсветки */
             animation: slideIn 0.4s ease-out;
             border: 1px solid rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             pointer-events: auto;
         }
         
@@ -1067,6 +1067,13 @@
         
         .table-loader {
             will-change: opacity;
+        }
+        
+        /* Временный стиль для элементов под подсветкой */
+        .tutorial-highlighted-element {
+            position: relative;
+            z-index: 2004 !important;
+            transform: translateZ(0);
         }
     </style>
 </head>
@@ -1403,8 +1410,8 @@
         let tutorialStepsConfig = [];
         let currentTutorialStep = 0;
         let isTutorialActive = false;
-        let isScrollingEnabled = true; // Добавляем контроль скроллинга
-        let highlightedElements = new Set(); // Для отслеживания подсвеченных элементов
+        let isScrollingEnabled = true;
+        let highlightedElements = new Set();
         
         // Cache for API responses
         const apiCache = {
@@ -1715,7 +1722,7 @@
                 "tutorial.add_wallet": "Ajouter un portefeuille",
                 "tutorial.add_wallet_desc": "Cliquez ici pour ajouter un nouveau portefeuille au système.",
                 "tutorial.filters": "Filtres",
-                "tutorial.filters_desc": "Utilisez ces filtres pour rechercher et trier les portefeuilles par formulaire, type, statut ou numéro.",
+                "tutorial.filters_desc": "Utilisez ces filtres pour rechercher и trier les portefeuilles par formulaire, type, statut ou numéro.",
                 "tutorial.table": "Tableau des portefeuilles",
                 "tutorial.table_desc": "Tous les portefeuilles sont affichés ici. Vous pouvez modifier, activer/désactiver ou supprimer des portefeuilles à l'aide des boutons d'action.",
                 "tutorial.edit_wallet": "Modifier le portefeuille",
@@ -1831,7 +1838,7 @@
         };
         
         // Tutorial steps configuration
-        /*const */tutorialStepsConfig = [
+        const tutorialStepsConfig = [
             {
                 elementId: 'burgerMenu',
                 title: 'tutorial.sidebar',
@@ -1877,8 +1884,7 @@
                     // Find first edit button in table
                     const editBtn = document.querySelector('.action-btn.edit');
                     if (editBtn) {
-                        const rect = editBtn.getBoundingClientRect();
-                        highlightElement(rect);
+                        highlightElement(editBtn.getBoundingClientRect());
                     }
                 }
             },
@@ -1890,20 +1896,16 @@
                 action: () => {
                     // Open sidebar and highlight Forms link
                     if (window.innerWidth > 1024) {
-                        // Desktop - sidebar is already open
                         const formsLink = document.querySelector('a[href*="forms.html"]');
                         if (formsLink) {
-                            const rect = formsLink.getBoundingClientRect();
-                            highlightElement(rect);
+                            highlightElement(formsLink.getBoundingClientRect());
                         }
                     } else {
-                        // Mobile - open sidebar first
                         toggleSidebar();
                         setTimeout(() => {
                             const formsLink = document.querySelector('a[href*="forms.html"]');
                             if (formsLink) {
-                                const rect = formsLink.getBoundingClientRect();
-                                highlightElement(rect);
+                                highlightElement(formsLink.getBoundingClientRect());
                             }
                         }, 300);
                     }
@@ -1929,103 +1931,6 @@
                     }
                 }, 2000);
             }
-        }
-        
-        // Обновляем completeTutorial функцию
-        function completeTutorial() {
-            isTutorialActive = false;
-            document.getElementById('tutorialOverlay').classList.remove('active');
-            localStorage.setItem('wallets_tutorial_completed', 'true');
-            showToast(translations[currentLanguage]['tutorial.complete'], 'success');
-            resetElementStyles(); // Сбрасываем стили
-        }
-        
-        // Обновляем skipTutorial функцию
-        function skipTutorial() {
-            if (confirm(translations[currentLanguage]['tutorial.skip'] + '?')) {
-                completeTutorial();
-            }
-        }
-        
-        // Position popup
-        function positionPopup(rect, position) {
-            const popup = document.getElementById('tutorialPopup');
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-            
-            // Рассчитываем оптимальную позицию
-            let top, left;
-            
-            switch(position) {
-                case 'top':
-                    top = Math.max(20, rect.top - 220);
-                    left = Math.max(20, Math.min(rect.left - 200, viewportWidth - 420));
-                    break;
-                case 'bottom':
-                    top = Math.min(viewportHeight - 320, rect.bottom + 25);
-                    left = Math.max(20, Math.min(rect.left - 150, viewportWidth - 420));
-                    break;
-                case 'left':
-                    top = Math.max(20, rect.top - 50);
-                    left = Math.max(20, rect.left - 440);
-                    break;
-                case 'right':
-                    top = Math.max(20, rect.top - 50);
-                    left = Math.min(viewportWidth - 420, rect.right + 25);
-                    break;
-                default:
-                    // Центр для финального шага
-                    top = '50%';
-                    left = '50%';
-                    popup.style.cssText = `
-                        position: fixed;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        max-width: 450px;
-                    `;
-                    return;
-            }
-            
-            popup.style.cssText = `
-                position: absolute;
-                top: ${top}px;
-                left: ${left}px;
-                max-width: 380px;
-            `;
-        }
-        
-        // Next tutorial step
-        function nextTutorialStep() {
-            if (currentTutorialStep < tutorialStepsConfig.length - 1) {
-                currentTutorialStep++;
-                updateTutorialStep();
-            } else {
-                completeTutorial();
-            }
-        }
-        
-        // Previous tutorial step
-        function prevTutorialStep() {
-            if (currentTutorialStep > 0) {
-                currentTutorialStep--;
-                updateTutorialStep();
-            }
-        }
-        
-        // Skip tutorial
-        function skipTutorial() {
-            if (confirm(translations[currentLanguage]['tutorial.skip'] + '?')) {
-                completeTutorial();
-            }
-        }
-        
-        // Complete tutorial
-        function completeTutorial() {
-            isTutorialActive = false;
-            document.getElementById('tutorialOverlay').classList.remove('active');
-            localStorage.setItem('wallets_tutorial_completed', 'true');
-            showToast(translations[currentLanguage]['tutorial.complete'], 'success');
         }
         
         // Show toast notification
@@ -3007,96 +2912,11 @@
             }
         }
         
-        // Initialize tutorial steps
-        function initTutorialSteps() {
-            tutorialStepsConfig = [
-                {
-                    elementId: 'burgerMenu',
-                    title: 'tutorial.sidebar',
-                    description: 'tutorial.sidebar_desc',
-                    position: 'bottom',
-                    action: () => {
-                        // Auto-open sidebar on mobile
-                        if (window.innerWidth <= 1024) {
-                            toggleSidebar();
-                        }
-                    }
-                },
-                {
-                    elementId: 'refreshBtn',
-                    title: 'tutorial.refresh',
-                    description: 'tutorial.refresh_desc',
-                    position: 'bottom'
-                },
-                {
-                    elementId: 'addWalletBtn',
-                    title: 'tutorial.add_wallet',
-                    description: 'tutorial.add_wallet_desc',
-                    position: 'bottom'
-                },
-                {
-                    elementId: 'formFilter',
-                    title: 'tutorial.filters',
-                    description: 'tutorial.filters_desc',
-                    position: 'bottom'
-                },
-                {
-                    elementId: 'walletsTable',
-                    title: 'tutorial.table',
-                    description: 'tutorial.table_desc',
-                    position: 'top'
-                },
-                {
-                    elementId: 'editBtnPlaceholder',
-                    title: 'tutorial.edit_wallet',
-                    description: 'tutorial.edit_wallet_desc',
-                    position: 'bottom',
-                    action: () => {
-                        // Find first edit button in table
-                        const editBtn = document.querySelector('.action-btn.edit');
-                        if (editBtn) {
-                            highlightElement(editBtn.getBoundingClientRect());
-                        }
-                    }
-                },
-                {
-                    elementId: 'sidebar',
-                    title: 'tutorial.forms_navigation',
-                    description: 'tutorial.forms_navigation_desc',
-                    position: 'right',
-                    action: () => {
-                        // Open sidebar and highlight Forms link
-                        if (window.innerWidth > 1024) {
-                            const formsLink = document.querySelector('a[href*="forms.html"]');
-                            if (formsLink) {
-                                highlightElement(formsLink.getBoundingClientRect());
-                            }
-                        } else {
-                            toggleSidebar();
-                            setTimeout(() => {
-                                const formsLink = document.querySelector('a[href*="forms.html"]');
-                                if (formsLink) {
-                                    highlightElement(formsLink.getBoundingClientRect());
-                                }
-                            }, 300);
-                        }
-                    }
-                },
-                {
-                    elementId: null, // No element for final step
-                    title: 'tutorial.complete',
-                    description: 'tutorial.complete_desc',
-                    position: 'center'
-                }
-            ];
-        }
+        // ТУТОРИАЛ - ОСНОВНЫЕ ИСПРАВЛЕНИЯ
         
-        // Start tutorial - UPDATED
+        // Start tutorial
         function startTutorial() {
             console.log('=== START TUTORIAL ===');
-            
-            // Инициализируем шаги туториала
-            initTutorialSteps();
             
             isTutorialActive = true;
             currentTutorialStep = 0;
@@ -3168,7 +2988,7 @@
             window.scrollTo(0, scrollTop);
         }
         
-        // Highlight element - UPDATED с динамическим отслеживанием
+        // Highlight element - УЛУЧШЕННАЯ ВЕРСИЯ
         function highlightElement(rect) {
             const highlight = document.getElementById('tutorialHighlight');
             
@@ -3188,43 +3008,62 @@
                 width: ${rect.width + (padding * 2)}px;
                 height: ${rect.height + (padding * 2)}px;
                 pointer-events: none;
+                z-index: 2003;
+                transform: translateZ(0);
+            `;
+        }
+        
+        // Position popup
+        function positionPopup(rect, position) {
+            const popup = document.getElementById('tutorialPopup');
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // Рассчитываем оптимальную позицию
+            let top, left;
+            
+            switch(position) {
+                case 'top':
+                    top = Math.max(20, rect.top - 220);
+                    left = Math.max(20, Math.min(rect.left - 200, viewportWidth - 420));
+                    break;
+                case 'bottom':
+                    top = Math.min(viewportHeight - 320, rect.bottom + 25);
+                    left = Math.max(20, Math.min(rect.left - 150, viewportWidth - 420));
+                    break;
+                case 'left':
+                    top = Math.max(20, rect.top - 50);
+                    left = Math.max(20, rect.left - 440);
+                    break;
+                case 'right':
+                    top = Math.max(20, rect.top - 50);
+                    left = Math.min(viewportWidth - 420, rect.right + 25);
+                    break;
+                default:
+                    // Центр для финального шага
+                    top = '50%';
+                    left = '50%';
+                    popup.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        max-width: 450px;
+                        z-index: 2002;
+                    `;
+                    return;
+            }
+            
+            popup.style.cssText = `
+                position: absolute;
+                top: ${top}px;
+                left: ${left}px;
+                max-width: 380px;
                 z-index: 2002;
             `;
-            
-            // Разрешаем клики на подсвечиваемом элементе
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            const element = document.elementFromPoint(centerX, centerY);
-            if (element && !element.closest('.tutorial-popup')) {
-                const clickableElement = findClickableParent(element);
-                if (clickableElement) {
-                    highlightedElements.add(clickableElement);
-                    clickableElement.style.pointerEvents = 'auto';
-                    clickableElement.style.zIndex = '2004';
-                    clickableElement.style.position = 'relative';
-                }
-            }
         }
         
-        // Find clickable parent element
-        function findClickableParent(element) {
-            let current = element;
-            while (current && current !== document.body) {
-                if (current.tagName === 'BUTTON' || 
-                    current.tagName === 'A' || 
-                    current.tagName === 'INPUT' ||
-                    current.tagName === 'SELECT' ||
-                    current.onclick ||
-                    current.getAttribute('onclick')) {
-                    return current;
-                }
-                current = current.parentElement;
-            }
-            return element;
-        }
-        
-        // Update tutorial step - UPDATED с очисткой предыдущих стилей
+        // Update tutorial step
         function updateTutorialStep() {
             // Очищаем стили от предыдущего шага
             resetElementStyles();
@@ -3260,6 +3099,11 @@
                         highlightElement(rect);
                         positionPopup(rect, step.position);
                         
+                        // Выделяем элемент на передний план
+                        element.classList.add('tutorial-highlighted-element');
+                        element.style.zIndex = '2004';
+                        element.style.position = 'relative';
+                        
                         // Execute custom action if exists
                         if (step.action) {
                             setTimeout(() => {
@@ -3276,21 +3120,20 @@
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%);
-                    z-index: 2003;
+                    z-index: 2002;
+                    max-width: 450px;
                 `;
             }
         }
         
-        // Reset element styles - UPDATED
+        // Reset element styles
         function resetElementStyles() {
-            highlightedElements.forEach(el => {
-                if (el && el.style) {
-                    el.style.pointerEvents = '';
-                    el.style.zIndex = '';
-                    el.style.position = '';
-                }
+            // Убираем классы подсветки
+            document.querySelectorAll('.tutorial-highlighted-element').forEach(el => {
+                el.classList.remove('tutorial-highlighted-element');
+                el.style.zIndex = '';
+                el.style.position = '';
             });
-            highlightedElements.clear();
             
             // Скрываем подсветку
             const highlight = document.getElementById('tutorialHighlight');
@@ -3324,7 +3167,7 @@
             }
         }
         
-        // Complete tutorial - UPDATED
+        // Complete tutorial
         function completeTutorial() {
             isTutorialActive = false;
             
@@ -3425,9 +3268,6 @@
             
             // Load page data
             loadPageData();
-            
-            // Инициализируем шаги туториала при загрузке
-            initTutorialSteps();
         });
     </script>
 </body>
