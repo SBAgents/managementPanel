@@ -626,23 +626,28 @@
         }
 
         
+        /* СТИЛЬ ДЛЯ КНОПКИ ПЕРЕКЛЮЧЕНИЯ СТАТУСА - копия логики кнопки управления */
         .action-btn.toggle.loading-status {
-            position: relative !important;
-            color: transparent !important;
+            position: relative;
+            color: transparent;
+            cursor: wait;
+            pointer-events: none;
+            opacity: 0.8;
         }
         
-        .action-btn.toggle.loading-status::after {
-            content: '' !important;
-            position: absolute !important;
-            left: 50% !important;
-            top: 50% !important;
-            width: 16px !important;
-            height: 16px !important;
-            margin: -8px 0 0 -8px !important;
-            border: 2px solid #333 !important; /* Явный цвет для теста */
-            border-radius: 50% !important;
-            border-top-color: transparent !important;
-            animation: spin 0.8s linear infinite !important;
+        .action-btn.toggle.loading-status::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            z-index: 1;
         }
         
         .action-btn.loading {
