@@ -2772,19 +2772,14 @@
         }
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
-       async function toggleFormStatus(formName, newStatus) {
+       async function toggleFormStatus(formName, newStatus, buttonElement) {
             console.log('TOGGLE FORM STATUS - Starting:', {formName, newStatus});
             
-            // 1. НАХОДИМ КНОПКУ ПО onclick АТРИБУТУ
-            const toggleButton = document.querySelector(`button[onclick*="${formName.replace(/'/g, "\\'")}"]`);
+            // 1. ВКЛЮЧАЕМ АНИМАЦИЮ СРАЗУ (без if)
+            buttonElement.classList.add('loading-status');
+            buttonElement.disabled = true;
             
             try {
-                // 2. ВКЛЮЧАЕМ АНИМАЦИЮ
-                if (toggleButton) {
-                    toggleButton.classList.add('loading-status');
-                    toggleButton.disabled = true;
-                }
-                
                 const token = localStorage.getItem('admin_token');
                 
                 const params = new URLSearchParams();
@@ -2801,7 +2796,7 @@
                 
                 if (result.success) {
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
-                    await loadForms(); // Обновляем таблицу
+                    await loadForms();
                 } else {
                     showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${result.error}`, 'error');
                 }
@@ -2809,11 +2804,9 @@
                 console.error('TOGGLE - error:', error);
                 showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${error.message}`, 'error');
             } finally {
-                // 3. ВЫКЛЮЧАЕМ АНИМАЦИЮ
-                if (toggleButton) {
-                    toggleButton.classList.remove('loading-status');
-                    toggleButton.disabled = false;
-                }
+                // 2. ВЫКЛЮЧАЕМ АНИМАЦИЮ
+                buttonElement.classList.remove('loading-status');
+                buttonElement.disabled = false;
             }
         }
 
