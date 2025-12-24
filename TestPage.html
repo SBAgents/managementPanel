@@ -1989,8 +1989,8 @@
 
         // Load forms
         async function loadForms() {
-            try {
-                showLoading(translations[currentLanguage]['forms.loading_forms']);
+            showLoading(translations[currentLanguage]['forms.loading_forms']);
+            try {               
                 
                 const token = localStorage.getItem('admin_token');
                 const response = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
