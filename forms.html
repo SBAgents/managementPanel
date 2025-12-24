@@ -2748,11 +2748,14 @@
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
         async function toggleFormStatus(formName, newStatus) {
-            button.classList.add('loading');
             console.log('TOGGLE FORM STATUS - Starting:', {formName, newStatus});
             
             try {
                 const token = localStorage.getItem('admin_token');
+                if (button) {
+                    button.classList.add('loading');
+                    button.disabled = true;
+                }
                 
                 // Создаем URL только с form_name
                 const params = new URLSearchParams();
@@ -2772,6 +2775,10 @@
                 if (result.success) {
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
                     await loadForms(); // Обновляем таблицу
+                    if (button) {
+                        button.classList.remove('loading');
+                        button.disabled = false;
+                    }
                 } else {
                     showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${result.error}`, 'error');
                 }
