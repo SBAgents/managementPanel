@@ -625,14 +625,14 @@
             background: rgba(243, 156, 18, 0.3);
         }
 
-        .action-btn.toggle.loading {
+        .action-btn.toggle.loading-status {
             position: relative;
             color: transparent !important;
             cursor: wait;
             pointer-events: none;
         }
         
-        .action-btn.toggle.loading::after {
+        .action-btn.toggle.loading-status::after {
             content: '';
             position: absolute;
             width: 16px;
@@ -2775,7 +2775,7 @@
             try {
                 // 2. ВКЛЮЧАЕМ АНИМАЦИЮ
                 if (toggleButton) {
-                    toggleButton.classList.add('loading');
+                    toggleButton.classList.add('loading-status');
                     toggleButton.disabled = true;
                 }
                 
@@ -2805,7 +2805,7 @@
             } finally {
                 // 3. ВЫКЛЮЧАЕМ АНИМАЦИЮ
                 if (toggleButton) {
-                    toggleButton.classList.remove('loading');
+                    toggleButton.classList.remove('loading-status');
                     toggleButton.disabled = false;
                 }
             }
