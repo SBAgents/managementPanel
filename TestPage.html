@@ -578,8 +578,8 @@
         .action-btn.manage.loading::after {
             content: '';
             position: absolute;
-            left: 50%;
-            top: 50%;
+            /*left: 50%;
+            top: 50%;*/
             transform: translate(-50%, -50%);
             border: 2px solid var(--accent);
             border-top: 2px solid transparent;
@@ -633,8 +633,8 @@
         .action-btn.loading::after {
             content: '';
             position: absolute;
-            left: 50%;
-            top: 50%;
+            /*left: 50%;
+            top: 50%;*/
             transform: translate(-50%, -50%);
             border: 2px solid var(--accent);
             border-top: 2px solid transparent;
@@ -803,8 +803,8 @@
         .agent-btn.loading::after {
             content: '';
             position: absolute;
-            left: 50%;
-            top: 50%;
+            /*left: 50%;
+            top: 50%;*/
             transform: translate(-50%, -50%);
             border: 2px solid var(--accent);
             border-top: 2px solid transparent;
@@ -954,7 +954,7 @@
                 left: -250px;
                 top: 0;
                 bottom: 0;
-                z-index: 999;
+                z-index: 2005;
                 transition: left 0.3s ease;
                 width: 250px;
             }
@@ -1234,10 +1234,10 @@
                         <span id="currentLanguage">RU</span>
                     </button>
                     <div class="language-dropdown" id="languageDropdown">
-                        <div class="language-option" data-lang="ru">Русский</div>
-                        <div class="language-option" data-lang="en">English</div>
-                        <div class="language-option" data-lang="fr">Français</div>
-                        <div class="language-option" data-lang="ar">العربية</div>
+                        <div class="language-option" data-lang="ru">RU</div>
+                        <div class="language-option" data-lang="en">EN</div>
+                        <div class="language-option" data-lang="fr">FR</div>
+                        <div class="language-option" data-lang="ar">AR</div>
                     </div>
                 </div>
                 <button class="user-control-btn logout-btn" onclick="logout()" id="logoutBtn" data-i18n="nav.logout">
@@ -2747,10 +2747,19 @@
         }
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
-        async function toggleFormStatus(formName, newStatus) {
+       async function toggleFormStatus(formName, newStatus) {
             console.log('TOGGLE FORM STATUS - Starting:', {formName, newStatus});
             
+            // 1. НАХОДИМ КНОПКУ ПО КЛАССУ И DATA-АТРИБУТУ
+            const toggleButton = document.querySelector(`.action-btn.toggle[data-form-name="${formName}"]`);
+            
             try {
+                // 2. ВКЛЮЧАЕМ АНИМАЦИЮ, ЕСЛИ КНОПКА НАЙДЕНА
+                if (toggleButton) {
+                    toggleButton.classList.add('loading');
+                    toggleButton.disabled = true; // Блокируем кнопку
+                }
+                
                 const token = localStorage.getItem('admin_token');
                 
                 // Создаем URL только с form_name
@@ -2777,6 +2786,12 @@
             } catch (error) {
                 console.error('TOGGLE - error:', error);
                 showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${error.message}`, 'error');
+            } finally {
+                // 3. ВЫКЛЮЧАЕМ АНИМАЦИЮ В ЛЮБОМ СЛУЧАЕ
+                if (toggleButton) {
+                    toggleButton.classList.remove('loading');
+                    toggleButton.disabled = false; // Разблокируем кнопку
+                }
             }
         }
 
