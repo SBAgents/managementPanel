@@ -624,6 +624,31 @@
         .action-btn.toggle:hover {
             background: rgba(243, 156, 18, 0.3);
         }
+
+        
+        /* СТИЛЬ ДЛЯ КНОПКИ ПЕРЕКЛЮЧЕНИЯ СТАТУСА - копия логики кнопки управления */
+        .action-btn.toggle.loading-status {
+            position: relative;
+            color: transparent;
+            cursor: wait;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        
+        .action-btn.toggle.loading-status::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            z-index: 1;
+        }
         
         .action-btn.loading {
             color: transparent !important;
@@ -1964,8 +1989,8 @@
 
         // Load forms
         async function loadForms() {
-            try {
-                showLoading(translations[currentLanguage]['forms.loading_forms']);
+            showLoading(translations[currentLanguage]['forms.loading_forms']);
+            try {               
                 
                 const token = localStorage.getItem('admin_token');
                 const response = await fetch(`${API_URL}?action=get_all_forms&token=${token}`);
@@ -2162,7 +2187,7 @@
                                 </button>
                             ` : ''}
                             ${currentPermissions?.canToggleServiceMode ? `
-                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName.replace(/'/g, "\\'")}', ${!isActive})" title="${translations[currentLanguage]['forms.toggle_status']}">
+                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName.replace(/'/g, "\\'")}', ${!isActive}, this)" title="${translations[currentLanguage]['forms.toggle_status']}">
                                     <i class="fas fa-power-off"></i>
                                 </button>
                             ` : ''}
@@ -2747,13 +2772,16 @@
         }
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
-        async function toggleFormStatus(formName, newStatus) {
+       async function toggleFormStatus(formName, newStatus, buttonElement) {
             console.log('TOGGLE FORM STATUS - Starting:', {formName, newStatus});
+            
+            // 1. ВКЛЮЧАЕМ АНИМАЦИЮ СРАЗУ (без if)
+            buttonElement.classList.add('loading-status');
+            buttonElement.disabled = true;
             
             try {
                 const token = localStorage.getItem('admin_token');
                 
-                // Создаем URL только с form_name
                 const params = new URLSearchParams();
                 params.append('action', 'toggle_form_status');
                 params.append('token', token);
@@ -2764,19 +2792,21 @@
                 console.log('TOGGLE - Request URL:', url);
                 
                 const response = await fetch(url);
-                
                 const result = await response.json();
-                console.log('TOGGLE - result:', result);
                 
                 if (result.success) {
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
-                    await loadForms(); // Обновляем таблицу
+                    await loadForms();
                 } else {
                     showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${result.error}`, 'error');
                 }
             } catch (error) {
                 console.error('TOGGLE - error:', error);
                 showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${error.message}`, 'error');
+            } finally {
+                // 2. ВЫКЛЮЧАЕМ АНИМАЦИЮ
+                buttonElement.classList.remove('loading-status');
+                buttonElement.disabled = false;
             }
         }
 
