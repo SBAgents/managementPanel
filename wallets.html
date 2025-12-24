@@ -2414,7 +2414,7 @@
         }
         
         // Test form connection
-        async function testCurrentForm() {
+        /*async function testCurrentForm() {
             const formSelect = document.getElementById('addFormSelect');
             const selectedOption = formSelect.options[formSelect.selectedIndex];
             const formName = formSelect.value;
@@ -2423,7 +2423,7 @@
             if (!formName || !formApi) {
                 showToast('Выберите форму для тестирования', 'warning');
                 return;
-            }
+            }*/
             
             const testBtn = event?.target?.closest('button');
             const originalText = testBtn?.innerHTML;
