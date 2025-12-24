@@ -2748,6 +2748,7 @@
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
         async function toggleFormStatus(formName, newStatus) {
+            button.classList.add('loading');
             console.log('TOGGLE FORM STATUS - Starting:', {formName, newStatus});
             
             try {
