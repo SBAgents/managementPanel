@@ -2797,7 +2797,7 @@
                 
                 if (result.success) {
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
-                    await updateFormStatusInTable();
+                    await updateFormStatusInTable(formName, newStatus);
                 } else {
                     showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${result.error}`, 'error');
                 }
