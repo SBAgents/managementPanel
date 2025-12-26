@@ -2796,7 +2796,7 @@
                 
                 if (result.success) {
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
-                    await loadForms();
+                    await updateFormStatusInTable();
                 } else {
                     showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${result.error}`, 'error');
                 }
@@ -2841,6 +2841,26 @@
                 btn.classList.remove('loading');
                 btn.disabled = false;
             }
+        }
+
+        //========ОБНОВЛЕНИЕ ПОЛЯ СТАТУСЫ===================
+        function updateFormStatusInTable(formName, newStatus) {
+            const rows = document.querySelectorAll('#formsTableBody tr');
+            
+            rows.forEach(row => {
+                const formNameCell = row.querySelector('td:first-child strong');
+                if (formNameCell && formNameCell.textContent === formName) {
+                    const statusCell = row.querySelector('.status');
+                    if (statusCell) {
+                        // Обновляем текст и класс статуса
+                        statusCell.textContent = newStatus ? 
+                            translations[currentLanguage]['status.active'] : 
+                            translations[currentLanguage]['status.inactive'];
+                        
+                        statusCell.className = newStatus ? 'status active' : 'status inactive';
+                    }
+                }
+            });
         }
 
         // Logout
