@@ -2773,6 +2773,7 @@
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
        async function toggleFormStatus(formName, newStatus, buttonElement) {
+            console.log('TOGGLE STARTED - Form:', formName, 'New status:', newStatus, 'Button:', buttonElement);
             console.log('TOGGLE FORM STATUS - Starting:', {formName, newStatus});
             
             // 1. ВКЛЮЧАЕМ АНИМАЦИЮ СРАЗУ (без if)
@@ -2845,6 +2846,8 @@
 
         //========ОБНОВЛЕНИЕ ПОЛЯ СТАТУСЫ===================
         function updateFormStatusInTable(formName, newStatus) {
+            console.log('UPDATE STATUS IN TABLE - Form:', formName, 'New status:', newStatus);
+            console.log('Total rows found:', document.querySelectorAll('#formsTableBody tr').length);
             const rows = document.querySelectorAll('#formsTableBody tr');
             
             rows.forEach(row => {
