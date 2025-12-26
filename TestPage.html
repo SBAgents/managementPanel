@@ -2797,7 +2797,7 @@
                 
                 if (result.success) {
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
-                    const currentRow = найти_строку_формы;
+                    const currentRow = buttonRow.querySelector('.status');
                     const isCurrentlyActive = currentRow.querySelector('.status').classList.contains('active');
                     const newUIStatus = !isCurrentlyActive;
                     
