@@ -2797,7 +2797,12 @@
                 
                 if (result.success) {
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
-                    await updateFormStatusInTable(formName, !isCurrentlyActive);
+                    const currentRow = найти_строку_формы;
+                    const isCurrentlyActive = currentRow.querySelector('.status').classList.contains('active');
+                    const newUIStatus = !isCurrentlyActive;
+                    
+                    // После успешного ответа:
+                    updateFormStatusInTable(formName, newUIStatus);
                 } else {
                     showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${result.error}`, 'error');
                 }
