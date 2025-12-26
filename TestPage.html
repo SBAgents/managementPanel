@@ -2797,6 +2797,8 @@
                 
                 if (result.success) {
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
+                    console.log('Button row:', buttonRow);
+                    console.log('Status cell:', currentStatusCell);
                     const buttonRow = buttonElement.closest('tr');
                     const currentRow = buttonRow.querySelector('.status');
                     const isCurrentlyActive = currentRow.querySelector('.status').classList.contains('active');
