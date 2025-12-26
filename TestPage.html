@@ -2773,8 +2773,10 @@
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
        async function toggleFormStatus(formName, newStatus, buttonElement) {
-            console.log('TOGGLE STARTED - Form:', formName, 'New status:', newStatus, 'Button:', buttonElement);
-            console.log('TOGGLE FORM STATUS - Starting:', {formName, newStatus});
+            const buttonRow = buttonElement.parentElement?.parentElement;
+            const currentRow = buttonRow.querySelector('.status');
+            const isCurrentlyActive = currentRow.querySelector('.status').classList.contains('active');
+            const newUIStatus = !isCurrentlyActive;
             
             // 1. ВКЛЮЧАЕМ АНИМАЦИЮ СРАЗУ (без if)
             buttonElement.classList.add('loading-status');
@@ -2799,10 +2801,6 @@
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
                     console.log('Button row:', buttonRow);
                     console.log('Status cell:', currentStatusCell);
-                    const buttonRow = buttonElement.parentElement?.parentElement;
-                    const currentRow = buttonRow.querySelector('.status');
-                    const isCurrentlyActive = currentRow.querySelector('.status').classList.contains('active');
-                    const newUIStatus = !isCurrentlyActive;
                     
                     // После успешного ответа:
                     updateFormStatusInTable(formName, newUIStatus);
