@@ -2772,7 +2772,7 @@
         }
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
-       async function toggleFormStatus(formName, newStatus, buttonElement) {
+       async function toggleFormStatus(formName, buttonElement) {
             const row = buttonElement.closest('tr');
             const statusCell = row.querySelector('.status');
             const isCurrentlyActive = statusCell.classList.contains('active');
