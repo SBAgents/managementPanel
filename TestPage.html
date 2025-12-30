@@ -2187,7 +2187,7 @@
                                 </button>
                             ` : ''}
                             ${currentPermissions?.canToggleServiceMode ? `
-                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName.replace(/'/g, "\\'")}', ${!isActive}, this)" title="${translations[currentLanguage]['forms.toggle_status']}">
+                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName}', this)" title="${translations[currentLanguage]['forms.toggle_status']}">
                                     <i class="fas fa-power-off"></i>
                                 </button>
                             ` : ''}
@@ -2773,6 +2773,10 @@
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
        async function toggleFormStatus(formName, newStatus, buttonElement) {
+            const row = buttonElement.closest('tr');
+            const statusCell = row.querySelector('.status');
+            const isCurrentlyActive = statusCell.classList.contains('active');
+            const newStatus = !isCurrentlyActive;
             console.log('TOGGLE STARTED - Form:', formName, 'Target status:', newStatus, 'Button:', buttonElement);
             
             // Включаем анимацию
