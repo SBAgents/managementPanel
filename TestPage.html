@@ -2652,8 +2652,6 @@
                 const token = localStorage.getItem('admin_token');
                 if (!token) return;
                 
-                console.log('RELOADING modal agents...');
-                
                 // Получаем свежие данные с сервера
                 const response = await fetch(
                     `${API_URL}?action=get_form_assignments` +
@@ -2665,7 +2663,6 @@
                 if (!response.ok) throw new Error('Network error');
                 
                 const result = await response.json();
-                console.log('Reload result:', result);
                 
                 if (result.success) {
                     // Полностью перезагружаем данные
@@ -2678,8 +2675,6 @@
                             selectedAgents.add(agent.agentId);
                         });
                     }
-                    
-                    console.log('Selected agents after reload:', Array.from(selectedAgents));
                     updateSelectedCount();
                     
                     // Обновляем UI
@@ -2692,8 +2687,6 @@
                     }
                     
                     renderAvailableAgents(filteredAvailableAgents);
-                    
-                    console.log('Modal reloaded successfully');
                 }
                 
             } catch (error) {
@@ -2914,7 +2907,6 @@
                             const newCount = Math.max(0, currentCount + change);
                             agentCell.textContent = newCount;
                             updated = true;
-                            console.log('Agent count updated:', currentCount, '→', newCount);
                         }
                     }
                 });
