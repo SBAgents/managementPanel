@@ -2623,7 +2623,7 @@
                     updateAgentCountInTable(currentFormName, -1);
                     
                     // Полностью обновляем модальное окно (как при назначении)
-                    /*await reloadModalAgents();*/
+                    await reloadModalAgents();
                     
                     // Показываем успешное сообщение
                     showToast(`${translations[currentLanguage]['toast.remove_success']}: ${agentId}`, 'success');
