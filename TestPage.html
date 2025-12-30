@@ -2847,7 +2847,13 @@
 
         //========ОБНОВЛЕНИЕ ПОЛЯ СТАТУСЫ===================
         function updateFormStatusInTable(formName, newStatus) {
-            console.log('UPDATE STATUS IN TABLE - Form:', formName, 'New status:', newStatus);
+            console.log('=== UPDATE STATUS DEBUG ===');
+            console.log('Form name to update:', formName);
+            console.log('New status:', newStatus);
+            console.log('allForms before update:', allForms.map(f => ({ 
+                name: f.formName, 
+                enabled: f.enabled 
+            })));
             
             const rows = document.querySelectorAll('#formsTableBody tr');
             console.log('Total rows found:', rows.length);
