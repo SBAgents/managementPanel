@@ -2910,6 +2910,32 @@
             }
         }
 
+         function updateAgentCountInTable(formName, change) {
+                console.log('UPDATE AGENT COUNT - Form:', formName, 'Change:', change);
+                
+                const rows = document.querySelectorAll('#formsTableBody tr');
+                let updated = false;
+                
+                rows.forEach(row => {
+                    const formNameCell = row.querySelector('td:first-child strong');
+                    if (formNameCell && formNameCell.textContent.trim() === formName.trim()) {
+                        // Ячейка "Агенты" - 4-я колонка (индекс 3, если считать с 0)
+                        const agentCell = row.querySelector('td:nth-child(5)'); // 5-я td в строке
+                        if (agentCell) {
+                            const currentCount = parseInt(agentCell.textContent) || 0;
+                            const newCount = Math.max(0, currentCount + change);
+                            agentCell.textContent = newCount;
+                            updated = true;
+                            console.log('Agent count updated:', currentCount, '→', newCount);
+                        }
+                    }
+                });
+                
+                if (!updated) {
+                    console.warn('Form not found for agent count update:', formName);
+                }
+            }
+
         function hideTableColumns(columnsToHide) {
             const table = document.getElementById('formsTable');
             const thElements = table.querySelectorAll('th');
@@ -2975,32 +3001,6 @@
             document.addEventListener('click', function() {
                 languageDropdown.classList.remove('show');
             });
-
-            function updateAgentCountInTable(formName, change) {
-                console.log('UPDATE AGENT COUNT - Form:', formName, 'Change:', change);
-                
-                const rows = document.querySelectorAll('#formsTableBody tr');
-                let updated = false;
-                
-                rows.forEach(row => {
-                    const formNameCell = row.querySelector('td:first-child strong');
-                    if (formNameCell && formNameCell.textContent.trim() === formName.trim()) {
-                        // Ячейка "Агенты" - 4-я колонка (индекс 3, если считать с 0)
-                        const agentCell = row.querySelector('td:nth-child(5)'); // 5-я td в строке
-                        if (agentCell) {
-                            const currentCount = parseInt(agentCell.textContent) || 0;
-                            const newCount = Math.max(0, currentCount + change);
-                            agentCell.textContent = newCount;
-                            updated = true;
-                            console.log('Agent count updated:', currentCount, '→', newCount);
-                        }
-                    }
-                });
-                
-                if (!updated) {
-                    console.warn('Form not found for agent count update:', formName);
-                }
-            }
             
             // Name filter input (real-time filtering)
             const nameFilterInput = document.getElementById('nameFilter');
