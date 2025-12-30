@@ -2775,7 +2775,7 @@
        async function toggleFormStatus(formName, newStatus, buttonElement) {
             const buttonRow = buttonElement.parentElement?.parentElement;
             const currentRow = buttonRow.querySelector('.status');
-            const isCurrentlyActive = currentRow.querySelector('.status').classList.contains('active');
+            const isCurrentlyActive = currentRow.classList.contains('active');
             const newUIStatus = !isCurrentlyActive;
             
             // 1. ВКЛЮЧАЕМ АНИМАЦИЮ СРАЗУ (без if)
