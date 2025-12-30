@@ -2865,6 +2865,12 @@
                             translations[currentLanguage]['status.inactive'];
                         
                         statusCell.className = newStatus ? 'status active' : 'status inactive';
+                        allForms.forEach(form => {
+                            if (form.formName === formName) {
+                                form.enabled = newStatus;
+                                console.log('Updated form data:', form.formName, 'enabled:', newStatus);
+                            }
+                        });
                         updated = true;
                         console.log('Status updated in row:', row);
                     }
