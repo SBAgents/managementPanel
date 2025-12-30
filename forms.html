@@ -638,8 +638,8 @@
         .action-btn.toggle.loading-status::before {
             content: '';
             position: absolute;
-            left: 50%;
-            top: 50%;
+            /*left: 50%;
+            top: 50%;*/
             width: 20px;
             height: 20px;
             margin: -10px 0 0 -10px;
@@ -2187,7 +2187,7 @@
                                 </button>
                             ` : ''}
                             ${currentPermissions?.canToggleServiceMode ? `
-                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName.replace(/'/g, "\\'")}', ${!isActive}, this)" title="${translations[currentLanguage]['forms.toggle_status']}">
+                                <button class="action-btn toggle" onclick="toggleFormStatus('${form.formName}', this)" title="${translations[currentLanguage]['forms.toggle_status']}">
                                     <i class="fas fa-power-off"></i>
                                 </button>
                             ` : ''}
@@ -2372,8 +2372,8 @@
             currentFormName = '';
             currentFormApi = '';
             selectedAgents.clear();
-
-            refreshForms(); //Обновляем инфо по формам после закрытия модального окна.
+            /*updateAgentCountInTable(formName, change);*/
+            /*refreshForms(); //Обновляем инфо по формам после закрытия модального окна.*/
         }
 
         // Update selected agents count
@@ -2389,8 +2389,6 @@
         function renderAssignedAgents(assignments) {
             const grid = document.getElementById('assignedAgentsGrid');
             grid.innerHTML = '';
-            
-            console.log('Rendering assigned agents:', assignments);
             
             if (!assignments || assignments.length === 0) {
                 grid.innerHTML = `<div class="empty-state">
@@ -2556,7 +2554,7 @@
                     
                     // Обновляем UI модального окна
                     await reloadModalAgents();
-                    
+                    updateAgentCountInTable(currentFormName, +1);
                     showToast(`${translations[currentLanguage]['toast.assign_success']}: ${agentId}`, 'success');
                     
                 } else {
@@ -2577,10 +2575,8 @@
 
         // Remove agent from form с анимацией загрузки
         async function removeAgentFromForm(agentId) {
-            console.log('REMOVE AGENT - Starting:', { agentId, form: currentFormName });
             
             const buttons = document.querySelectorAll(`.agent-btn.remove[onclick*="${agentId}"]`);
-            console.log('Buttons found:', buttons.length);
             
             // Анимация загрузки (такая же как при назначении)
             buttons.forEach(btn => {
@@ -2595,7 +2591,6 @@
                 }
                 
                 // Отправляем запрос на удаление
-                console.log('Sending DELETE request...');
                 const response = await fetch(
                     `${API_URL}?action=remove_agent_from_form` +
                     `&token=${encodeURIComponent(token)}` +
@@ -2604,22 +2599,18 @@
                     `&_t=${Date.now()}` // Для избежания кэширования
                 );
                 
-                console.log('Response status:', response.status);
-                
                 if (!response.ok) {
                     throw new Error(`Network error: ${response.status}`);
                 }
                 
                 const result = await response.json();
-                console.log('DELETE result:', result);
                 
                 if (result.success) {
-                    // УСПЕХ - такой же фидбэк как при назначении
-                    console.log('DELETE successful, updating UI...');
-                    
+                    // УСПЕХ - такой же фидбэк как при назначении                    
                     // Удаляем агента из selectedAgents
                     selectedAgents.delete(agentId);
                     updateSelectedCount();
+                    updateAgentCountInTable(currentFormName, -1);
                     
                     // Полностью обновляем модальное окно (как при назначении)
                     await reloadModalAgents();
@@ -2661,8 +2652,6 @@
                 const token = localStorage.getItem('admin_token');
                 if (!token) return;
                 
-                console.log('RELOADING modal agents...');
-                
                 // Получаем свежие данные с сервера
                 const response = await fetch(
                     `${API_URL}?action=get_form_assignments` +
@@ -2674,7 +2663,6 @@
                 if (!response.ok) throw new Error('Network error');
                 
                 const result = await response.json();
-                console.log('Reload result:', result);
                 
                 if (result.success) {
                     // Полностью перезагружаем данные
@@ -2687,8 +2675,6 @@
                             selectedAgents.add(agent.agentId);
                         });
                     }
-                    
-                    console.log('Selected agents after reload:', Array.from(selectedAgents));
                     updateSelectedCount();
                     
                     // Обновляем UI
@@ -2701,8 +2687,6 @@
                     }
                     
                     renderAvailableAgents(filteredAvailableAgents);
-                    
-                    console.log('Modal reloaded successfully');
                 }
                 
             } catch (error) {
@@ -2733,9 +2717,10 @@
                         saveBtn.disabled = false;
                         
                         if (response && response.success) {
+                            forceRefreshModal();
                             showToast(`${translations[currentLanguage]['toast.assign_success']} (${response.successCount || agents.length})`, 'success');
                             closeAgentsModal();
-                            loadForms();
+                            /*loadForms();*/
                             // Обновляем данные о назначениях
                             loadAllFormAssignments();
                         } else {
@@ -2772,10 +2757,13 @@
         }
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
-       async function toggleFormStatus(formName, newStatus, buttonElement) {
-            console.log('TOGGLE FORM STATUS - Starting:', {formName, newStatus});
+       async function toggleFormStatus(formName, buttonElement) {
+            const row = buttonElement.closest('tr');
+            const statusCell = row.querySelector('.status');
+            const isCurrentlyActive = statusCell.classList.contains('active');
+            const newStatus = !isCurrentlyActive;
             
-            // 1. ВКЛЮЧАЕМ АНИМАЦИЮ СРАЗУ (без if)
+            // Включаем анимацию
             buttonElement.classList.add('loading-status');
             buttonElement.disabled = true;
             
@@ -2789,22 +2777,21 @@
                 params.append('enabled', newStatus.toString());
                 
                 const url = `${API_URL}?${params.toString()}`;
-                console.log('TOGGLE - Request URL:', url);
                 
                 const response = await fetch(url);
                 const result = await response.json();
                 
                 if (result.success) {
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
-                    await loadForms();
+                    // Меняем статус в таблице на тот, который мы отправили (newStatus)
+                    updateFormStatusInTable(formName, newStatus);
                 } else {
                     showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${result.error}`, 'error');
                 }
             } catch (error) {
-                console.error('TOGGLE - error:', error);
                 showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${error.message}`, 'error');
             } finally {
-                // 2. ВЫКЛЮЧАЕМ АНИМАЦИЮ
+                // Выключаем анимацию
                 buttonElement.classList.remove('loading-status');
                 buttonElement.disabled = false;
             }
@@ -2843,6 +2830,37 @@
             }
         }
 
+        //========ОБНОВЛЕНИЕ ПОЛЯ СТАТУСЫ===================
+        function updateFormStatusInTable(formName, newStatus) {            
+            const rows = document.querySelectorAll('#formsTableBody tr');
+            
+            let updated = false;
+            
+            rows.forEach(row => {
+                const formNameCell = row.querySelector('td:first-child strong');
+                if (formNameCell && formNameCell.textContent.trim() === formName.trim()) {
+                    const statusCell = row.querySelector('.status');
+                    if (statusCell) {
+                        // Обновляем текст и класс статуса
+                        statusCell.textContent = newStatus ? 
+                            translations[currentLanguage]['status.active'] : 
+                            translations[currentLanguage]['status.inactive'];
+                        
+                        statusCell.className = newStatus ? 'status active' : 'status inactive';
+                        allForms.forEach(form => {
+                            if (form.formName === formName) {
+                                form.enabled = newStatus;
+                            }
+                        });
+                        updated = true;
+                    }
+                }
+            });
+            
+            if (!updated) {
+            }
+        }
+
         // Logout
         async function logout() {
             const btn = document.getElementById('logoutBtn');
@@ -2873,6 +2891,29 @@
                 btn.innerHTML = originalText;
             }
         }
+
+         function updateAgentCountInTable(formName, change) {
+                
+                const rows = document.querySelectorAll('#formsTableBody tr');
+                let updated = false;
+                
+                rows.forEach(row => {
+                    const formNameCell = row.querySelector('td:first-child strong');
+                    if (formNameCell && formNameCell.textContent.trim() === formName.trim()) {
+                        // Ячейка "Агенты" - 4-я колонка (индекс 3, если считать с 0)
+                        const agentCell = row.querySelector('td:nth-child(5)'); // 5-я td в строке
+                        if (agentCell) {
+                            const currentCount = parseInt(agentCell.textContent) || 0;
+                            const newCount = Math.max(0, currentCount + change);
+                            agentCell.textContent = newCount;
+                            updated = true;
+                        }
+                    }
+                });
+                
+                if (!updated) {
+                }
+            }
 
         function hideTableColumns(columnsToHide) {
             const table = document.getElementById('formsTable');
