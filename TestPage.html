@@ -2777,7 +2777,6 @@
             const statusCell = row.querySelector('.status');
             const isCurrentlyActive = statusCell.classList.contains('active');
             const newStatus = !isCurrentlyActive;
-            console.log('TOGGLE STARTED - Form:', formName, 'Target status:', newStatus, 'Button:', buttonElement);
             
             // Включаем анимацию
             buttonElement.classList.add('loading-status');
@@ -2793,11 +2792,9 @@
                 params.append('enabled', newStatus.toString());
                 
                 const url = `${API_URL}?${params.toString()}`;
-                console.log('TOGGLE - Request URL:', url);
                 
                 const response = await fetch(url);
                 const result = await response.json();
-                console.log('TOGGLE - Server response:', result);
                 
                 if (result.success) {
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
@@ -2807,7 +2804,6 @@
                     showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${result.error}`, 'error');
                 }
             } catch (error) {
-                console.error('TOGGLE - error:', error);
                 showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${error.message}`, 'error');
             } finally {
                 // Выключаем анимацию
@@ -2850,17 +2846,8 @@
         }
 
         //========ОБНОВЛЕНИЕ ПОЛЯ СТАТУСЫ===================
-        function updateFormStatusInTable(formName, newStatus) {
-            console.log('=== UPDATE STATUS DEBUG ===');
-            console.log('Form name to update:', formName);
-            console.log('New status:', newStatus);
-            console.log('allForms before update:', allForms.map(f => ({ 
-                name: f.formName, 
-                enabled: f.enabled 
-            })));
-            
+        function updateFormStatusInTable(formName, newStatus) {            
             const rows = document.querySelectorAll('#formsTableBody tr');
-            console.log('Total rows found:', rows.length);
             
             let updated = false;
             
@@ -2882,13 +2869,11 @@
                             }
                         });
                         updated = true;
-                        console.log('Status updated in row:', row);
                     }
                 }
             });
             
             if (!updated) {
-                console.warn('Form not found in table:', formName);
             }
         }
 
