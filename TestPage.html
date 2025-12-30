@@ -2372,7 +2372,7 @@
             currentFormName = '';
             currentFormApi = '';
             selectedAgents.clear();
-            updateAgentCountInTable(formName, change);
+            /*updateAgentCountInTable(formName, change);*/
             /*refreshForms(); //Обновляем инфо по формам после закрытия модального окна.*/
         }
 
@@ -2556,7 +2556,7 @@
                     
                     // Обновляем UI модального окна
                     await reloadModalAgents();
-                    
+                    updateAgentCountInTable(currentFormName, +1);
                     showToast(`${translations[currentLanguage]['toast.assign_success']}: ${agentId}`, 'success');
                     
                 } else {
@@ -2620,9 +2620,10 @@
                     // Удаляем агента из selectedAgents
                     selectedAgents.delete(agentId);
                     updateSelectedCount();
+                    updateAgentCountInTable(currentFormName, -1);
                     
                     // Полностью обновляем модальное окно (как при назначении)
-                    await reloadModalAgents();
+                    /*await reloadModalAgents();*/
                     
                     // Показываем успешное сообщение
                     showToast(`${translations[currentLanguage]['toast.remove_success']}: ${agentId}`, 'success');
@@ -2733,9 +2734,10 @@
                         saveBtn.disabled = false;
                         
                         if (response && response.success) {
+                            forceRefreshModal();
                             showToast(`${translations[currentLanguage]['toast.assign_success']} (${response.successCount || agents.length})`, 'success');
                             closeAgentsModal();
-                            loadForms();
+                            /*loadForms();*/
                             // Обновляем данные о назначениях
                             loadAllFormAssignments();
                         } else {
