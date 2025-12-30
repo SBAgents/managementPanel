@@ -2577,10 +2577,8 @@
 
         // Remove agent from form с анимацией загрузки
         async function removeAgentFromForm(agentId) {
-            console.log('REMOVE AGENT - Starting:', { agentId, form: currentFormName });
             
             const buttons = document.querySelectorAll(`.agent-btn.remove[onclick*="${agentId}"]`);
-            console.log('Buttons found:', buttons.length);
             
             // Анимация загрузки (такая же как при назначении)
             buttons.forEach(btn => {
@@ -2595,7 +2593,6 @@
                 }
                 
                 // Отправляем запрос на удаление
-                console.log('Sending DELETE request...');
                 const response = await fetch(
                     `${API_URL}?action=remove_agent_from_form` +
                     `&token=${encodeURIComponent(token)}` +
@@ -2604,19 +2601,14 @@
                     `&_t=${Date.now()}` // Для избежания кэширования
                 );
                 
-                console.log('Response status:', response.status);
-                
                 if (!response.ok) {
                     throw new Error(`Network error: ${response.status}`);
                 }
                 
                 const result = await response.json();
-                console.log('DELETE result:', result);
                 
                 if (result.success) {
-                    // УСПЕХ - такой же фидбэк как при назначении
-                    console.log('DELETE successful, updating UI...');
-                    
+                    // УСПЕХ - такой же фидбэк как при назначении                    
                     // Удаляем агента из selectedAgents
                     selectedAgents.delete(agentId);
                     updateSelectedCount();
@@ -2911,7 +2903,6 @@
         }
 
          function updateAgentCountInTable(formName, change) {
-                console.log('UPDATE AGENT COUNT - Form:', formName, 'Change:', change);
                 
                 const rows = document.querySelectorAll('#formsTableBody tr');
                 let updated = false;
@@ -2932,7 +2923,6 @@
                 });
                 
                 if (!updated) {
-                    console.warn('Form not found for agent count update:', formName);
                 }
             }
 
