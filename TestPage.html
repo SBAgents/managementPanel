@@ -2773,12 +2773,9 @@
 
         //===================ПЕРЕКЛЮЧЕНИЕ СТАТУСОВ ФОРМ================
        async function toggleFormStatus(formName, newStatus, buttonElement) {
-            const buttonRow = buttonElement.parentElement?.parentElement;
-            const currentRow = buttonRow.querySelector('.status');
-            const isCurrentlyActive = currentRow.classList.contains('active');
-            const newUIStatus = !isCurrentlyActive;
+            console.log('TOGGLE STARTED - Form:', formName, 'Target status:', newStatus, 'Button:', buttonElement);
             
-            // 1. ВКЛЮЧАЕМ АНИМАЦИЮ СРАЗУ (без if)
+            // Включаем анимацию
             buttonElement.classList.add('loading-status');
             buttonElement.disabled = true;
             
@@ -2796,14 +2793,12 @@
                 
                 const response = await fetch(url);
                 const result = await response.json();
+                console.log('TOGGLE - Server response:', result);
                 
                 if (result.success) {
                     showToast(translations[currentLanguage]['toast.toggle_success'], 'success');
-                    console.log('Button row:', buttonRow);
-                    console.log('Status cell:', currentStatusCell);
-                    
-                    // После успешного ответа:
-                    updateFormStatusInTable(formName, newUIStatus);
+                    // Меняем статус в таблице на тот, который мы отправили (newStatus)
+                    updateFormStatusInTable(formName, newStatus);
                 } else {
                     showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${result.error}`, 'error');
                 }
@@ -2811,7 +2806,7 @@
                 console.error('TOGGLE - error:', error);
                 showToast(`${translations[currentLanguage]['toast.toggle_error']}: ${error.message}`, 'error');
             } finally {
-                // 2. ВЫКЛЮЧАЕМ АНИМАЦИЮ
+                // Выключаем анимацию
                 buttonElement.classList.remove('loading-status');
                 buttonElement.disabled = false;
             }
@@ -2853,12 +2848,15 @@
         //========ОБНОВЛЕНИЕ ПОЛЯ СТАТУСЫ===================
         function updateFormStatusInTable(formName, newStatus) {
             console.log('UPDATE STATUS IN TABLE - Form:', formName, 'New status:', newStatus);
-            console.log('Total rows found:', document.querySelectorAll('#formsTableBody tr').length);
+            
             const rows = document.querySelectorAll('#formsTableBody tr');
+            console.log('Total rows found:', rows.length);
+            
+            let updated = false;
             
             rows.forEach(row => {
                 const formNameCell = row.querySelector('td:first-child strong');
-                if (formNameCell && formNameCell.textContent === formName) {
+                if (formNameCell && formNameCell.textContent.trim() === formName.trim()) {
                     const statusCell = row.querySelector('.status');
                     if (statusCell) {
                         // Обновляем текст и класс статуса
@@ -2867,9 +2865,15 @@
                             translations[currentLanguage]['status.inactive'];
                         
                         statusCell.className = newStatus ? 'status active' : 'status inactive';
+                        updated = true;
+                        console.log('Status updated in row:', row);
                     }
                 }
             });
+            
+            if (!updated) {
+                console.warn('Form not found in table:', formName);
+            }
         }
 
         // Logout
