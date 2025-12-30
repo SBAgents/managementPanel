@@ -2390,8 +2390,6 @@
             const grid = document.getElementById('assignedAgentsGrid');
             grid.innerHTML = '';
             
-            console.log('Rendering assigned agents:', assignments);
-            
             if (!assignments || assignments.length === 0) {
                 grid.innerHTML = `<div class="empty-state">
                     <p>${translations[currentLanguage]['forms.no_assigned_agents']}</p>
