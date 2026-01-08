@@ -2233,10 +2233,11 @@
                             return JSON.parse(cachedWallets);
                         }
                         
-                        const walletsResponse = await fetch(`${form.formAPI}?action=get_wallets&show_all=true`);
-                         headers: {
-                            'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
-                        }
+                        const walletsResponse = await fetch(`${form.formAPI}?action=get_wallets&show_all=true`, {
+                            headers: {
+                                'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+                            }
+                        });
                         if (!walletsResponse.ok) {
                             console.warn(`Failed to load wallets from form: ${form.formName}`);
                             return [];
