@@ -1400,6 +1400,8 @@
     <script>
         //Check current session
         if (!localStorage.getItem('session') || localStorage.getItem('sessionExpiry') < Date.now()) {
+            localStorage.removeItem('session');
+            localStorage.removeItem('sessionExpiry');
             window.location.href = 'index.html';
         }
         
