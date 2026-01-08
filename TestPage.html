@@ -1399,7 +1399,8 @@
     
     <script>
         //Check current session
-        if (!localStorage.getItem('session') || localStorage.getItem('sessionExpiry') < Date.now()) {
+        const expiry = localStorage.getItem('sessionExpiry');
+        if (!localStorage.getItem('session') || !expiry || parseInt(expiry) < Math.floor(Date.now() / 1000)) {
             localStorage.removeItem('session');
             localStorage.removeItem('sessionExpiry');
             window.location.href = 'index.html';
