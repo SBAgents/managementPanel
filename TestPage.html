@@ -1405,6 +1405,9 @@
             localStorage.removeItem('session');
             localStorage.removeItem('sessionExpiry');
         }
+
+        console.log('Token:', localStorage.getItem('admin_token'));
+        console.log('User:', localStorage.getItem('admin_user'));
         
         // API Configuration
         const API_URL = 'https://script.google.com/macros/s/AKfycbxDaBdYMx44M2W3FsJp5tOECFTRD6rWrhPAC96MuUexROt5Qjgj4U0er4So6Ehsh8xQ5g/exec';
