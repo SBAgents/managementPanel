@@ -1401,9 +1401,9 @@
         //Check current session
         const expiry = localStorage.getItem('sessionExpiry');
         if (!localStorage.getItem('session') || !expiry || parseInt(expiry) < Math.floor(Date.now() / 1000)) {
+            window.location.href = 'index.html';
             localStorage.removeItem('session');
             localStorage.removeItem('sessionExpiry');
-            window.location.href = 'index.html';
         }
         
         // API Configuration
