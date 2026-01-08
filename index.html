@@ -488,6 +488,8 @@
                     localStorage.setItem('admin_user', JSON.stringify(result.user));
                     localStorage.setItem('admin_permissions', JSON.stringify(result.permissions));
                     localStorage.setItem('current_language', currentLanguage);
+                    localStorage.setItem('session', 'active');
+                    localStorage.setItem('sessionExpiry', Date.now() + 10800000); // 3 часа
                     
                     window.location.href = 'wallets.html';
                 } else {
