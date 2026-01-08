@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+FFF<<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -1401,8 +1401,8 @@
         //Check current session
         const expiry = localStorage.getItem('sessionExpiry');
         if (!localStorage.getItem('session') || !expiry || parseInt(expiry) < Math.floor(Date.now() / 1000)) {
-            /*localStorage.removeItem('session');
-            localStorage.removeItem('sessionExpiry');*/
+            localStorage.removeItem('session');
+            localStorage.removeItem('sessionExpiry');
             window.location.href = 'index.html';
         }
         
