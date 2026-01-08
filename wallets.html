@@ -1399,9 +1399,15 @@
     
     <script>
         //Check current session
-        /*if (!localStorage.getItem('session') || localStorage.getItem('sessionExpiry') < Date.now()) {
+        const expiry = localStorage.getItem('sessionExpiry');
+        if (!localStorage.getItem('session') || !expiry || parseInt(expiry) < Math.floor(Date.now() / 1000)) {
             window.location.href = 'index.html';
-        }*/
+            localStorage.removeItem('session');
+            localStorage.removeItem('sessionExpiry');
+        }
+
+        console.log('Token:', localStorage.getItem('admin_token'));
+        console.log('User:', localStorage.getItem('admin_user'));
         
         // API Configuration
         const API_URL = 'https://script.google.com/macros/s/AKfycbxDaBdYMx44M2W3FsJp5tOECFTRD6rWrhPAC96MuUexROt5Qjgj4U0er4So6Ehsh8xQ5g/exec';
@@ -2230,7 +2236,9 @@
                             return JSON.parse(cachedWallets);
                         }
                         
-                        const walletsResponse = await fetch(`${form.formAPI}?action=get_wallets&show_all=true`);
+                        const token = localStorage.getItem('admin_token');
+                        const walletsResponse = await fetch(`${form.formAPI}?action=get_wallets&show_all=true&token=${token}`);
+
                         if (!walletsResponse.ok) {
                             console.warn(`Failed to load wallets from form: ${form.formName}`);
                             return [];
